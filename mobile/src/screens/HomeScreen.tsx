@@ -6,31 +6,20 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
-import {
-  Search,
-  MapPin,
-  Car,
-  Edit2,
-  Sparkles,
-  ChevronRight,
-  Disc,
-  Droplet,
-  Activity,
-  Zap,
-} from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.headerTitle}>AutoPeças AI</Text>
             <View style={styles.locationRow}>
-              <MapPin color="#ffffff" size={16} />
+              <Ionicons name="location" size={16} color="#ffffff" />
               <Text style={styles.locationText}>São Paulo, SP</Text>
             </View>
           </View>
@@ -41,7 +30,7 @@ export default function HomeScreen() {
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <Search color="#9ca3af" size={20} />
+          <Ionicons name="search" size={20} color="#9ca3af" />
           <TextInput
             style={styles.searchInput}
             placeholder="Busque por peça ou sintoma..."
@@ -52,7 +41,7 @@ export default function HomeScreen() {
         {/* Vehicle Card */}
         <View style={styles.vehicleCard}>
           <View style={styles.vehicleIcon}>
-            <Car color="#1e3a8a" size={24} />
+            <Ionicons name="car" size={24} color="#1e3a8a" />
           </View>
           <View style={styles.vehicleInfo}>
             <Text style={styles.vehicleLabel}>SEU VEÍCULO</Text>
@@ -60,7 +49,7 @@ export default function HomeScreen() {
             <Text style={styles.vehicleDetails}>• 2020 1.0 12v</Text>
           </View>
           <TouchableOpacity style={styles.editButton}>
-            <Edit2 color="#ffffff" size={18} />
+            <Ionicons name="create-outline" size={18} color="#ffffff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.searchButton}>
             <Text style={styles.searchButtonText}>Buscar Peças</Text>
@@ -70,7 +59,7 @@ export default function HomeScreen() {
         {/* AI Diagnostic Card */}
         <View style={styles.aiCard}>
           <View style={styles.aiHeader}>
-            <Sparkles color="#fbbf24" size={24} />
+            <Ionicons name="sparkles" size={24} color="#fbbf24" />
             <Text style={styles.aiTitle}>Diagnóstico Inteligente</Text>
           </View>
           <Text style={styles.aiDescription}>
@@ -78,7 +67,7 @@ export default function HomeScreen() {
           </Text>
           <TouchableOpacity style={styles.aiExampleButton}>
             <Text style={styles.aiExampleText}>Ex: "Carro engasgando"</Text>
-            <ChevronRight color="#9ca3af" size={20} />
+            <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
           </TouchableOpacity>
         </View>
 
@@ -86,10 +75,10 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categorias</Text>
           <View style={styles.categoriesGrid}>
-            <CategoryButton icon={Disc} label="Freios" />
-            <CategoryButton icon={Droplet} label="Óleo" />
-            <CategoryButton icon={Activity} label="Suspensão" />
-            <CategoryButton icon={Zap} label="Elétrica" />
+            <CategoryButton icon="disc" label="Freios" />
+            <CategoryButton icon="water" label="Óleo" />
+            <CategoryButton icon="pulse" label="Suspensão" />
+            <CategoryButton icon="flash" label="Elétrica" />
           </View>
         </View>
 
@@ -101,7 +90,32 @@ export default function HomeScreen() {
               <Text style={styles.seeAllText}>Ver tudo</Text>
             </TouchableOpacity>
           </View>
-          {/* Product cards aqui */}
+
+          {/* Product Card Example */}
+          <View style={styles.productCard}>
+            <View style={styles.productImagePlaceholder}>
+              <Ionicons name="image-outline" size={40} color="#9ca3af" />
+            </View>
+            <View style={styles.productInfo}>
+              <Text style={styles.productName}>
+                Pastilha de Freio Dianteira Cerâmica
+              </Text>
+              <Text style={styles.productCategory}>FREIOS</Text>
+              <View style={styles.productFooter}>
+                <View>
+                  <Text style={styles.productStore}>Auto Peças Central</Text>
+                  <View style={styles.ratingRow}>
+                    <Ionicons name="star" size={12} color="#fbbf24" />
+                    <Text style={styles.ratingText}>4.8</Text>
+                  </View>
+                </View>
+                <Text style={styles.productPrice}>R$ 145,90</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.addButton}>
+              <Ionicons name="add" size={24} color="#ffffff" />
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -109,14 +123,14 @@ export default function HomeScreen() {
 }
 
 interface CategoryButtonProps {
-  icon: React.ComponentType<any>;
+  icon: string;
   label: string;
 }
 
-function CategoryButton({ icon: Icon, label }: CategoryButtonProps) {
+function CategoryButton({ icon, label }: CategoryButtonProps) {
   return (
     <TouchableOpacity style={styles.categoryButton}>
-      <Icon color="#1e3a8a" size={32} />
+      <Ionicons name={icon as any} size={32} color="#1e3a8a" />
       <Text style={styles.categoryLabel}>{label}</Text>
     </TouchableOpacity>
   );

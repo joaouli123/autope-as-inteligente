@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Car } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../types/navigation';
 
 type SignupScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Signup'>;
@@ -15,7 +16,7 @@ export default function SignupScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <Car color="#1e3a8a" size={48} strokeWidth={2} />
+          <Ionicons name="car" size={48} color="#1e3a8a" />
           <Text style={styles.title}>Criar Conta</Text>
         </View>
 
@@ -63,7 +64,7 @@ export default function SignupScreen() {
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate('Main', { screen: 'Home' })}
+            onPress={() => navigation.navigate('Main')}
           >
             <Text style={styles.buttonText}>Criar Conta</Text>
           </TouchableOpacity>

@@ -1,16 +1,13 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Search, ShoppingCart, ClipboardList } from 'lucide-react-native';
-
-// Types
-import { MainTabParamList } from '../types/navigation';
+import { Ionicons } from '@expo/vector-icons';
 
 import HomeScreen from '../screens/HomeScreen';
 import SearchScreen from '../screens/SearchScreen';
 import CartScreen from '../screens/CartScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 
-const Tab = createBottomTabNavigator<MainTabParamList>();
+const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
   return (
@@ -33,7 +30,9 @@ export default function MainTabs() {
         component={HomeScreen}
         options={{
           title: 'Início',
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -41,7 +40,9 @@ export default function MainTabs() {
         component={SearchScreen}
         options={{
           title: 'Buscar',
-          tabBarIcon: ({ color, size }) => <Search color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -49,7 +50,9 @@ export default function MainTabs() {
         component={CartScreen}
         options={{
           title: 'Carrinho',
-          tabBarIcon: ({ color, size }) => <ShoppingCart color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cart" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -57,7 +60,9 @@ export default function MainTabs() {
         component={OrdersScreen}
         options={{
           title: 'Pedidos',
-          tabBarIcon: ({ color, size }) => <ClipboardList color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="list" size={size} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
