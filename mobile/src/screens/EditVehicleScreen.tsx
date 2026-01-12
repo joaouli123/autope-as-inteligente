@@ -17,6 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, Car, Bike, Truck } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { validateYear } from '../utils/validators';
 import { getBrands, getModels, type VehicleType, type FipeBrand, type FipeModel } from '../services/fipeService';
 
 // Vehicle dropdown constants
@@ -70,10 +71,9 @@ export default function EditVehicleScreen() {
       Alert.alert('Erro', 'Marca e Modelo são obrigatórios');
       return;
     }
-    const yearNum = parseInt(year, 10);
-    const currentYear = new Date().getFullYear();
-    if (!year.trim() || year.length !== 4 || yearNum < 1900 || yearNum > currentYear + 1) {
-      Alert.alert('Erro', `Ano inválido (entre 1900 e ${currentYear + 1})`);
+    const yearValidation = validateYear(year);
+    if (!yearValidation.valid) {
+      Alert.alert('Erro', yearValidation.message);
       return;
     }
     if (!engine || !valves || !fuel || !transmission) {

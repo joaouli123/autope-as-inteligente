@@ -17,7 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, Eye, EyeOff, Car, Bike, Truck } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { validateEmail, validateCPForCNPJ } from '../utils/validators';
+import { validateEmail, validateCPForCNPJ, validateYear } from '../utils/validators';
 import { maskCPForCNPJ, maskPhone, maskCEP } from '../utils/masks';
 import { fetchAddressByCEP } from '../services/cepService';
 import { getBrands, getModels, type VehicleType, type FipeBrand, type FipeModel } from '../services/fipeService';
@@ -158,10 +158,9 @@ export default function SignupScreen() {
       Alert.alert('Erro', 'Marca e Modelo são obrigatórios');
       return false;
     }
-    const yearNum = parseInt(year, 10);
-    const currentYear = new Date().getFullYear();
-    if (!year.trim() || year.length !== 4 || yearNum < 1900 || yearNum > currentYear + 1) {
-      Alert.alert('Erro', `Ano inválido (entre 1900 e ${currentYear + 1})`);
+    const yearValidation = validateYear(year);
+    if (!yearValidation.valid) {
+      Alert.alert('Erro', yearValidation.message);
       return false;
     }
     if (!engine || !valves || !fuel || !transmission) {
