@@ -19,7 +19,7 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.headerTitle}>AutoPeças AI</Text>
             <View style={styles.locationRow}>
-              <Ionicons name="location" size={16} color="#ffffff" />
+              <Ionicons name="location-outline" size={16} color="#ffffff" />
               <Text style={styles.locationText}>São Paulo, SP</Text>
             </View>
           </View>
@@ -59,7 +59,7 @@ export default function HomeScreen() {
         {/* AI Diagnostic Card */}
         <View style={styles.aiCard}>
           <View style={styles.aiHeader}>
-            <Ionicons name="sparkles" size={24} color="#fbbf24" />
+            <Ionicons name="flash-outline" size={24} color="#fbbf24" />
             <Text style={styles.aiTitle}>Diagnóstico Inteligente</Text>
           </View>
           <Text style={styles.aiDescription}>

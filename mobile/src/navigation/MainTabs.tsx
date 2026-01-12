@@ -52,7 +52,7 @@ export default function MainTabs() {
         options={{
           title: 'Carrinho',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cart" size={size} color={color} />
+            <Ionicons name="cart-outline" size={size} color={color} />
           ),
         }}
       />
