@@ -7,6 +7,8 @@ export type RootStackParamList = {
   Signup: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
   Profile: undefined;
+  EditProfile: undefined;
+  EditVehicle: undefined;
 };
 
 // Main Tab Navigator types
