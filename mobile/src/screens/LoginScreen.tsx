@@ -1,10 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Car } from 'lucide-react-native';
+import type { RootStackParamList } from '../types/navigation';
+
+type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 export default function LoginScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -36,12 +40,12 @@ export default function LoginScreen() {
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate('Main' as never)}
+            onPress={() => navigation.navigate('Main', { screen: 'Home' })}
           >
             <Text style={styles.buttonText}>Entrar</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Signup' as never)}>
+          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
             <Text style={styles.linkText}>
               Não tem conta? <Text style={styles.linkBold}>Criar Conta</Text>
             </Text>

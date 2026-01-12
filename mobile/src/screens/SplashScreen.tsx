@@ -1,10 +1,14 @@
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Car } from 'lucide-react-native';
+import type { RootStackParamList } from '../types/navigation';
+
+type SplashScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 
 export default function SplashScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<SplashScreenNavigationProp>();
 
   return (
     <View style={styles.container}>
@@ -23,14 +27,14 @@ export default function SplashScreen() {
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.buttonPrimary}
-          onPress={() => navigation.navigate('Login' as never)}
+          onPress={() => navigation.navigate('Login')}
         >
           <Text style={styles.buttonPrimaryText}>Entrar</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.buttonSecondary}
-          onPress={() => navigation.navigate('Signup' as never)}
+          onPress={() => navigation.navigate('Signup')}
         >
           <Text style={styles.buttonSecondaryText}>Criar Conta</Text>
         </TouchableOpacity>
