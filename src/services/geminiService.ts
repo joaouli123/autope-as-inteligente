@@ -1,7 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { AIResponse, Vehicle } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 // Using Flash for speed as this is an interactive search feature
 const MODEL_NAME = "gemini-3-flash-preview";
@@ -11,6 +12,11 @@ export const analyzeSearchQuery = async (
   userVehicle: Vehicle | null
 ): Promise<AIResponse> => {
   try {
+    // Check if AI is available
+    if (!ai) {
+      throw new Error("Gemini API key not configured");
+    }
+
     const vehicleContext = userVehicle
       ? `O veículo do usuário é um ${userVehicle.make} ${userVehicle.model} ano ${userVehicle.year}.`
       : "O usuário não especificou um veículo no perfil.";
