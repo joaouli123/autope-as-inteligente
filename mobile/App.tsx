@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
-import Constants from 'expo-constants';
 
 // Importar supabase client
 import { supabase } from './services/supabaseClient';
@@ -36,11 +35,8 @@ export default function App() {
     try {
       setIsLoading(true);
       
-      // Testar conexão com Supabase
-      const { data, error } = await supabase
-        .from('products')
-        .select('count')
-        .limit(1);
+      // Testar conexão com Supabase usando auth session (não requer tabela específica)
+      const { data, error } = await supabase.auth.getSession();
 
       if (error) {
         setError(`Erro Supabase: ${error.message}`);
