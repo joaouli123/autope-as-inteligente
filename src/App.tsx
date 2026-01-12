@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ViewState, UserProfile, CartItem, Product, FilterCriteria, Order, OrderStatus, PaymentMethodType, AddressData, UserRole } from './types';
 import { POPULAR_VEHICLES, STORES as MOCK_STORES } from './services/mockData';
-import { dataService } from './services/dataService'; // Import new service
+import { dataService } from './services/dataService';
 import { analyzeSearchQuery } from './services/geminiService';
 import { getBrands, getModels, FipeItem } from './services/fipeService';
-import NavBar from './components/NavBar';
-import ProductCard from './components/ProductCard';
-import StoreRating from './components/StoreRating'; // Import StoreRating
+import NavBar from './components/layout/NavBar';
+import ProductCard from './components/product/ProductCard';
+import StoreRating from './components/store/StoreRating';
 import { 
   Search, MapPin, ChevronRight, Sparkles, Filter, Trash2, CheckCircle, Car, 
   ArrowLeft, Loader2, ShoppingCart, Download, X, SlidersHorizontal, ChevronDown,

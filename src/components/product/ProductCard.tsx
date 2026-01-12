@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Product, Store } from '../types';
-import StoreRating from './StoreRating';
+import { Product, Store } from '../../types';
+import StoreRating from '../store/StoreRating';
 import { Plus, ImageOff } from 'lucide-react';
 
 interface ProductCardProps {
