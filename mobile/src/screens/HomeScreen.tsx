@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   Search,
   MapPin,
@@ -20,11 +22,17 @@ import {
   Activity,
   Zap,
 } from 'lucide-react-native';
+import type { RootStackParamList } from '../types/navigation';
+
+type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 export default function HomeScreen() {
+  const navigation = useNavigation<HomeScreenNavigationProp>();
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View>
@@ -34,7 +42,10 @@ export default function HomeScreen() {
               <Text style={styles.locationText}>São Paulo, SP</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.avatar}>
+          <TouchableOpacity 
+            style={styles.avatar}
+            onPress={() => navigation.navigate('Profile')}
+          >
             <Text style={styles.avatarText}>JL</Text>
           </TouchableOpacity>
         </View>
@@ -104,7 +115,8 @@ export default function HomeScreen() {
           {/* Product cards aqui */}
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -129,6 +141,8 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#1e3a8a',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 100,
