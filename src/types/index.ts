@@ -111,7 +111,7 @@ export enum ViewState {
   DASHBOARD_SALES = 'DASHBOARD_SALES'
 }
 
-export interface AIReponse {
+export interface AIResponse {
   suggestedPartType: string;
   reasoning: string;
   keywords: string[];
