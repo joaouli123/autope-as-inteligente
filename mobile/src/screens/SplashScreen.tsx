@@ -1,20 +1,20 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Car } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 
-type SplashScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function SplashScreen() {
-  const navigation = useNavigation<SplashScreenNavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
 
   return (
     <View style={styles.container}>
       {/* Logo/Icon */}
       <View style={styles.iconContainer}>
-        <Car color="#1e3a8a" size={64} strokeWidth={2} />
+        <Ionicons name="car" size={64} color="#1e3a8a" />
       </View>
 
       {/* Title */}
