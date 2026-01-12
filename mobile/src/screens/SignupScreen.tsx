@@ -23,6 +23,12 @@ import { fetchAddressByCEP } from '../services/cepService';
 import { getBrands, getModels, type VehicleType, type FipeBrand, type FipeModel } from '../services/fipeService';
 import ProgressBar from '../components/ProgressBar';
 
+// Vehicle dropdown constants
+const ENGINE_OPTIONS = ['1.0', '1.3', '1.4', '1.5', '1.6', '1.8', '2.0', '2.2', '2.4', '2.5', '3.0'];
+const VALVE_OPTIONS = ['8v', '12v', '16v', '24v'];
+const FUEL_OPTIONS = ['Flex', 'Gasolina', 'Diesel', 'Álcool', 'Elétrico', 'Híbrido'];
+const TRANSMISSION_OPTIONS = ['Manual', 'Automático', 'CVT', 'Automatizado'];
+
 type SignupScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Signup'>;
 
 export default function SignupScreen() {
@@ -478,7 +484,7 @@ export default function SignupScreen() {
                   Alert.alert(
                     'Motor',
                     'Selecione o motor',
-                    ['1.0', '1.3', '1.4', '1.5', '1.6', '1.8', '2.0', '2.2', '2.4', '2.5', '3.0'].map(
+                    ENGINE_OPTIONS.map(
                       (e) => ({
                         text: e,
                         onPress: () => setEngine(e),
@@ -499,7 +505,7 @@ export default function SignupScreen() {
                   Alert.alert(
                     'Válvulas',
                     'Selecione as válvulas',
-                    ['8v', '12v', '16v', '24v'].map((v) => ({
+                    VALVE_OPTIONS.map((v) => ({
                       text: v,
                       onPress: () => setValves(v),
                     }))
@@ -519,7 +525,7 @@ export default function SignupScreen() {
               Alert.alert(
                 'Combustível',
                 'Selecione o combustível',
-                ['Flex', 'Gasolina', 'Diesel', 'Álcool', 'Elétrico', 'Híbrido'].map((f) => ({
+                FUEL_OPTIONS.map((f) => ({
                   text: f,
                   onPress: () => setFuel(f),
                 }))
@@ -537,7 +543,7 @@ export default function SignupScreen() {
               Alert.alert(
                 'Câmbio',
                 'Selecione o câmbio',
-                ['Manual', 'Automático', 'CVT', 'Automatizado'].map((t) => ({
+                TRANSMISSION_OPTIONS.map((t) => ({
                   text: t,
                   onPress: () => setTransmission(t),
                 }))
