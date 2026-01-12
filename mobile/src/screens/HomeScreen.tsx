@@ -123,14 +123,14 @@ export default function HomeScreen() {
 }
 
 interface CategoryButtonProps {
-  icon: string;
+  icon: 'disc' | 'water' | 'pulse' | 'flash';
   label: string;
 }
 
 function CategoryButton({ icon, label }: CategoryButtonProps) {
   return (
     <TouchableOpacity style={styles.categoryButton}>
-      <Ionicons name={icon as any} size={32} color="#1e3a8a" />
+      <Ionicons name={icon} size={32} color="#1e3a8a" />
       <Text style={styles.categoryLabel}>{label}</Text>
     </TouchableOpacity>
   );
