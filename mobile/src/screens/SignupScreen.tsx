@@ -158,8 +158,10 @@ export default function SignupScreen() {
       Alert.alert('Erro', 'Marca e Modelo são obrigatórios');
       return false;
     }
-    if (!year.trim() || year.length !== 4) {
-      Alert.alert('Erro', 'Ano inválido (ex: 2020)');
+    const yearNum = parseInt(year, 10);
+    const currentYear = new Date().getFullYear();
+    if (!year.trim() || year.length !== 4 || yearNum < 1900 || yearNum > currentYear + 1) {
+      Alert.alert('Erro', `Ano inválido (entre 1900 e ${currentYear + 1})`);
       return false;
     }
     if (!engine || !valves || !fuel || !transmission) {

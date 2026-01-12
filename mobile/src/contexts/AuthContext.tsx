@@ -90,7 +90,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateUser = async (userData: Partial<UserProfile>): Promise<boolean> => {
     if (user) {
-      setUser({ ...user, ...userData });
+      // Deep merge for nested objects
+      const updatedUser = {
+        ...user,
+        ...userData,
+        address: userData.address ? { ...user.address, ...userData.address } : user.address,
+        vehicle: userData.vehicle ? { ...user.vehicle, ...userData.vehicle } : user.vehicle,
+      };
+      setUser(updatedUser);
       return true;
     }
     return false;

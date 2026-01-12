@@ -103,7 +103,7 @@ export default function ProfileScreen() {
                 <Text style={styles.sectionTitle}>📋 Dados Pessoais</Text>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() => navigation.navigate('EditProfile' as any)}
+                  onPress={() => (navigation as any).navigate('EditProfile')}
                 >
                   <Edit2 color="#1e3a8a" size={20} />
                   <Text style={styles.editButtonText}>Editar</Text>
@@ -160,7 +160,7 @@ export default function ProfileScreen() {
                 <Text style={styles.sectionTitle}>🚗 Seu Veículo</Text>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() => navigation.navigate('EditVehicle' as any)}
+                  onPress={() => (navigation as any).navigate('EditVehicle')}
                 >
                   <Edit2 color="#1e3a8a" size={20} />
                   <Text style={styles.editButtonText}>Editar</Text>
