@@ -1,12 +1,18 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ViewState, UserProfile, CartItem, Product, FilterCriteria, Order, OrderStatus, PaymentMethodType, AddressData, UserRole } from './types';
 import { POPULAR_VEHICLES, STORES as MOCK_STORES } from './services/mockData';
-import { dataService } from './services/dataService'; // Import new service
+import { dataService } from './services/dataService';
 import { analyzeSearchQuery } from './services/geminiService';
 import { getBrands, getModels, FipeItem } from './services/fipeService';
-import NavBar from './components/NavBar';
-import ProductCard from './components/ProductCard';
-import StoreRating from './components/StoreRating'; // Import StoreRating
+import NavBar from './components/layout/NavBar';
+import ProductCard from './components/product/ProductCard';
+import StoreRating from './components/store/StoreRating';
+import SearchableDropdown from './components/common/SearchableDropdown';
+import { ENGINE_OPTIONS, VALVE_OPTIONS, FUEL_OPTIONS, TRANSMISSION_OPTIONS } from './constants/vehicles';
+import { EXTENDED_FILTERS, COMPONENT_DEPENDENT_FILTERS } from './constants/filters';
+import { formatCurrency, formatDate, getStatusLabel, getPaymentMethodInfo, normalizeText } from './utils/formatters';
+import { AIIcon, getCategoryIcon } from './utils/icons';
+import { fetchAddressApi } from './utils/validators';
 import { 
   Search, MapPin, ChevronRight, Sparkles, Filter, Trash2, CheckCircle, Car, 
   ArrowLeft, Loader2, ShoppingCart, Download, X, SlidersHorizontal, ChevronDown,
@@ -15,296 +21,6 @@ import {
   Edit2, Share2, Store as StoreIcon, ShieldCheck, Box, LayoutDashboard, Users, DollarSign,
   HelpCircle, Gift, Bell, Save, Wrench, Gauge, GitMerge
 } from 'lucide-react';
-
-// --- DATA LISTS FOR VEHICLE REGISTRATION ---
-const ENGINE_OPTIONS = ['1.0', '1.3', '1.4', '1.5', '1.6', '1.8', '2.0', '2.2', '2.4', '2.5', '3.0', '4.0+'];
-const VALVE_OPTIONS = ['8v', '12v', '16v', '20v', '24v'];
-const FUEL_OPTIONS = ['Flex', 'Gasolina', 'Etanol', 'Diesel', 'Híbrido', 'Elétrico'];
-const TRANSMISSION_OPTIONS = ['Manual', 'Automático', 'CVT', 'Automatizado (Robô)'];
-
-// --- ADVANCED FILTER CONFIGURATION ---
-
-// 1. Base Filters per Category (The first level of filtering)
-const EXTENDED_FILTERS: Record<string, { key: string; label: string; options: string[] }[]> = {
-  'Freios': [
-    { key: 'component', label: 'Componente', options: ['Pastilha', 'Disco', 'Tambor', 'Sapata', 'Cilindro Mestre', 'Fluido', 'Sensor ABS'] },
-    { key: 'position', label: 'Posição', options: ['Dianteira', 'Traseira', 'Ambos'] },
-  ],
-  'Suspensão': [
-    { key: 'component', label: 'Componente', options: ['Amortecedor', 'Mola', 'Bieleta', 'Bucha', 'Bandeja', 'Coxim', 'Batente'] },
-    { key: 'position', label: 'Posição', options: ['Dianteira', 'Traseira'] },
-  ],
-  'Motor': [
-    { key: 'component', label: 'Componente', options: ['Vela', 'Cabo de Vela', 'Correia', 'Tensor', 'Bomba D\'água', 'Junta', 'Filtro', 'Pistão', 'Anéis', 'Válvula', 'Radiador'] },
-  ],
-  'Transmissão': [ // New Category
-    { key: 'component', label: 'Componente', options: ['Embreagem', 'Homocinética', 'Semieixo', 'Óleo Câmbio', 'Sincronizado', 'Tulipa', 'Trizeta'] },
-  ],
-  'Elétrica': [
-    { key: 'component', label: 'Componente', options: ['Lâmpada', 'Bateria', 'Fusível', 'Alternador', 'Motor de Arranque', 'Sensor', 'Bobina', 'Chave de Seta'] },
-  ],
-  'Óleo': [
-    { key: 'viscosity', label: 'Viscosidade', options: ['0W20', '5W30', '5W40', '10W40', '15W40', '20W50'] },
-    { key: 'type', label: 'Base', options: ['Sintético', 'Semissintético', 'Mineral'] },
-    { key: 'api', label: 'Norma API', options: ['SL', 'SM', 'SN', 'SP'] }
-  ],
-  'Pneus': [
-    { key: 'rim', label: 'Aro', options: ['R13', 'R14', 'R15', 'R16', 'R17', 'R18', 'R19'] },
-    { key: 'width', label: 'Largura', options: ['175', '185', '195', '205', '215', '225', '235'] },
-    { key: 'profile', label: 'Perfil', options: ['40', '45', '50', '55', '60', '65', '70', '75', '80'] }
-  ],
-};
-
-// 2. Component Dependent Filters (The "Smart" Level)
-// These appear ONLY when a specific 'component' is selected in the category
-const COMPONENT_DEPENDENT_FILTERS: Record<string, { key: string; label: string; options: string[] }[]> = {
-  // --- MOTOR COMPONENTS ---
-  'Vela': [
-    { key: 'electrode_type', label: 'Tipo Eletrodo', options: ['Níquel', 'Platina', 'Iridium', 'Rutênio'] },
-    { key: 'thread_size', label: 'Rosca', options: ['10mm', '12mm', '14mm'] },
-    { key: 'hex_size', label: 'Sextavado', options: ['14mm', '16mm', '21mm'] },
-    { key: 'heat_range', label: 'Grau Térmico', options: ['Quente', 'Frio'] }
-  ],
-  'Correia': [
-    { key: 'profile', label: 'Perfil', options: ['Dentada', 'Poly-V', 'V'] },
-    { key: 'material', label: 'Material', options: ['HNBR', 'CR (Cloropreno)', 'EPDM'] },
-    // "teeth" number is usually too large for a dropdown, implied in search
-  ],
-  'Junta': [
-    { key: 'gasket_position', label: 'Aplicação', options: ['Cabeçote', 'Tampa de Válvula', 'Carter', 'Coletor Adm.', 'Coletor Esc.'] },
-    { key: 'material', label: 'Material', options: ['Fibra (Amianto)', 'Metal (MLS)', 'Cortiça', 'Borracha'] }
-  ],
-  'Bomba D\'água': [
-    { key: 'impeller_material', label: 'Material Rotor', options: ['Plástico', 'Metal'] },
-    { key: 'housing', label: 'Com Carcaça?', options: ['Sim', 'Não (Refil)'] }
-  ],
-  'Filtro': [
-    { key: 'filter_specific_type', label: 'Aplicação', options: ['Óleo', 'Ar Motor', 'Combustível', 'Cabine'] },
-    { key: 'structure', label: 'Estrutura', options: ['Blindado', 'Refil (Ecológico)'] }
-  ],
-
-  // --- ELÉTRICA COMPONENTS ---
-  'Lâmpada': [
-    { key: 'socket', label: 'Encaixe', options: ['H1', 'H3', 'H4', 'H7', 'H8', 'H11', 'H16', 'H27', 'HB3', 'HB4', 'T10 (Pingo)', '1 Polo', '2 Polos'] },
-    { key: 'technology', label: 'Tecnologia', options: ['Halógena', 'LED', 'Xênon', 'Super Branca'] },
-    { key: 'color_temp', label: 'Cor (Kelvin)', options: ['3000K (Amarela)', '4300K (Original)', '6000K (Branca)', '8000K (Azulada)'] },
-    { key: 'voltage', label: 'Voltagem', options: ['12V', '24V'] }
-  ],
-  'Bateria': [
-    { key: 'amperage', label: 'Amperagem', options: ['40Ah', '45Ah', '48Ah', '50Ah', '60Ah', '70Ah', '80Ah', '90Ah'] },
-    { key: 'pole', label: 'Polo Positivo', options: ['Direito', 'Esquerdo'] },
-    { key: 'technology', label: 'Tecnologia', options: ['Convencional (SLI)', 'EFB (Start-Stop)', 'AGM (Start-Stop Premium)'] },
-    { key: 'size_std', label: 'Padrão Caixa', options: ['Caixa Alta', 'Caixa Baixa'] }
-  ],
-  'Fusível': [
-    { key: 'fuse_type', label: 'Tamanho', options: ['Lâmina Mini', 'Lâmina Padrão', 'Lâmina Maxi', 'Vidro', 'Cartucho'] },
-    { key: 'amperage', label: 'Amperagem', options: ['5A', '7.5A', '10A', '15A', '20A', '25A', '30A', '40A', '50A'] }
-  ],
-  'Alternador': [
-    { key: 'amperage_output', label: 'Amperagem', options: ['70A', '90A', '120A', '150A'] },
-    { key: 'pulley', label: 'Polia', options: ['Rígida', 'Roda Livre'] }
-  ],
-
-  // --- TRANSMISSÃO COMPONENTS ---
-  'Embreagem': [
-    { key: 'kit_content', label: 'Conteúdo', options: ['Completo (Platô+Disco+Atuador)', 'Básico (Platô+Disco)'] },
-    { key: 'actuation', label: 'Acionamento', options: ['Cabo', 'Hidráulico'] },
-    // Diameter and Splines usually in search or advanced, kept simple here
-  ],
-  'Homocinética': [
-    { key: 'joint_position', label: 'Posição', options: ['Roda (Fixa)', 'Câmbio (Deslizante)'] },
-    { key: 'abs_ring', label: 'Anel ABS', options: ['Com ABS', 'Sem ABS'] }
-  ],
-  'Óleo Câmbio': [
-    { key: 'transmission_type', label: 'Tipo Câmbio', options: ['Manual', 'Automático', 'CVT', 'Dupla Embreagem'] },
-    { key: 'viscosity', label: 'Viscosidade', options: ['75W80', '75W90', '80W90', 'ATF Dexron III', 'ATF Dexron VI', 'CVT Fluid'] }
-  ],
-
-  // --- FREIOS & SUSPENSÃO (Already largely covered by base, but adding specific refinements) ---
-  'Pastilha': [
-     { key: 'material', label: 'Material', options: ['Cerâmica', 'Semimetálica', 'Metálica', 'Orgânica'] },
-     { key: 'sensor', label: 'Sensor', options: ['Com Sensor', 'Sem Sensor'] }
-  ],
-  'Disco': [
-     { key: 'disc_type', label: 'Tipo', options: ['Ventilado', 'Sólido'] },
-     { key: 'carbon_content', label: 'Liga', options: ['Convencional', 'High Carbon'] }
-  ],
-  'Amortecedor': [
-      { key: 'type', label: 'Tecnologia', options: ['Gás (Pressurizado)', 'Óleo (Convencional)'] },
-      { key: 'fixation', label: 'Fixação', options: ['Pino/Pino', 'Olhal/Olhal', 'Pino/Olhal'] }
-  ]
-};
-
-
-// --- Utility: Currency Formatter ---
-export const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-};
-
-// --- Custom Icon Component for AI Chip ---
-const AIIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    {/* Central Chip */}
-    <rect x="5" y="5" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-    {/* Top Pins */}
-    <path d="M9 2V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M12 2V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M15 2V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    {/* Bottom Pins */}
-    <path d="M9 19V22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M12 19V22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M15 19V22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    {/* Left Pins */}
-    <path d="M2 9H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M2 12H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M2 15H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    {/* Right Pins */}
-    <path d="M19 9H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M19 12H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M19 15H22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    {/* AI Text */}
-    <text x="12" y="13" textAnchor="middle" dominantBaseline="middle" fill="currentColor" fontSize="7" fontWeight="bold" style={{ fontFamily: 'sans-serif' }}>AI</text>
-  </svg>
-);
-
-// --- Icon Mapping for Categories ---
-const getCategoryIcon = (category: string) => {
-  switch (category) {
-    case 'Freios': return <Disc size={20} strokeWidth={1.5} />;
-    case 'Motor': return <Settings size={20} strokeWidth={1.5} />;
-    case 'Transmissão': return <GitMerge size={20} strokeWidth={1.5} />; // Using GitMerge as abstraction for gearbox/transmission
-    case 'Óleo': return <Droplet size={20} strokeWidth={1.5} />;
-    case 'Suspensão': return <Activity size={20} strokeWidth={1.5} />;
-    case 'Pneus': return <CircleDashed size={20} strokeWidth={1.5} />;
-    case 'Elétrica': return <Zap size={20} strokeWidth={1.5} />;
-    case 'Acess.': return <Package size={20} strokeWidth={1.5} />;
-    case 'Limpeza': return <Sparkles size={20} strokeWidth={1.5} />;
-    default: return <Filter size={20} strokeWidth={1.5} />;
-  }
-};
-
-// --- Helper Functions ---
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
-};
-
-const getStatusLabel = (status: OrderStatus) => {
-  const map: Record<OrderStatus, string> = {
-    [OrderStatus.PENDING]: 'Processando',
-    [OrderStatus.CONFIRMED]: 'Confirmado',
-    [OrderStatus.DELIVERING]: 'Em Trânsito',
-    [OrderStatus.COMPLETED]: 'Entregue',
-    [OrderStatus.CANCELLED]: 'Cancelado'
-  };
-  return map[status] || status;
-};
-
-const getPaymentMethodInfo = (method: PaymentMethodType) => {
-  switch (method) {
-    case 'credit_card_machine': return { label: 'Cartão (Maquininha)', icon: CreditCard };
-    case 'cash': return { label: 'Dinheiro', icon: Banknote };
-    case 'pix': return { label: 'Pix', icon: CheckCircle }; // Icon handled specifically in render
-    default: return { label: '-', icon: CreditCard };
-  }
-};
-
-// --- Helper Component: Searchable Select ---
-interface SearchableSelectProps {
-  label: string;
-  placeholder: string;
-  options: FipeItem[];
-  value: string; 
-  onSelect: (item: FipeItem) => void;
-  isLoading?: boolean;
-  disabled?: boolean;
-  icon?: React.ReactNode;
-}
-
-const SearchableSelect: React.FC<SearchableSelectProps> = ({ 
-  label, placeholder, options, value, onSelect, isLoading, disabled, icon 
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const filteredOptions = useMemo(() => {
-    if (!search) return options;
-    return options.filter(opt => opt.nome.toLowerCase().includes(search.toLowerCase()));
-  }, [options, search]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative" ref={wrapperRef}>
-      <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">{label}</label>
-      <div 
-        className={`relative flex items-center bg-gray-50 border rounded-xl transition-all touch-manipulation ${
-          isOpen ? 'ring-2 ring-blue-900 border-blue-900 bg-white' : 'border-gray-200'
-        } ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-        onClick={() => !disabled && setIsOpen(true)}
-      >
-        {icon && <div className="pl-4 text-gray-400">{icon}</div>}
-        
-        <input 
-          type="text"
-          className={`w-full bg-transparent py-3.5 pl-3 pr-10 text-gray-900 focus:outline-none ${disabled ? 'cursor-not-allowed' : ''}`}
-          placeholder={placeholder}
-          value={isOpen ? search : value} 
-          onChange={(e) => setSearch(e.target.value)}
-          onFocus={() => {
-            setIsOpen(true);
-            setSearch(''); 
-          }}
-          disabled={disabled}
-        />
-        
-        <div className="absolute right-4 text-gray-400 pointer-events-none">
-          {isLoading ? <Loader2 className="animate-spin" size={18} /> : <ChevronDown size={18} />}
-        </div>
-      </div>
-
-      {isOpen && !disabled && (
-        <div className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-60 overflow-y-auto no-scrollbar animate-[fadeIn_0.1s_ease-out]">
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((opt) => (
-              <button
-                key={opt.codigo}
-                type="button"
-                className="w-full text-left px-4 py-3 hover:bg-blue-50 text-gray-700 text-sm border-b border-gray-50 last:border-0 transition-colors active:bg-blue-100"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelect(opt);
-                  setIsOpen(false);
-                  setSearch('');
-                }}
-              >
-                {opt.nome}
-              </button>
-            ))
-          ) : (
-            <div className="p-4 text-center text-gray-400 text-sm">
-              Nenhum resultado encontrado.
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const App: React.FC = () => {
   // --- State ---
@@ -470,16 +186,6 @@ const App: React.FC = () => {
   };
 
   // --- Commerce Logic ---
-  const fetchAddressApi = async (cepValue: string) => {
-    const cleanCep = cepValue.replace(/\D/g, '');
-    if (cleanCep.length !== 8) return null;
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-      const data = await response.json();
-      if (!data.erro) return data;
-      return null;
-    } catch (error) { return null; }
-  };
   const fetchAddressByCep = async (cepValue: string) => {
     setIsLoadingAddress(true);
     const data = await fetchAddressApi(cepValue);
@@ -500,11 +206,6 @@ const App: React.FC = () => {
     setCart(prev => prev.map(item => item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item));
   };
   const cartTotal = useMemo(() => cart.reduce((acc, item) => acc + (item.price * item.quantity), 0), [cart]);
-
-  // Helper to normalize strings for robust matching (removes accents and lowercases)
-  const normalizeText = (text: string) => {
-    return text.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  };
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) {
@@ -1006,8 +707,8 @@ const App: React.FC = () => {
              </div>
              
              {/* Make/Model/Year */}
-             <SearchableSelect label="Marca" placeholder="Selecione..." options={brands} value={selectedBrand?.nome || ''} onSelect={setSelectedBrand} isLoading={loadingBrands} />
-             <SearchableSelect label="Modelo" placeholder="Selecione..." options={models} value={selectedModel?.nome || ''} onSelect={setSelectedModel} isLoading={loadingModels} disabled={!selectedBrand} />
+             <SearchableDropdown label="Marca" placeholder="Selecione..." options={brands} value={selectedBrand?.nome || ''} onSelect={setSelectedBrand} isLoading={loadingBrands} />
+             <SearchableDropdown label="Modelo" placeholder="Selecione..." options={models} value={selectedModel?.nome || ''} onSelect={setSelectedModel} isLoading={loadingModels} disabled={!selectedBrand} />
              <input type="number" placeholder="Ano (Ex: 2020)" className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 mt-1" value={vehicleYear} onChange={e => setVehicleYear(e.target.value)} />
              
              {/* Detailed Specs: Engine, Valves, Fuel */}
@@ -1354,8 +1055,8 @@ const App: React.FC = () => {
                  ))}
                </div>
                
-               <SearchableSelect label="Marca" placeholder="Selecione..." options={brands} value={selectedBrand?.nome || ''} onSelect={setSelectedBrand} isLoading={loadingBrands} />
-               <SearchableSelect label="Modelo" placeholder="Selecione..." options={models} value={selectedModel?.nome || ''} onSelect={setSelectedModel} isLoading={loadingModels} disabled={!selectedBrand} />
+               <SearchableDropdown label="Marca" placeholder="Selecione..." options={brands} value={selectedBrand?.nome || ''} onSelect={setSelectedBrand} isLoading={loadingBrands} />
+               <SearchableDropdown label="Modelo" placeholder="Selecione..." options={models} value={selectedModel?.nome || ''} onSelect={setSelectedModel} isLoading={loadingModels} disabled={!selectedBrand} />
                <input type="number" placeholder="Ano Ex: 2020" className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 mt-1" value={vehicleYear} onChange={e => setVehicleYear(e.target.value)} />
 
                {/* Engine Specs */}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Home, Search, ShoppingCart, ClipboardList } from 'lucide-react';
-import { ViewState } from '../types';
+import { ViewState } from '../../types';
 
 interface NavBarProps {
   currentView: ViewState;

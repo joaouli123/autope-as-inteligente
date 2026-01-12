@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { AIReponse, Vehicle } from "../types";
+import { AIResponse, Vehicle } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -9,7 +9,7 @@ const MODEL_NAME = "gemini-3-flash-preview";
 export const analyzeSearchQuery = async (
   userQuery: string,
   userVehicle: Vehicle | null
-): Promise<AIReponse> => {
+): Promise<AIResponse> => {
   try {
     const vehicleContext = userVehicle
       ? `O veículo do usuário é um ${userVehicle.make} ${userVehicle.model} ano ${userVehicle.year}.`
@@ -51,7 +51,7 @@ export const analyzeSearchQuery = async (
     const text = response.text;
     if (!text) throw new Error("Sem resposta da IA");
 
-    return JSON.parse(text) as AIReponse;
+    return JSON.parse(text) as AIResponse;
 
   } catch (error) {
     console.error("Gemini Search Error:", error);
