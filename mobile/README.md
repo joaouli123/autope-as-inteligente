@@ -1,6 +1,12 @@
 # 📱 AutoPeças IA - Mobile App (Expo)
 
-Aplicativo mobile para iOS e Android construído com React Native + Expo.
+Aplicativo mobile para iOS e Android construído com React Native + Expo SDK 54.
+
+## 🎯 Versões
+
+- ✅ **Expo SDK:** 54.0.0
+- ✅ **React Native:** 0.76.6
+- ✅ **React:** 18.3.1 (compatível com RN)
 
 ## 🚀 Início Rápido
 
@@ -8,13 +14,19 @@ Aplicativo mobile para iOS e Android construído com React Native + Expo.
 
 - Node.js 18+ instalado
 - npm ou yarn
-- Expo Go app instalado no seu celular ([iOS](https://apps.apple.com/app/expo-go/id982107779) | [Android](https://play.google.com/store/apps/details?id=host.exp.exponent))
+- Expo Go app instalado no celular ([iOS](https://apps.apple.com/app/expo-go/id982107779) | [Android](https://play.google.com/store/apps/details?id=host.exp.exponent))
 
 ### 1. Instalação
 
 ```bash
 cd mobile
 npm install
+```
+
+**⚠️ IMPORTANTE:** Se der erro de peer dependencies:
+
+```bash
+npm install --legacy-peer-deps
 ```
 
 ### 2. Configurar Variáveis de Ambiente
@@ -52,12 +64,80 @@ npm run ios      # iOS (apenas macOS)
 
 ---
 
+## 🐛 Troubleshooting
+
+### ❌ Erro: "TurboModuleRegistry...PlatformConstants"
+
+**Solução:**
+```bash
+cd mobile
+rm -rf node_modules
+npm install
+npm start -- --clear
+```
+
+### ❌ Erro: "peer dependencies React 19"
+
+**Causa:** React Native 0.76 não suporta React 19 ainda.
+
+**Solução:** Este PR já corrige para React 18.3.1
+
+### ❌ App não carrega no Expo Go
+
+**Verificar:**
+1. Mesmo WiFi no PC e celular?
+2. Firewall bloqueando porta 8081?
+3. Tentar: `npm start -- --tunnel`
+
+### ❌ "Supabase não conectado"
+
+1. Verificar se `.env` existe em `mobile/`
+2. Confirmar que as chaves estão corretas
+3. Testar URL no navegador: `https://seu-projeto.supabase.co`
+
+---
+
+## 📦 Dependências Principais
+
+```json
+{
+  "expo": "~54.0.0",                    // Framework principal
+  "react": "18.3.1",                     // Compatível com RN 0.76
+  "react-native": "0.76.6",              // Engine nativo
+  "@supabase/supabase-js": "^2.45.0",   // Cliente Supabase
+  "react-native-url-polyfill": "^2.0.0" // Polyfill para fetch
+}
+```
+
+---
+
+## 🔧 Scripts Úteis
+
+```bash
+# Limpar cache
+npm start -- --clear
+
+# Modo tunnel (para redes complexas)
+npm start -- --tunnel
+
+# Ver logs detalhados
+npm start -- --verbose
+
+# Rebuild completo
+rm -rf node_modules .expo
+npm install
+npm start
+```
+
+---
+
 ## 📂 Estrutura do Projeto
 
 ```
 mobile/
 ├── App.tsx                 # Componente raiz
 ├── app.json               # Configuração do Expo
+├── babel.config.js        # Configuração do Babel (obrigatório)
 ├── package.json           # Dependências
 ├── services/
 │   └── supabaseClient.ts  # Cliente Supabase configurado
@@ -70,34 +150,14 @@ mobile/
 
 ---
 
-## 🔧 Próximos Passos
+## 📱 Próximos Passos
 
-### Implementar Telas
-- [ ] Tela de Login/Signup
-- [ ] Home (listagem de produtos)
-- [ ] Busca inteligente
-- [ ] Detalhes do produto
-- [ ] Carrinho
-- [ ] Perfil do usuário
-
-### Integração Backend
-- [ ] Autenticação com Supabase
-- [ ] CRUD de produtos
-- [ ] Sistema de busca
-- [ ] Integração com IA (via backend seguro)
-
-### Navegação
-Recomendado instalar:
-```bash
-npm install @react-navigation/native @react-navigation/native-stack
-npx expo install react-native-screens react-native-safe-area-context
-```
-
-### UI Components
-Opções recomendadas:
-- [React Native Paper](https://callstack.github.io/react-native-paper/)
-- [NativeBase](https://nativebase.io/)
-- [Tamagui](https://tamagui.dev/)
+- [ ] Implementar tela de Login
+- [ ] Implementar tela Home com produtos
+- [ ] Adicionar navegação (React Navigation ou Expo Router)
+- [ ] Integrar busca inteligente
+- [ ] Implementar carrinho de compras
+- [ ] Configurar EAS Build para gerar APK/IPA
 
 ---
 
@@ -145,18 +205,9 @@ npm run ios --configuration Release
 
 ---
 
-## 🐛 Troubleshooting
+## 🆘 Suporte
 
-### Erro: "Supabase environment variables missing"
-- Verifique se o arquivo `.env` existe em `mobile/`
-- Confirme que as variáveis começam com `EXPO_PUBLIC_`
-
-### App não carrega no Expo Go
-- Certifique-se de estar na mesma rede WiFi
-- Tente reiniciar com `npm start --clear`
-
-### Erro de polyfill
-- Certifique-se de que `react-native-get-random-values` é importado no topo do `App.tsx`
+Se continuar com problemas, abra uma issue no repositório ou contate o time de desenvolvimento.
 
 ---
 
@@ -166,15 +217,6 @@ npm run ios --configuration Release
 - [React Native](https://reactnative.dev/)
 - [Supabase Client](https://supabase.com/docs/reference/javascript/installing)
 - [EAS Build](https://docs.expo.dev/build/introduction/)
-
----
-
-## 🤝 Contribuindo
-
-1. Crie uma branch: `git checkout -b feature/nova-feature`
-2. Commit suas mudanças: `git commit -m 'Add nova feature'`
-3. Push para a branch: `git push origin feature/nova-feature`
-4. Abra um Pull Request
 
 ---
 
