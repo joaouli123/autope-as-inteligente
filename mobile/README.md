@@ -5,8 +5,8 @@ Aplicativo mobile para iOS e Android construído com React Native + Expo SDK 54.
 ## 🎯 Versões
 
 - ✅ **Expo SDK:** 54.0.0
-- ✅ **React Native:** 0.76.6
-- ✅ **React:** 18.3.1 (compatível com RN)
+- ✅ **React Native:** 0.81.4
+- ✅ **React:** 19.1.0
 
 ## 🚀 Início Rápido
 
@@ -23,11 +23,7 @@ cd mobile
 npm install
 ```
 
-**⚠️ IMPORTANTE:** Se der erro de peer dependencies:
-
-```bash
-npm install --legacy-peer-deps
-```
+**⚠️ IMPORTANTE:** Este projeto usa `legacy-peer-deps` devido ao React 19. Já está configurado no `.npmrc`.
 
 ### 2. Configurar Variáveis de Ambiente
 
@@ -64,23 +60,110 @@ npm run ios      # iOS (apenas macOS)
 
 ---
 
-## 🐛 Troubleshooting
+## 📂 Estrutura do Projeto
 
-### ❌ Erro: "TurboModuleRegistry...PlatformConstants"
-
-**Solução:**
-```bash
-cd mobile
-rm -rf node_modules
-npm install
-npm start -- --clear
+```
+mobile/
+├── App.tsx                    # Componente raiz com navegação
+├── index.js                   # Entry point
+├── app.json                   # Configuração do Expo
+├── babel.config.js            # Configuração do Babel
+├── package.json               # Dependências
+├── .npmrc                     # Config npm (legacy-peer-deps)
+├── services/
+│   └── supabaseClient.ts      # Cliente Supabase
+└── src/
+    ├── navigation/
+    │   └── MainTabs.tsx       # Bottom tabs navigation
+    └── screens/
+        ├── SplashScreen.tsx   # Tela inicial
+        ├── LoginScreen.tsx    # Login
+        ├── SignupScreen.tsx   # Cadastro
+        ├── HomeScreen.tsx     # Tela principal
+        ├── SearchScreen.tsx   # Busca de peças
+        ├── CartScreen.tsx     # Carrinho
+        └── OrdersScreen.tsx   # Pedidos
 ```
 
-### ❌ Erro: "peer dependencies React 19"
+---
 
-**Causa:** React Native 0.76 não suporta React 19 ainda.
+## 📦 Dependências Principais
 
-**Solução:** Este PR já corrige para React 18.3.1
+```json
+{
+  "expo": "~54.0.0",
+  "react": "19.1.0",
+  "react-native": "0.81.4",
+  "@react-navigation/native": "^7.1.17",
+  "@react-navigation/native-stack": "^7.4.8",
+  "@react-navigation/bottom-tabs": "^7.4.7",
+  "react-native-screens": "~4.16.0",
+  "react-native-safe-area-context": "~5.6.0",
+  "lucide-react-native": "^0.460.0",
+  "@supabase/supabase-js": "^2.47.10",
+  "react-native-url-polyfill": "^2.0.0"
+}
+```
+
+---
+
+## 🎨 Telas Implementadas
+
+### ✅ SplashScreen
+- Tela inicial com logo
+- Botões para Login/Cadastro
+- Background azul (#1e3a8a)
+
+### ✅ LoginScreen
+- Formulário de login
+- Navegação para tela principal
+
+### ✅ SignupScreen
+- Formulário de cadastro completo
+- Campos: nome, email, telefone, senha
+
+### ✅ HomeScreen (Tela Principal)
+- Header com logo e localização
+- Barra de busca
+- Card do veículo selecionado
+- Card de diagnóstico IA
+- Grid de categorias (Freios, Óleo, Suspensão, Elétrica)
+- Seção de produtos populares
+
+### ✅ Bottom Tabs
+- Início (Home)
+- Buscar (Search)
+- Carrinho (Cart)
+- Pedidos (Orders)
+
+---
+
+## 🔧 Scripts Úteis
+
+```bash
+# Limpar cache
+npm start -- --clear
+
+# Modo tunnel (para redes complexas)
+npm start -- --tunnel
+
+# Verificar TypeScript
+npx tsc --noEmit
+
+# Exportar bundle (validação)
+npx expo export
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### ❌ Erro: "peer dependencies"
+
+**Solução:** Já configurado no `.npmrc`, mas se precisar:
+```bash
+npm install --legacy-peer-deps
+```
 
 ### ❌ App não carrega no Expo Go
 
@@ -97,67 +180,13 @@ npm start -- --clear
 
 ---
 
-## 📦 Dependências Principais
+## 📱 Visual
 
-```json
-{
-  "expo": "~54.0.0",                    // Framework principal
-  "react": "18.3.1",                     // Compatível com RN 0.76
-  "react-native": "0.76.6",              // Engine nativo
-  "@supabase/supabase-js": "^2.45.0",   // Cliente Supabase
-  "react-native-url-polyfill": "^2.0.0" // Polyfill para fetch
-}
-```
-
----
-
-## 🔧 Scripts Úteis
-
-```bash
-# Limpar cache
-npm start -- --clear
-
-# Modo tunnel (para redes complexas)
-npm start -- --tunnel
-
-# Ver logs detalhados
-npm start -- --verbose
-
-# Rebuild completo
-rm -rf node_modules .expo
-npm install
-npm start
-```
-
----
-
-## 📂 Estrutura do Projeto
-
-```
-mobile/
-├── App.tsx                 # Componente raiz
-├── app.json               # Configuração do Expo
-├── babel.config.js        # Configuração do Babel (obrigatório)
-├── package.json           # Dependências
-├── services/
-│   └── supabaseClient.ts  # Cliente Supabase configurado
-└── src/                   # Código fonte (criar conforme necessário)
-    ├── screens/          # Telas do app
-    ├── components/       # Componentes reutilizáveis
-    ├── types/           # TypeScript types
-    └── constants/       # Constantes e configs
-```
-
----
-
-## 📱 Próximos Passos
-
-- [ ] Implementar tela de Login
-- [ ] Implementar tela Home com produtos
-- [ ] Adicionar navegação (React Navigation ou Expo Router)
-- [ ] Integrar busca inteligente
-- [ ] Implementar carrinho de compras
-- [ ] Configurar EAS Build para gerar APK/IPA
+O app mantém 100% do visual da versão web:
+- **Cores principais:** #1e3a8a (azul), #3b82f6 (azul claro)
+- **Fontes:** System default (San Francisco iOS / Roboto Android)
+- **Ícones:** lucide-react-native
+- **Espaçamento:** Consistente com o web (Tailwind equivalente)
 
 ---
 
@@ -167,7 +196,7 @@ mobile/
 
 - ✅ Use apenas a chave `ANON` no app mobile
 - ❌ **NUNCA** coloque a chave `service_role` no código
-- 🛡️ Chamadas para Gemini AI devem ser feitas via backend seguro (Supabase Edge Functions ou Cloud Functions)
+- 🛡️ Chamadas para Gemini AI devem ser feitas via backend seguro
 - 🔒 Nunca commite o arquivo `.env` no Git
 
 ---
@@ -193,30 +222,14 @@ eas build --platform android
 eas build --platform ios
 ```
 
-### Build Local (alternativa)
-
-```bash
-# Android
-npm run android --variant=release
-
-# iOS (requer macOS + Xcode)
-npm run ios --configuration Release
-```
-
----
-
-## 🆘 Suporte
-
-Se continuar com problemas, abra uma issue no repositório ou contate o time de desenvolvimento.
-
 ---
 
 ## 📚 Documentação
 
 - [Expo Docs](https://docs.expo.dev/)
 - [React Native](https://reactnative.dev/)
+- [React Navigation](https://reactnavigation.org/)
 - [Supabase Client](https://supabase.com/docs/reference/javascript/installing)
-- [EAS Build](https://docs.expo.dev/build/introduction/)
 
 ---
 
