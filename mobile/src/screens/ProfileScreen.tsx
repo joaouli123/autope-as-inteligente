@@ -14,7 +14,7 @@ import { Car, LogOut, Trash2, Edit } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
