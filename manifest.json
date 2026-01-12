@@ -1,0 +1,43 @@
+{
+  "id": "br.com.autopecas.ai",
+  "name": "AutoPeças Inteligente",
+  "short_name": "AutoPeças",
+  "start_url": ".",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait",
+  "categories": ["shopping", "productivity", "utilities"],
+  "description": "Encontre peças automotivas compatíveis com seu veículo usando Inteligência Artificial.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3209/3209071.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3209/3209071.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=350&q=80",
+      "sizes": "1080x1920",
+      "type": "image/jpg",
+      "form_factor": "narrow",
+      "label": "Busca Inteligente de Peças"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=350&q=80",
+      "sizes": "1080x1920",
+      "type": "image/jpg",
+      "form_factor": "narrow",
+      "label": "Compatibilidade de Veículo"
+    }
+  ]
+}
