@@ -33,6 +33,7 @@ interface AuthContextData {
   signup: (userData: UserProfile) => Promise<boolean>;
   logout: () => void;
   updateProfile: (userData: UserProfile) => void;
+  updateUser: (userData: Partial<UserProfile>) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -87,8 +88,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(userData);
   };
 
+  const updateUser = async (userData: Partial<UserProfile>): Promise<boolean> => {
+    if (user) {
+      // Deep merge for nested objects
+      const updatedUser = {
+        ...user,
+        ...userData,
+        address: userData.address ? { ...user.address, ...userData.address } : user.address,
+        vehicle: userData.vehicle ? { ...user.vehicle, ...userData.vehicle } : user.vehicle,
+      };
+      setUser(updatedUser);
+      return true;
+    }
+    return false;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, updateProfile, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

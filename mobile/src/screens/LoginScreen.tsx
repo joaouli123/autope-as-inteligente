@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 32,
+    paddingTop: 40,
     justifyContent: 'center',
   },
   header: {

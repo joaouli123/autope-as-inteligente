@@ -76,3 +76,18 @@ export const validateCPForCNPJ = (value: string): boolean => {
   if (cleaned.length === 14) return validateCNPJ(value);
   return false;
 };
+
+export const validateYear = (year: string): { valid: boolean; message: string } => {
+  const yearNum = parseInt(year, 10);
+  const currentYear = new Date().getFullYear();
+  
+  if (!year.trim() || year.length !== 4) {
+    return { valid: false, message: 'Ano deve ter 4 dígitos' };
+  }
+  
+  if (isNaN(yearNum) || yearNum < 1900 || yearNum > currentYear + 1) {
+    return { valid: false, message: `Ano inválido (entre 1900 e ${currentYear + 1})` };
+  }
+  
+  return { valid: true, message: '' };
+};
