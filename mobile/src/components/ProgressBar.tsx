@@ -37,6 +37,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e3a8a',
   },
   barInactive: {
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#d1d5db',
   },
 });

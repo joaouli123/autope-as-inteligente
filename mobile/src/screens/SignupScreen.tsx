@@ -564,45 +564,44 @@ export default function SignupScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => (step > 1 ? setStep(step - 1) : navigation.goBack())}>
+            <ArrowLeft color="#1f2937" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Criar Conta</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => (step > 1 ? setStep(step - 1) : navigation.goBack())}>
-              <ArrowLeft color="#ffffff" size={24} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Criar Conta</Text>
-            <View style={{ width: 24 }} />
-          </View>
+          {step === 1 && renderStep1()}
+          {step === 2 && renderStep2()}
+          {step === 3 && renderStep3()}
 
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {step === 1 && renderStep1()}
-            {step === 2 && renderStep2()}
-            {step === 3 && renderStep3()}
-
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginText}>
-                Já tem conta? <Text style={styles.loginLink}>Entrar</Text>
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginText}>
+              Já tem conta? <Text style={styles.loginLink}>Entrar</Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffffff',
   },
   header: {
     flexDirection: 'row',
@@ -614,7 +613,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#1f2937',
   },
   scrollView: {
     flex: 1,
@@ -629,11 +628,13 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#1f2937',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 12,
@@ -647,7 +648,9 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
     borderRadius: 12,
   },
   passwordInput: {
@@ -689,12 +692,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
     paddingVertical: 12,
     borderRadius: 12,
   },
   tabActive: {
     backgroundColor: '#1e3a8a',
+    borderColor: '#1e3a8a',
   },
   tabText: {
     fontSize: 14,
@@ -705,7 +711,9 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   picker: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 12,
@@ -721,6 +729,8 @@ const styles = StyleSheet.create({
   pickerOptions: {
     maxHeight: 200,
     backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
     borderRadius: 12,
     marginTop: 4,
   },
@@ -735,7 +745,7 @@ const styles = StyleSheet.create({
     color: '#1f2937',
   },
   button: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e3a8a',
     paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
@@ -745,18 +755,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
   },
   buttonText: {
-    color: '#1e3a8a',
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: '600',
   },
   loginText: {
-    color: '#d1d5db',
+    color: '#6b7280',
     fontSize: 14,
     textAlign: 'center',
     marginTop: 24,
   },
   loginLink: {
-    color: '#ffffff',
+    color: '#1e3a8a',
     fontWeight: '600',
   },
 });
