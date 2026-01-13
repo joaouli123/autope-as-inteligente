@@ -11,19 +11,20 @@ import {
 } from 'react-native';
 import { X, ChevronDown, Filter, Sliders } from 'lucide-react-native';
 
-interface FilterOptions {
+interface FilterState {
   compatibilityGuaranteed: boolean;
-  categories: string[];
-  priceRange: { min: number; max: number };
+  category: string;
+  specifications: string[];
+  priceMin: number;
+  priceMax: number;
   sortBy: 'relevance' | 'price_asc' | 'price_desc' | 'newest';
-  specifications: { [key: string]: string[] };
 }
 
 interface AdvancedFilterModalProps {
   visible: boolean;
   onClose: () => void;
-  filters: FilterOptions;
-  onApply: (filters: FilterOptions) => void;
+  filters: FilterState;
+  onApply: (filters: FilterState) => void;
   userVehicle?: {
     brand: string;
     model: string;
@@ -32,14 +33,12 @@ interface AdvancedFilterModalProps {
 }
 
 const CATEGORIES = [
-  { id: 'Freios', name: 'Freios', specs: ['Dianteiro', 'Traseiro', 'Cerâmica', 'Metálica'] },
-  { id: 'Motor', name: 'Motor', specs: ['Filtro', 'Velas', 'Bobina', 'Sensor'] },
-  { id: 'Suspensão', name: 'Suspensão', specs: ['Amortecedor', 'Mola', 'Barra', 'Cubo'] },
-  { id: 'Elétrica', name: 'Elétrica', specs: ['12V', '24V', 'Bateria', 'Alternador'] },
-  { id: 'Transmissão', name: 'Transmissão', specs: ['Embreagem', 'Cabo', 'Óleo'] },
-  { id: 'Filtros', name: 'Filtros', specs: ['Óleo', 'Ar', 'Combustível', 'Cabine'] },
-  { id: 'Pneus', name: 'Pneus', specs: [] },
-  { id: 'Bateria', name: 'Bateria', specs: [] },
+  { id: 'Freios', name: 'Freios', specs: ['Dianteiro', 'Traseiro', 'Cerâmica', 'Metálica', 'Orgânica'] },
+  { id: 'Motor', name: 'Motor', specs: ['Filtro', 'Velas', 'Bobina', 'Sensor', 'Correia'] },
+  { id: 'Suspensão', name: 'Suspensão', specs: ['Amortecedor', 'Mola', 'Barra', 'Cubo', 'Bandeja'] },
+  { id: 'Elétrica', name: 'Elétrica', specs: ['12V', '24V', 'Bateria', 'Alternador', 'Motor de Partida'] },
+  { id: 'Transmissão', name: 'Transmissão', specs: ['Embreagem', 'Cabo', 'Óleo', 'Rolamento'] },
+  { id: 'Filtros', name: 'Filtros', specs: ['Óleo', 'Ar', 'Combustível', 'Cabine', 'Transmissão'] },
 ];
 
 const SORT_OPTIONS = [
@@ -56,16 +55,16 @@ export default function AdvancedFilterModal({
   onApply,
   userVehicle,
 }: AdvancedFilterModalProps) {
-  const [localFilters, setLocalFilters] = useState<FilterOptions>(filters);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [localFilters, setLocalFilters] = useState<FilterState>(filters);
 
   const handleClear = () => {
     setLocalFilters({
       compatibilityGuaranteed: false,
-      categories: [],
-      priceRange: { min: 0, max: 10000 },
+      category: '',
+      specifications: [],
+      priceMin: 0,
+      priceMax: 5000,
       sortBy: 'relevance',
-      specifications: {},
     });
   };
 
@@ -75,36 +74,21 @@ export default function AdvancedFilterModal({
   };
 
   const toggleCategory = (categoryId: string) => {
-    const categories = [...localFilters.categories];
-    const index = categories.indexOf(categoryId);
-    
-    if (index > -1) {
-      categories.splice(index, 1);
-    } else {
-      categories.push(categoryId);
-    }
-    
-    setLocalFilters({ ...localFilters, categories });
+    // Only one category can be selected at a time
+    setLocalFilters(prev => ({
+      ...prev,
+      category: prev.category === categoryId ? '' : categoryId,
+      specifications: [], // Clear specs when changing category
+    }));
   };
 
-  const toggleSpecification = (categoryId: string, spec: string) => {
-    const specifications = { ...localFilters.specifications };
-    
-    if (!specifications[categoryId]) {
-      specifications[categoryId] = [];
-    }
-    
-    const specs = [...specifications[categoryId]];
-    const index = specs.indexOf(spec);
-    
-    if (index > -1) {
-      specs.splice(index, 1);
-    } else {
-      specs.push(spec);
-    }
-    
-    specifications[categoryId] = specs;
-    setLocalFilters({ ...localFilters, specifications });
+  const toggleSpecification = (spec: string) => {
+    setLocalFilters(prev => ({
+      ...prev,
+      specifications: prev.specifications.includes(spec)
+        ? prev.specifications.filter(s => s !== spec)
+        : [...prev.specifications, spec],
+    }));
   };
 
   return (
@@ -171,14 +155,14 @@ export default function AdvancedFilterModal({
                   <TouchableOpacity
                     style={[
                       styles.chip,
-                      localFilters.categories.includes(category.id) && styles.chipActive,
+                      localFilters.category === category.id && styles.chipActive,
                     ]}
                     onPress={() => toggleCategory(category.id)}
                   >
                     <Text
                       style={[
                         styles.chipText,
-                        localFilters.categories.includes(category.id) && styles.chipTextActive,
+                        localFilters.category === category.id && styles.chipTextActive,
                       ]}
                     >
                       {category.name}
@@ -186,22 +170,22 @@ export default function AdvancedFilterModal({
                   </TouchableOpacity>
 
                   {/* Specifications for selected category */}
-                  {localFilters.categories.includes(category.id) && category.specs.length > 0 && (
+                  {localFilters.category === category.id && category.specs.length > 0 && (
                     <View style={styles.specsContainer}>
                       {category.specs.map((spec) => (
                         <TouchableOpacity
                           key={spec}
                           style={[
                             styles.specChip,
-                            localFilters.specifications[category.id]?.includes(spec) &&
+                            localFilters.specifications.includes(spec) &&
                               styles.specChipActive,
                           ]}
-                          onPress={() => toggleSpecification(category.id, spec)}
+                          onPress={() => toggleSpecification(spec)}
                         >
                           <Text
                             style={[
                               styles.specChipText,
-                              localFilters.specifications[category.id]?.includes(spec) &&
+                              localFilters.specifications.includes(spec) &&
                                 styles.specChipTextActive,
                             ]}
                           >
@@ -221,7 +205,7 @@ export default function AdvancedFilterModal({
             <View style={styles.priceHeader}>
               <Text style={styles.sectionTitle}>Faixa de Preço</Text>
               <Text style={styles.priceRange}>
-                R$ {localFilters.priceRange.min} - R$ {localFilters.priceRange.max}
+                R$ {localFilters.priceMin} - R$ {localFilters.priceMax}
               </Text>
             </View>
             <View style={styles.priceInputContainer}>
@@ -229,12 +213,12 @@ export default function AdvancedFilterModal({
                 <Text style={styles.priceInputLabel}>Mín</Text>
                 <TextInput
                   style={styles.priceInput}
-                  value={localFilters.priceRange.min.toString()}
+                  value={localFilters.priceMin.toString()}
                   onChangeText={(text) => {
                     const value = parseInt(text) || 0;
                     setLocalFilters({
                       ...localFilters,
-                      priceRange: { ...localFilters.priceRange, min: value },
+                      priceMin: value,
                     });
                   }}
                   keyboardType="numeric"
@@ -246,16 +230,16 @@ export default function AdvancedFilterModal({
                 <Text style={styles.priceInputLabel}>Máx</Text>
                 <TextInput
                   style={styles.priceInput}
-                  value={localFilters.priceRange.max.toString()}
+                  value={localFilters.priceMax.toString()}
                   onChangeText={(text) => {
-                    const value = parseInt(text) || 10000;
+                    const value = parseInt(text) || 5000;
                     setLocalFilters({
                       ...localFilters,
-                      priceRange: { ...localFilters.priceRange, max: value },
+                      priceMax: value,
                     });
                   }}
                   keyboardType="numeric"
-                  placeholder="10000"
+                  placeholder="5000"
                 />
               </View>
             </View>
@@ -271,7 +255,7 @@ export default function AdvancedFilterModal({
                   styles.sortOption,
                   localFilters.sortBy === option.value && styles.sortOptionActive,
                 ]}
-                onPress={() => setLocalFilters({ ...localFilters, sortBy: option.value as FilterOptions['sortBy'] })}
+                onPress={() => setLocalFilters({ ...localFilters, sortBy: option.value as FilterState['sortBy'] })}
               >
                 <View
                   style={[
