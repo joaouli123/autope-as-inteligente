@@ -651,7 +651,7 @@ const App: React.FC = () => {
         <button onClick={() => handleLogin('CONSUMER')} className="w-full bg-white text-blue-900 font-bold text-[16px] py-4 rounded-2xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3 hover:bg-blue-50">Entrar</button>
         <button onClick={() => { setSignupStep(1); setCurrentView(ViewState.SIGNUP); }} className="w-full bg-blue-800/50 backdrop-blur-sm text-white font-semibold text-[16px] py-4 rounded-2xl border border-blue-700 active:scale-[0.98] transition-all">Criar Conta</button>
         <div className="pt-8 text-center">
-          <button onClick={() => setCurrentView(ViewState.WEB_PORTAL_LOGIN)} className="text-xs text-blue-200/60 font-medium hover:text-white transition-colors border-b border-transparent hover:border-white/20 pb-0.5">Trabalhe Conosco: Acesso para Lojistas</button>
+          <a href="/lojista/login" className="text-xs text-blue-200/60 font-medium hover:text-white transition-colors border-b border-transparent hover:border-white/20 pb-0.5">Trabalhe Conosco: Acesso para Lojistas</a>
         </div>
       </div>
     </div>
