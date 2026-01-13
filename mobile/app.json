@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "autopecas",
+    "scheme": "autopecas-ia",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",

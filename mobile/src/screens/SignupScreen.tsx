@@ -21,6 +21,7 @@ import { validateEmail, validateCPForCNPJ, validateYear } from '../utils/validat
 import { maskCPForCNPJ, maskPhone, maskCEP } from '../utils/masks';
 import { fetchAddressByCEP } from '../services/cepService';
 import { getBrands, getModels, type VehicleType, type FipeBrand, type FipeModel } from '../services/fipeService';
+import { sendWelcomeEmail } from '../services/emailService';
 import ProgressBar from '../components/ProgressBar';
 
 // Vehicle dropdown constants
@@ -208,7 +209,17 @@ export default function SignupScreen() {
 
     const success = await signup(userData);
     if (success) {
-      navigation.navigate('Main', { screen: 'Home' });
+      // Enviar email de boas-vindas
+      try {
+        await sendWelcomeEmail(email, name);
+      } catch (error) {
+        console.error('Erro ao enviar email:', error);
+        // Não bloquear o cadastro por erro no email
+      }
+      
+      Alert.alert('Sucesso!', 'Conta criada! Verifique seu email.', [
+        { text: 'OK', onPress: () => navigation.navigate('Main', { screen: 'Home' }) },
+      ]);
     }
   };
 

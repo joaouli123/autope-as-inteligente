@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -14,6 +15,7 @@ import { Car, Eye, EyeOff } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { validateEmail } from '../utils/validators';
+import { sendPasswordResetEmail } from '../services/emailService';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -25,6 +27,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const handleLogin = async () => {
     if (!validateEmail(email)) {
@@ -45,6 +49,29 @@ export default function LoginScreen() {
       navigation.navigate('Main', { screen: 'Home' });
     } else {
       Alert.alert('Erro', 'E-mail ou senha inválidos');
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!validateEmail(resetEmail)) {
+      Alert.alert('Erro', 'Digite um e-mail válido');
+      return;
+    }
+
+    try {
+      // Gerar token (em produção, vem do backend)
+      const resetToken = Math.random().toString(36).substring(7);
+      
+      await sendPasswordResetEmail(resetEmail, 'Usuário', resetToken);
+      
+      setShowForgotModal(false);
+      setResetEmail('');
+      Alert.alert(
+        'Email Enviado!',
+        'Verifique sua caixa de entrada para redefinir sua senha.'
+      );
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível enviar o email. Tente novamente.');
     }
   };
 
@@ -90,7 +117,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowForgotModal(true)}>
               <Text style={styles.forgotPassword}>Esqueci minha senha</Text>
             </TouchableOpacity>
 
@@ -112,6 +139,51 @@ export default function LoginScreen() {
           </View>
         </View>
       </SafeAreaView>
+
+      {/* Modal Esqueci Senha */}
+      <Modal
+        visible={showForgotModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowForgotModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowForgotModal(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>Redefinir Senha</Text>
+            <Text style={styles.modalSubtitle}>
+              Digite seu email para receber o link de redefinição
+            </Text>
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="E-mail"
+              placeholderTextColor="#9ca3af"
+              value={resetEmail}
+              onChangeText={setResetEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={handleForgotPassword}
+            >
+              <Text style={styles.modalButtonText}>Enviar Link</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalCancel}
+              onPress={() => setShowForgotModal(false)}
+            >
+              <Text style={styles.modalCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -194,5 +266,58 @@ const styles = StyleSheet.create({
   signupLink: {
     color: '#ffffff',
     fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 24,
+  },
+  modalInput: {
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 12,
+    fontSize: 16,
+    color: '#1f2937',
+    marginBottom: 16,
+  },
+  modalButton: {
+    backgroundColor: '#1e3a8a',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalCancel: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    color: '#6b7280',
+    fontSize: 14,
   },
 });

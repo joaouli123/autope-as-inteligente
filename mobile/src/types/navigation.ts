@@ -9,6 +9,7 @@ export type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   EditVehicle: undefined;
+  PasswordReset: { token: string };
 };
 
 // Main Tab Navigator types
