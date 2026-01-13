@@ -9,11 +9,13 @@ export default function LojistaLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const isPublicRoute = location.pathname === '/lojista/login' || location.pathname === '/lojista/cadastro';
+
   useEffect(() => {
-    if (!loading && !isAuthenticated && location.pathname !== '/lojista/login') {
+    if (!loading && !isAuthenticated && !isPublicRoute) {
       navigate('/lojista/login');
     }
-  }, [isAuthenticated, loading, location.pathname, navigate]);
+  }, [isAuthenticated, loading, isPublicRoute, navigate]);
 
   if (loading) {
     return (
@@ -23,7 +25,7 @@ export default function LojistaLayout() {
     );
   }
 
-  if (location.pathname === '/lojista/login') {
+  if (isPublicRoute) {
     return <Outlet />;
   }
 
