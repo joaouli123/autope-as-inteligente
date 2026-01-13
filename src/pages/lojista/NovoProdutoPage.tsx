@@ -262,11 +262,6 @@ export default function NovoProdutoPage() {
         ? formData.oem_codes.split(',').map((s) => s.trim()).filter(Boolean)
         : null;
 
-      // Validate oem_codes format
-      if (oem_codes && !Array.isArray(oem_codes)) {
-        throw new Error('Códigos OEM devem ser um array de strings');
-      }
-
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
