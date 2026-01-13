@@ -14,6 +14,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Search, Filter, X } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 
+// Constants
+const STATUS_BAR_HEIGHT = 60;
+
 // Mock products (depois vem do Supabase)
 // TODO: Move mock data to a centralized mock data service for better maintainability
 const mockProducts = [
@@ -108,7 +111,7 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
+    <View style={styles.wrapper}>
       <SafeAreaView style={styles.container} edges={['bottom']}>
         {/* Header azul arredondado */}
         <View style={styles.header}>
@@ -188,13 +191,17 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#1e3a8a',
+  },
   container: {
     flex: 1,
   },
   header: {
     backgroundColor: '#1e3a8a',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: STATUS_BAR_HEIGHT,
     paddingBottom: 70,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
