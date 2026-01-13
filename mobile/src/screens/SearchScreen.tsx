@@ -15,6 +15,7 @@ import { Search, Filter, X } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 
 // Mock products (depois vem do Supabase)
+// TODO: Move mock data to a centralized mock data service for better maintainability
 const mockProducts = [
   {
     id: '1',

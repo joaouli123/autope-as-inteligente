@@ -21,6 +21,7 @@ type ProductScreenNavigationProp = NativeStackNavigationProp<RootStackParamList,
 type ProductScreenRouteProp = RouteProp<RootStackParamList, 'Product'>;
 
 // Mock product data
+// TODO: Move to centralized mock data service and fetch from Supabase in production
 const mockProduct = {
   id: '1',
   name: 'Pastilha de Freio Dianteira Cerâmica',

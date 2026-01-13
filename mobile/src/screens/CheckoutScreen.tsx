@@ -39,11 +39,12 @@ export default function CheckoutScreen() {
     
     // Send order confirmation emails
     // TODO: Replace hardcoded customer info with actual user data from AuthContext
+    // TODO: Add user feedback (toast notification) for email send status
     try {
       await sendOrderEmails({
         orderCode: order.id,
-        customerName: 'Cliente', // TODO: Get from user profile
-        customerEmail: 'cliente@example.com', // TODO: Get from user profile
+        customerName: 'Cliente', // TODO: Get from user profile (useAuth hook)
+        customerEmail: 'cliente@example.com', // TODO: Get from user profile (useAuth hook)
         storeEmail: 'loja@autopecascentral.com',
         storeName: 'Auto Peças Central',
         items: cartItems.map(item => ({

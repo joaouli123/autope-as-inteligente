@@ -27,7 +27,7 @@ interface OrderEmailData {
 
 const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
   if (!RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY is not configured. Skipping email send.');
+    console.warn('RESEND_API_KEY is not configured. Skipping email send. To configure: Add RESEND_API_KEY to your .env file or expo app.json extra config.');
     return { success: false, error: 'API key not configured' };
   }
 
