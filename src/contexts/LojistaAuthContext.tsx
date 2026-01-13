@@ -93,13 +93,21 @@ export function LojistaAuthProvider({ children }: { children: ReactNode }) {
       // 3. Se não encontrou o usuário, criar agora
       if (!userData) {
         console.log('Usuário não existe na tabela users, criando...');
+        
+        // Garantir que temos email válido
+        if (!data.user.email) {
+          console.error('Email do usuário não está disponível');
+          await supabase.auth.signOut();
+          return false;
+        }
+        
         const { error: createUserError } = await supabase
           .from('users')
           .insert({
             id: data.user.id,
-            email: data.user.email!,
+            email: data.user.email,
             role: 'store_owner',
-            name: data.user.user_metadata?.owner_name || data.user.email,
+            name: data.user.user_metadata?.owner_name || data.user.email || 'Lojista',
           });
 
         if (createUserError) {
