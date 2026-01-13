@@ -131,11 +131,20 @@ export default function PerfilPage() {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (reviewsError) throw reviewsError;
+      if (reviewsError) {
+        // Tratar erro 404 (tabela não existe)
+        if (reviewsError.code === 'PGRST116' || reviewsError.code === '42P01') {
+          console.warn('Tabela store_reviews não existe. Execute o SQL para criá-la.');
+          setReviews([]);
+          return;
+        }
+        throw reviewsError;
+      }
 
       setReviews(reviewsData || []);
     } catch (error) {
       console.error('Error fetching reviews:', error);
+      setReviews([]);  // Não travar a página, apenas mostrar lista vazia
     }
   };
 
@@ -323,11 +332,11 @@ export default function PerfilPage() {
         />
         <StatsCard
           title="Nota Média"
-          value={store.average_rating.toFixed(1)}
+          value={(store.average_rating ?? 0).toFixed(1)}
           icon={Star}
           iconBgColor="bg-yellow-100"
           iconColor="text-yellow-600"
-          subtitle={`${store.total_reviews} avaliações`}
+          subtitle={`${store.total_reviews ?? 0} avaliações`}
         />
       </div>
 
@@ -630,11 +639,11 @@ export default function PerfilPage() {
           {/* Average Rating */}
           <div className="text-center p-6 bg-gray-50 rounded-lg">
             <div className="text-6xl font-bold text-gray-900 mb-2">
-              {store.average_rating.toFixed(1)}
+              {(store.average_rating ?? 0).toFixed(1)}
             </div>
-            {renderStars(Math.round(store.average_rating), 32)}
+            {renderStars(Math.round(store.average_rating ?? 0), 32)}
             <p className="text-gray-600 mt-2">
-              {store.total_reviews} avaliações
+              {store.total_reviews ?? 0} avaliações
             </p>
           </div>
 
@@ -643,8 +652,8 @@ export default function PerfilPage() {
             {[5, 4, 3, 2, 1].map((stars, index) => {
               const count = ratingDistribution[index];
               const percentage =
-                store.total_reviews > 0
-                  ? (count / store.total_reviews) * 100
+                (store.total_reviews ?? 0) > 0
+                  ? (count / (store.total_reviews ?? 0)) * 100
                   : 0;
 
               return (
