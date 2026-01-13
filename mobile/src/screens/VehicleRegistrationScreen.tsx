@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, Car, Save, Search } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import { getBrands, getModels, getYears, type FipeItem, type FipeYear } from '../services/fipeService';
 import { getVehicleByPlate, decodeVIN } from '../services/brasilApiService';
 

@@ -257,10 +257,15 @@ export default function NovoProdutoPage() {
         v.trim()
       );
 
-      // Parse OEM codes
+      // Parse OEM codes - ensure it's an array or null
       const oem_codes = formData.oem_codes
         ? formData.oem_codes.split(',').map((s) => s.trim()).filter(Boolean)
         : null;
+
+      // Validate oem_codes format
+      if (oem_codes && !Array.isArray(oem_codes)) {
+        throw new Error('Códigos OEM devem ser um array de strings');
+      }
 
       const productData = {
         name: formData.name.trim(),
@@ -275,18 +280,29 @@ export default function NovoProdutoPage() {
         stock_quantity: parseInt(formData.stock_quantity) || 0,
         images: formData.images,
         specifications,
-        compatible_vehicles,
+        // compatible_vehicles is saved separately in product_compatibility table
         is_active: formData.is_active,
       };
 
       if (isEditing && id) {
         // Update existing product
+        console.log('=== DEBUG: Updating Product ===');
+        console.log('Product ID:', id);
+        console.log('Data to update:', JSON.stringify(productData, null, 2));
+
         const { error } = await supabase
           .from('products')
           .update(productData)
           .eq('id', id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('=== DEBUG: Update Error ===');
+          console.error('Error code:', error.code);
+          console.error('Error message:', error.message);
+          console.error('Error details:', error.details);
+          console.error('Error hint:', error.hint);
+          throw error;
+        }
 
         // Update vehicle compatibilities
         if (formData.vehicle_compatibilities.length > 0) {
@@ -335,13 +351,24 @@ export default function NovoProdutoPage() {
 
         if (storeError) throw storeError;
 
+        console.log('=== DEBUG: Creating Product ===');
+        console.log('Data to insert:', JSON.stringify(productData, null, 2));
+        console.log('Store ID:', storeData.id);
+
         const { data: newProduct, error } = await supabase
           .from('products')
           .insert({ ...productData, store_id: storeData.id })
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('=== DEBUG: Insert Error ===');
+          console.error('Error code:', error.code);
+          console.error('Error message:', error.message);
+          console.error('Error details:', error.details);
+          console.error('Error hint:', error.hint);
+          throw error;
+        }
 
         // Insert vehicle compatibilities
         if (formData.vehicle_compatibilities.length > 0 && newProduct) {
@@ -374,12 +401,25 @@ export default function NovoProdutoPage() {
       navigate('/lojista/produtos');
     } catch (error: any) {
       console.error('Error saving product:', error);
-      if (error.code === '23505') {
+      
+      let errorMessage = 'Erro ao salvar produto. ';
+      
+      if (error.message?.includes('duplicate') || error.code === '23505') {
+        errorMessage += 'SKU já cadastrado. Use outro código.';
         setErrors({ sku: 'Este SKU já está em uso' });
-        alert('Erro: SKU já está em uso. Por favor, use um SKU diferente.');
+      } else if (error.code === '23502') {
+        errorMessage += 'Campos obrigatórios não preenchidos.';
+      } else if (error.code === '23503') {
+        errorMessage += 'Erro de referência no banco de dados.';
+      } else if (error.code === '42703') {
+        errorMessage += 'Erro na estrutura do banco. Verifique se todas as colunas existem.';
+      } else if (error.message) {
+        errorMessage += error.message;
       } else {
-        alert('Erro ao salvar produto. Tente novamente.');
+        errorMessage += 'Tente novamente.';
       }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
