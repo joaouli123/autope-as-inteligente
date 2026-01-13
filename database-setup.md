@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS public.products (
   description TEXT NOT NULL,
   category TEXT NOT NULL,
   sku TEXT UNIQUE NOT NULL,
+  oem_codes TEXT[], -- OEM reference codes
+  mpn TEXT, -- Manufacturer Part Number
   brand TEXT,
   model TEXT,
   price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
@@ -64,6 +66,52 @@ CREATE TABLE IF NOT EXISTS public.products (
   sales_count INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tabela VEHICLES_CATALOG (Catálogo de veículos da FIPE)
+CREATE TABLE IF NOT EXISTS public.vehicles_catalog (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  brand TEXT NOT NULL,
+  model TEXT NOT NULL,
+  year_start INTEGER NOT NULL,
+  year_end INTEGER,
+  engine TEXT, -- 1.0, 1.4, 1.6, etc.
+  transmission TEXT, -- Manual, Automática, CVT, etc.
+  fuel_type TEXT, -- Gasolina, Flex, Diesel, Elétrico
+  fipe_code TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tabela USER_VEHICLES (Veículos cadastrados pelos usuários)
+CREATE TABLE IF NOT EXISTS public.user_vehicles (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  brand TEXT NOT NULL,
+  model TEXT NOT NULL,
+  year INTEGER NOT NULL,
+  engine TEXT,
+  transmission TEXT,
+  fuel_type TEXT,
+  license_plate TEXT,
+  vin TEXT, -- Vehicle Identification Number (Chassi)
+  is_primary BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tabela PRODUCT_COMPATIBILITY (Matriz de compatibilidade detalhada)
+CREATE TABLE IF NOT EXISTS public.product_compatibility (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  brand TEXT NOT NULL,
+  model TEXT NOT NULL,
+  year_start INTEGER NOT NULL,
+  year_end INTEGER,
+  engines TEXT[], -- Array de motores compatíveis
+  transmissions TEXT[], -- Array de transmissões compatíveis
+  fuel_types TEXT[], -- Array de tipos de combustível
+  notes TEXT, -- Observações adicionais
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Tabela ORDERS
@@ -132,6 +180,22 @@ CREATE INDEX IF NOT EXISTS idx_products_store_id ON public.products(store_id);
 CREATE INDEX IF NOT EXISTS idx_products_sku ON public.products(sku);
 CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products(is_active);
+CREATE INDEX IF NOT EXISTS idx_products_brand ON public.products(brand);
+
+-- Índices para VEHICLES_CATALOG
+CREATE INDEX IF NOT EXISTS idx_vehicles_catalog_brand ON public.vehicles_catalog(brand);
+CREATE INDEX IF NOT EXISTS idx_vehicles_catalog_model ON public.vehicles_catalog(model);
+CREATE INDEX IF NOT EXISTS idx_vehicles_catalog_fipe_code ON public.vehicles_catalog(fipe_code);
+
+-- Índices para USER_VEHICLES
+CREATE INDEX IF NOT EXISTS idx_user_vehicles_user_id ON public.user_vehicles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_vehicles_is_primary ON public.user_vehicles(is_primary);
+CREATE INDEX IF NOT EXISTS idx_user_vehicles_license_plate ON public.user_vehicles(license_plate);
+
+-- Índices para PRODUCT_COMPATIBILITY
+CREATE INDEX IF NOT EXISTS idx_product_compatibility_product_id ON public.product_compatibility(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_compatibility_brand ON public.product_compatibility(brand);
+CREATE INDEX IF NOT EXISTS idx_product_compatibility_model ON public.product_compatibility(model);
 
 -- Índices para ORDERS
 CREATE INDEX IF NOT EXISTS idx_orders_store_id ON public.orders(store_id);
@@ -153,6 +217,9 @@ ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.store_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vehicles_catalog ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_vehicles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_compatibility ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para USERS
 DROP POLICY IF EXISTS "users_select_own" ON public.users;
@@ -239,6 +306,63 @@ CREATE POLICY "reviews_update_store_response" ON public.store_reviews
   FOR UPDATE USING (
     store_id IN (SELECT id FROM public.stores WHERE owner_id = auth.uid())
   );
+
+-- Políticas para VEHICLES_CATALOG (catálogo público, somente leitura para todos)
+DROP POLICY IF EXISTS "vehicles_catalog_select_all" ON public.vehicles_catalog;
+CREATE POLICY "vehicles_catalog_select_all" ON public.vehicles_catalog
+  FOR SELECT USING (true);
+
+-- Políticas para USER_VEHICLES
+DROP POLICY IF EXISTS "user_vehicles_select_own" ON public.user_vehicles;
+CREATE POLICY "user_vehicles_select_own" ON public.user_vehicles
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "user_vehicles_insert_own" ON public.user_vehicles;
+CREATE POLICY "user_vehicles_insert_own" ON public.user_vehicles
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "user_vehicles_update_own" ON public.user_vehicles;
+CREATE POLICY "user_vehicles_update_own" ON public.user_vehicles
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "user_vehicles_delete_own" ON public.user_vehicles;
+CREATE POLICY "user_vehicles_delete_own" ON public.user_vehicles
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Políticas para PRODUCT_COMPATIBILITY (todos podem ler, apenas lojistas podem gerenciar)
+DROP POLICY IF EXISTS "product_compatibility_select_all" ON public.product_compatibility;
+CREATE POLICY "product_compatibility_select_all" ON public.product_compatibility
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "product_compatibility_insert_own" ON public.product_compatibility;
+CREATE POLICY "product_compatibility_insert_own" ON public.product_compatibility
+  FOR INSERT WITH CHECK (
+    product_id IN (
+      SELECT p.id FROM public.products p
+      JOIN public.stores s ON p.store_id = s.id
+      WHERE s.owner_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "product_compatibility_update_own" ON public.product_compatibility;
+CREATE POLICY "product_compatibility_update_own" ON public.product_compatibility
+  FOR UPDATE USING (
+    product_id IN (
+      SELECT p.id FROM public.products p
+      JOIN public.stores s ON p.store_id = s.id
+      WHERE s.owner_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "product_compatibility_delete_own" ON public.product_compatibility;
+CREATE POLICY "product_compatibility_delete_own" ON public.product_compatibility
+  FOR DELETE USING (
+    product_id IN (
+      SELECT p.id FROM public.products p
+      JOIN public.stores s ON p.store_id = s.id
+      WHERE s.owner_id = auth.uid()
+    )
+  );
 ```
 
 ### 4. Função para atualizar updated_at automaticamente
@@ -277,6 +401,13 @@ CREATE TRIGGER update_products_updated_at
 DROP TRIGGER IF EXISTS update_orders_updated_at ON public.orders;
 CREATE TRIGGER update_orders_updated_at
   BEFORE UPDATE ON public.orders
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Trigger para user_vehicles
+DROP TRIGGER IF EXISTS update_user_vehicles_updated_at ON public.user_vehicles;
+CREATE TRIGGER update_user_vehicles_updated_at
+  BEFORE UPDATE ON public.user_vehicles
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 ```
