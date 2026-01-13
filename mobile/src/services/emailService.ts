@@ -10,6 +10,10 @@ interface SendEmailParams {
 }
 
 const sendEmail = async ({ to, subject, html }: SendEmailParams) => {
+  if (!RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not configured. Please add it to your .env file.');
+  }
+
   try {
     const response = await fetch(RESEND_API_URL, {
       method: 'POST',
