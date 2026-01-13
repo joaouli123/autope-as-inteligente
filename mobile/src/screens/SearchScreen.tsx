@@ -7,16 +7,16 @@ import {
   StyleSheet,
   Image,
   FlatList,
-  ListRenderItem,
+  StatusBar,
   Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Search, Filter, X } from 'lucide-react-native';
+import { Search, Filter, X, ShoppingBag } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 
-// Mock types
+// Interface
 interface Product {
   id: string;
   name: string;
@@ -26,7 +26,7 @@ interface Product {
   category: string;
 }
 
-// Mock products
+// Dados mockados
 const mockProducts: Product[] = [
   {
     id: '1',
@@ -60,49 +60,16 @@ const mockProducts: Product[] = [
     image: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400',
     category: 'Transmissão',
   },
-  {
-    id: '5',
-    name: 'Bateria 60Ah Livre de Manutenção',
-    price: 425.50,
-    store: 'Baterias Express',
-    image: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400',
-    category: 'Elétrica',
-  },
-  {
-    id: '6',
-    name: 'Jogo de Velas de Ignição Premium',
-    price: 89.90,
-    store: 'Auto Peças Central',
-    image: 'https://images.unsplash.com/photo-1580274455191-1c62238fa333?w=400',
-    category: 'Motor',
-  },
-  {
-    id: '7',
-    name: 'Disco de Freio Ventilado Par',
-    price: 285.00,
-    store: 'Freios & Suspensão',
-    image: 'https://images.unsplash.com/photo-1614359952095-8b2ac2043e0d?w=400',
-    category: 'Freios',
-  },
-  {
-    id: '8',
-    name: 'Radiador de Alumínio Reforçado',
-    price: 520.00,
-    store: 'Refrigeração Auto',
-    image: 'https://images.unsplash.com/photo-1625047508850-1f3c0d67d9fd?w=400',
-    category: 'Arrefecimento',
-  },
 ];
 
 type SearchScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Search'>;
 
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
-  const insets = useSafeAreaInsets(); // Hook for dynamic safe area
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(mockProducts);
 
-  // Formatting helper
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -128,23 +95,16 @@ export default function SearchScreen() {
     Keyboard.dismiss();
   };
 
-  // Render Item for FlatList
-  const renderProductItem: ListRenderItem<Product> = ({ item }) => (
+  const renderProductItem = ({ item }: { item: Product }) => (
     <TouchableOpacity
       style={styles.productCard}
       onPress={() => navigation.navigate('Product', { productId: item.id })}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      <Image
-        source={{ uri: item.image }}
-        style={styles.productImage}
-        resizeMode="cover"
-      />
+      <Image source={{ uri: item.image }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productCategory}>{item.category}</Text>
-        <Text style={styles.productName} numberOfLines={2}>
-          {item.name}
-        </Text>
+        <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
         <Text style={styles.productStore}>{item.store}</Text>
         <Text style={styles.productPrice}>{formatCurrency(item.price)}</Text>
       </View>
@@ -152,16 +112,27 @@ export default function SearchScreen() {
   );
 
   return (
+    // CORREÇÃO 1: O Wrapper geral é CINZA
     <View style={styles.wrapper}>
-      {/* Dynamic Header padding based on device insets */}
+      <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
+
+      {/* CORREÇÃO 2: O Header é uma View separada que contém APENAS o título/subtítulo */}
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-        <Text style={styles.headerTitle}>Buscar Peças</Text>
-        <Text style={styles.headerSubtitle}>
-          Encontre a peça perfeita para seu veículo
-        </Text>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.headerTitle}>Buscar Peças</Text>
+            <Text style={styles.headerSubtitle}>
+              Encontre a peça perfeita para seu veículo
+            </Text>
+          </View>
+          {/* Avatar simulado (opcional, como na imagem) */}
+          <View style={styles.avatarPlaceholder}>
+             <Text style={styles.avatarText}>JL</Text>
+          </View>
+        </View>
       </View>
 
-      {/* Search Bar - Positioned absolutely or via negative margin */}
+      {/* CORREÇÃO 3: A Barra de busca vem DEPOIS do header fechar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
           <Search color="#9ca3af" size={20} />
@@ -171,7 +142,6 @@ export default function SearchScreen() {
             placeholderTextColor="#9ca3af"
             value={searchQuery}
             onChangeText={handleSearch}
-            returnKeyType="search"
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={clearSearch}>
@@ -184,24 +154,26 @@ export default function SearchScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Results List */}
+      {/* Lista de Resultados */}
       <FlatList
         data={filteredProducts}
         renderItem={renderProductItem}
         keyExtractor={(item) => item.id}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
-          styles.resultsContent,
+          styles.listContent,
           { paddingBottom: insets.bottom + 20 }
         ]}
         showsVerticalScrollIndicator={false}
-        keyboardDismissMode="on-drag"
         ListHeaderComponent={
           <Text style={styles.sectionTitle}>
-            {searchQuery.trim() === '' ? 'Todos os produtos' : 'Resultados da busca'}
+            {searchQuery.trim() === '' ? 'Todos os produtos' : 'Resultados encontrados'}
           </Text>
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
+            <ShoppingBag color="#9ca3af" size={48} style={{ opacity: 0.5, marginBottom: 12 }} />
             <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
           </View>
         }
@@ -213,14 +185,21 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#f3f4f6', // Changed to light gray for better contrast with list
+    backgroundColor: '#f3f4f6', // Fundo CINZA da tela
   },
   header: {
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#1e3a8a', // Fundo AZUL apenas no topo
     paddingHorizontal: 20,
-    paddingBottom: 70, // Space for the overlapping search bar
+    paddingBottom: 80,
+    marginBottom: -30, // Espaço extra para a barra de busca "subir"
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
+  },
+  headerContent: {
+	
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 28,
@@ -231,14 +210,27 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 14,
     color: '#d1d5db',
+    maxWidth: 250,
+  },
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   searchContainer: {
     flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 20,
-    marginTop: -40, // Negative margin to overlap header
+    marginTop: -30, // TRUQUE: Puxa a barra para cima do azul
     marginBottom: 10,
-    zIndex: 10,
+    zIndex: 10, // Garante que a barra fique "em cima" visualmente
   },
   searchInputContainer: {
     flex: 1,
@@ -246,94 +238,97 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff',
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 12,
+    paddingVertical: 12,
+    borderRadius: 14,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 4,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: '#1f2937',
+    marginLeft: 8,
   },
   filterButton: {
+
     width: 50,
     backgroundColor: '#ffffff',
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 4,
   },
-  resultsContent: {
+  listContent: {
+
     paddingHorizontal: 20,
     paddingTop: 10,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 16,
-    marginTop: 10,
-  },
-  emptyState: {
-    paddingVertical: 60,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#6b7280',
+    marginTop: 20,
   },
   productCard: {
     flexDirection: 'row',
     backgroundColor: '#ffffff',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 12,
     marginBottom: 16,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 3,
   },
   productImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    backgroundColor: '#e5e7eb',
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    backgroundColor: '#f3f4f6',
   },
   productInfo: {
     flex: 1,
-    marginLeft: 12,
-    justifyContent: 'space-between',
+    marginLeft: 15,
+    justifyContent: 'center',
   },
   productCategory: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#6b7280',
-    marginBottom: 4,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    marginBottom: 2,
   },
   productName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 4,
-    lineHeight: 20,
   },
   productStore: {
     fontSize: 12,
     color: '#9ca3af',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   productPrice: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1e3a8a',
+  },
+  emptyState: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    color: '#9ca3af',
+    fontSize: 16,
   },
 });
