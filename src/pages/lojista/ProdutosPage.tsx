@@ -67,10 +67,20 @@ export default function ProdutosPage() {
               <Package size={64} className="text-gray-400" />
             </div>
             <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+              <h3 className="text-lg font-bold text-gray-900 mb-2" style={{ 
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}>
                 {product.name}
               </h3>
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+              <p className="text-sm text-gray-600 mb-4" style={{ 
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}>
                 {product.description}
               </p>
               <div className="flex items-center justify-between mb-4">

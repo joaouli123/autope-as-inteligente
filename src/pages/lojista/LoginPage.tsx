@@ -21,7 +21,7 @@ export default function LojistaLoginPage() {
       if (success) {
         navigate('/lojista/dashboard');
       } else {
-        setError('Email ou senha inválidos, ou você não tem permissão de lojista.');
+        setError('Credenciais inválidas.');
       }
     } catch (err) {
       setError('Erro ao fazer login. Tente novamente.');
