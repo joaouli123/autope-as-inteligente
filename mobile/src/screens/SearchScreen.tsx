@@ -17,7 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Search, Filter, X, ShoppingBag } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import AdvancedFilterModal from '../components/AdvancedFilterModal';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 
 // --- Interfaces ---
 interface Product {
