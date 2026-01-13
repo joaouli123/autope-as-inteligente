@@ -3,6 +3,7 @@ export interface Store {
   owner_id: string;
   name: string;
   slug: string;
+  cnpj: string;
   logo_url?: string;
   address: {
     street: string;
