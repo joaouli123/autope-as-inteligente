@@ -200,7 +200,24 @@ export default function SignupPage() {
         return;
       }
 
-      // 2. Gerar slug único
+      // 2. CRIAR REGISTRO NA TABELA USERS (ANTES DA LOJA!)
+      const { error: userError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: formData.email,
+          role: 'store_owner',
+          name: formData.ownerName,
+        });
+
+      if (userError) {
+        console.error('Erro ao criar usuário na tabela users:', userError);
+        setError(translateError(userError));
+        setLoading(false);
+        return;
+      }
+
+      // 3. Gerar slug único
       let slug = generateSlug(formData.storeName);
       let slugAttempt = 0;
       let uniqueSlug = slug;
@@ -224,7 +241,7 @@ export default function SignupPage() {
         uniqueSlug = `${slug}-${Date.now()}`;
       }
 
-      // 3. Criar registro na tabela stores
+      // 4. Criar registro na tabela stores
       const { error: storeError } = await supabase
         .from('stores')
         .insert({

@@ -1,21 +1,31 @@
-# Configuração do Banco de Dados
+# Configuração do Banco de Dados Supabase
 
-Este arquivo contém as instruções SQL necessárias para configurar corretamente a tabela `stores` no Supabase.
+Este documento contém os scripts SQL necessários para configurar o banco de dados do projeto.
 
-## Como Aplicar
+## ⚠️ IMPORTANTE
 
-1. Acesse o Supabase Dashboard
-2. Vá em **SQL Editor**
-3. Copie e cole o código SQL abaixo
-4. Execute o script
+Execute estes comandos no **Supabase Dashboard** → **SQL Editor** antes de usar a aplicação.
 
-## Script SQL
+## 📋 Scripts SQL
+
+### 1. Criar Tabelas
 
 ```sql
--- Verificar se a tabela stores existe e tem todas as colunas necessárias
-CREATE TABLE IF NOT EXISTS stores (
+-- Tabela USERS
+CREATE TABLE IF NOT EXISTS public.users (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT UNIQUE NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('consumer', 'store_owner', 'admin')),
+  name TEXT,
+  phone TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tabela STORES
+CREATE TABLE IF NOT EXISTS public.stores (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   cnpj TEXT UNIQUE,
@@ -27,60 +37,105 @@ CREATE TABLE IF NOT EXISTS stores (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
--- Adicionar colunas se não existirem
-ALTER TABLE stores ADD COLUMN IF NOT EXISTS cnpj TEXT UNIQUE;
-ALTER TABLE stores ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE;
-
--- Criar índices para melhor performance
-CREATE INDEX IF NOT EXISTS idx_stores_owner_id ON stores(owner_id);
-CREATE INDEX IF NOT EXISTS idx_stores_cnpj ON stores(cnpj);
-CREATE INDEX IF NOT EXISTS idx_stores_slug ON stores(slug);
-
--- Habilitar RLS (Row Level Security)
-ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
-
--- Políticas: Lojistas podem ver apenas suas próprias lojas
-DROP POLICY IF EXISTS "Lojistas podem ver suas lojas" ON stores;
-CREATE POLICY "Lojistas podem ver suas lojas" ON stores
-  FOR SELECT USING (auth.uid() = owner_id);
-
--- Políticas: Lojistas podem atualizar apenas suas próprias lojas
-DROP POLICY IF EXISTS "Lojistas podem atualizar suas lojas" ON stores;
-CREATE POLICY "Lojistas podem atualizar suas lojas" ON stores
-  FOR UPDATE USING (auth.uid() = owner_id);
-
--- Políticas: Permitir inserção de novas lojas
-DROP POLICY IF EXISTS "Permitir criação de lojas" ON stores;
-CREATE POLICY "Permitir criação de lojas" ON stores
-  FOR INSERT WITH CHECK (auth.uid() = owner_id);
 ```
 
-## Verificação
-
-Após executar o script, você pode verificar se tudo foi criado corretamente:
+### 2. Criar Índices
 
 ```sql
--- Verificar estrutura da tabela
-SELECT column_name, data_type, is_nullable
-FROM information_schema.columns
-WHERE table_name = 'stores'
-ORDER BY ordinal_position;
-
--- Verificar índices
-SELECT indexname, indexdef
-FROM pg_indexes
-WHERE tablename = 'stores';
-
--- Verificar políticas
-SELECT policyname, cmd, qual
-FROM pg_policies
-WHERE tablename = 'stores';
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+CREATE INDEX IF NOT EXISTS idx_stores_owner_id ON public.stores(owner_id);
+CREATE INDEX IF NOT EXISTS idx_stores_cnpj ON public.stores(cnpj);
+CREATE INDEX IF NOT EXISTS idx_stores_slug ON public.stores(slug);
 ```
 
-## Notas Importantes
+### 3. Habilitar RLS e Configurar Políticas
 
-- Execute este script **antes** de tentar cadastrar uma nova loja
-- Se houver usuários de teste antigos, delete-os no **Supabase Auth** antes de testar
-- A coluna `slug` é obrigatória e deve ser única para cada loja
-- A coluna `cnpj` também deve ser única
+```sql
+-- Habilitar RLS
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
+
+-- Políticas para USERS
+DROP POLICY IF EXISTS "users_select_own" ON public.users;
+CREATE POLICY "users_select_own" ON public.users
+  FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "users_insert_own" ON public.users;
+CREATE POLICY "users_insert_own" ON public.users
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "users_update_own" ON public.users;
+CREATE POLICY "users_update_own" ON public.users
+  FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+
+-- Políticas para STORES
+DROP POLICY IF EXISTS "stores_select_active" ON public.stores;
+CREATE POLICY "stores_select_active" ON public.stores
+  FOR SELECT USING (is_active = true OR auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "stores_insert_own" ON public.stores;
+CREATE POLICY "stores_insert_own" ON public.stores
+  FOR INSERT WITH CHECK (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "stores_update_own" ON public.stores;
+CREATE POLICY "stores_update_own" ON public.stores
+  FOR UPDATE USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "stores_delete_own" ON public.stores;
+CREATE POLICY "stores_delete_own" ON public.stores
+  FOR DELETE USING (auth.uid() = owner_id);
+```
+
+### 4. Função para atualizar updated_at automaticamente
+
+```sql
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para users
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
+CREATE TRIGGER update_users_updated_at
+  BEFORE UPDATE ON public.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Trigger para stores
+DROP TRIGGER IF EXISTS update_stores_updated_at ON public.stores;
+CREATE TRIGGER update_stores_updated_at
+  BEFORE UPDATE ON public.stores
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+```
+
+## 🧪 Verificação
+
+Após executar os scripts, verifique se as tabelas foram criadas:
+
+```sql
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+AND table_name IN ('users', 'stores');
+```
+
+## 🔧 Comandos Úteis para Debug
+
+### Limpar dados de teste
+
+```sql
+-- Ver todas as lojas
+SELECT * FROM public.stores;
+
+-- Deletar lojas de teste
+TRUNCATE TABLE public.stores CASCADE;
+
+-- Deletar usuários órfãos (que não existem no Auth)
+DELETE FROM public.users 
+WHERE id NOT IN (SELECT id FROM auth.users);
+```

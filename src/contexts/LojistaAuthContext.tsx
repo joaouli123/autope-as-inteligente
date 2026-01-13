@@ -28,18 +28,26 @@ export function LojistaAuthProvider({ children }: { children: ReactNode }) {
       
       if (session?.user) {
         // Verificar se é lojista e buscar dados da loja
-        const { data: userData } = await supabase
+        const { data: userData, error: userError } = await supabase
           .from('users')
           .select('role')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
+
+        if (userError) {
+          console.error('Erro ao buscar usuário:', userError);
+        }
 
         if (userData?.role === 'store_owner') {
-          const { data: storeData } = await supabase
+          const { data: storeData, error: storeError } = await supabase
             .from('stores')
             .select('*')
             .eq('owner_id', session.user.id)
-            .single();
+            .maybeSingle();
+
+          if (storeError) {
+            console.error('Erro ao buscar loja:', storeError);
+          }
 
           if (storeData) {
             setStore(storeData);
@@ -55,40 +63,78 @@ export function LojistaAuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      // 1. Autenticar no Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro de autenticação:', error);
+        return false;
+      }
 
-      if (data.user) {
-        // Verificar se é lojista
-        const { data: userData } = await supabase
+      if (!data.user) {
+        console.error('Usuário não encontrado');
+        return false;
+      }
+
+      // 2. Buscar role (usar maybeSingle)
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (userError) {
+        console.error('Erro ao buscar usuário:', userError);
+      }
+
+      // 3. Se não encontrou o usuário, criar agora
+      if (!userData) {
+        console.log('Usuário não existe na tabela users, criando...');
+        const { error: createUserError } = await supabase
           .from('users')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
+          .insert({
+            id: data.user.id,
+            email: data.user.email!,
+            role: 'store_owner',
+            name: data.user.user_metadata?.owner_name || data.user.email,
+          });
 
-        if (userData?.role !== 'store_owner') {
+        if (createUserError) {
+          console.error('Erro ao criar usuário na tabela:', createUserError);
           await supabase.auth.signOut();
           return false;
         }
-
-        // Buscar dados da loja
-        const { data: storeData } = await supabase
-          .from('stores')
-          .select('*')
-          .eq('owner_id', data.user.id)
-          .single();
-
-        if (storeData) {
-          setStore(storeData);
-          return true;
-        }
+      } else if (userData.role !== 'store_owner') {
+        console.error('Usuário não é lojista');
+        await supabase.auth.signOut();
+        return false;
       }
 
-      return false;
+      // 4. Buscar loja (usar maybeSingle)
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('owner_id', data.user.id)
+        .maybeSingle();
+
+      if (storeError) {
+        console.error('Erro ao buscar loja:', storeError);
+        await supabase.auth.signOut();
+        return false;
+      }
+
+      if (!storeData) {
+        console.error('Loja não encontrada para este usuário');
+        await supabase.auth.signOut();
+        return false;
+      }
+
+      setStore(storeData);
+      return true;
+
     } catch (error) {
       console.error('Login error:', error);
       return false;

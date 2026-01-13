@@ -16,6 +16,36 @@ autope-as-inteligente/
 
 ---
 
+## 🗄️ Configuração do Banco de Dados
+
+Antes de usar a aplicação, você precisa configurar o banco de dados no Supabase:
+
+1. Acesse o [Supabase Dashboard](https://app.supabase.com)
+2. Selecione seu projeto
+3. Vá em **SQL Editor**
+4. Execute os scripts SQL do arquivo [`database-setup.md`](./database-setup.md)
+
+### Variáveis de Ambiente
+
+#### Para desenvolvimento local:
+
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+VITE_SUPABASE_URL=sua-url-do-supabase
+VITE_SUPABASE_ANON_KEY=sua-chave-anon
+VITE_GEMINI_API_KEY=sua-chave-gemini
+```
+
+#### Para Railway (produção):
+
+Configure as variáveis no painel do Railway:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_GEMINI_API_KEY`
+
+---
+
 ## 🌐 Web App (Vite + React)
 
 ### Instalação
