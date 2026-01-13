@@ -61,7 +61,7 @@ export default function SignupPage() {
   };
 
   const generateSlug = (storeName: string): string => {
-    return storeName
+    const slug = storeName
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -69,6 +69,9 @@ export default function SignupPage() {
       .trim()
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-');
+    
+    // Se o slug estiver vazio após a limpeza, usar um valor padrão
+    return slug || 'loja';
   };
 
   const [formData, setFormData] = useState({
@@ -201,8 +204,9 @@ export default function SignupPage() {
       let slug = generateSlug(formData.storeName);
       let slugAttempt = 0;
       let uniqueSlug = slug;
+      const maxAttempts = 100; // Limite de tentativas para evitar loop infinito
 
-      while (true) {
+      while (slugAttempt < maxAttempts) {
         const { data: existingSlug } = await supabase
           .from('stores')
           .select('id')
@@ -213,6 +217,11 @@ export default function SignupPage() {
 
         slugAttempt++;
         uniqueSlug = `${slug}-${slugAttempt}`;
+      }
+
+      // Se atingir o limite máximo, usar um timestamp para garantir unicidade
+      if (slugAttempt >= maxAttempts) {
+        uniqueSlug = `${slug}-${Date.now()}`;
       }
 
       // 3. Criar registro na tabela stores
