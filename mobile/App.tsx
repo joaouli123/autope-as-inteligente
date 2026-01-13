@@ -22,6 +22,7 @@ import EditVehicleScreen from './src/screens/EditVehicleScreen';
 import PasswordResetScreen from './src/screens/PasswordResetScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
 import OrderSuccessScreen from './src/screens/OrderSuccessScreen';
+import ProductScreen from './src/screens/ProductScreen';
 import MainTabs from './src/navigation/MainTabs';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -71,6 +72,7 @@ export default function App() {
             <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />
             <Stack.Screen name="OrderSuccess" component={OrderSuccessScreen} />
+            <Stack.Screen name="Product" component={ProductScreen} options={{ headerShown: false }} />
           </Stack.Navigator>
         </NavigationContainer>
       </CartProvider>

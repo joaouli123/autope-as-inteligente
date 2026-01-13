@@ -5,23 +5,25 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { CreditCard, Smartphone, Barcode, MapPin, ShoppingCart } from 'lucide-react-native';
+import { CreditCard, DollarSign, MapPin, Edit2 } from 'lucide-react-native';
 import { useCart } from '../contexts/CartContext';
+import { sendOrderEmails } from '../services/emailService';
 import type { RootStackParamList } from '../types/navigation';
 
 type CheckoutScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type PaymentMethod = 'credit' | 'pix' | 'boleto';
+type PaymentMethod = 'card' | 'pix' | 'cash';
 
 export default function CheckoutScreen() {
   const navigation = useNavigation<CheckoutScreenNavigationProp>();
   const { cartItems, getCartTotal, createOrder } = useCart();
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('credit');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 
-  const handleConfirmOrder = () => {
+  const handleConfirmOrder = async () => {
     // Validate cart is not empty
     if (cartItems.length === 0) {
       navigation.goBack();
@@ -29,11 +31,38 @@ export default function CheckoutScreen() {
     }
     
     const paymentMethods: Record<PaymentMethod, string> = {
-      credit: 'Cartão de Crédito',
+      card: 'Cartão (Maquininha)',
       pix: 'PIX',
-      boleto: 'Boleto Bancário',
+      cash: 'Dinheiro',
     };
-    createOrder(paymentMethods[selectedPayment]);
+    const order = createOrder(paymentMethods[paymentMethod]);
+    
+    // Send order confirmation emails
+    try {
+      await sendOrderEmails({
+        orderCode: order.id,
+        customerName: 'Cliente',
+        customerEmail: 'cliente@example.com',
+        storeEmail: 'loja@autopecascentral.com',
+        storeName: 'Auto Peças Central',
+        items: cartItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total: getCartTotal() + 15.90,
+        address: {
+          street: 'Av. Paulista',
+          number: '1000',
+          city: 'São Paulo',
+          state: 'SP',
+        },
+      });
+    } catch (error) {
+      console.error('Failed to send order emails:', error);
+      // Continue anyway - don't block order completion
+    }
+    
     navigation.navigate('OrderSuccess');
   };
 
@@ -51,12 +80,25 @@ export default function CheckoutScreen() {
           <Text style={styles.headerTitle}>Finalizar Pedido</Text>
         </View>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.content}
+          contentContainerStyle={{ flexGrow: 1 }}
+          bounces={false}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Delivery Address */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <MapPin color="#1e3a8a" size={20} />
-              <Text style={styles.sectionTitle}>Endereço de Entrega</Text>
+              <View style={styles.sectionTitleRow}>
+                <MapPin color="#1e3a8a" size={20} />
+                <Text style={styles.sectionTitle}>Endereço de Entrega</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('EditProfile' as any)}
+                style={styles.editIconButton}
+              >
+                <Edit2 color="#1e3a8a" size={18} />
+              </TouchableOpacity>
             </View>
             <View style={styles.addressCard}>
               <Text style={styles.addressText}>Av. Paulista, 1000</Text>
@@ -66,98 +108,57 @@ export default function CheckoutScreen() {
             </View>
           </View>
 
-          {/* Order Summary */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <ShoppingCart color="#1e3a8a" size={20} />
-              <Text style={styles.sectionTitle}>Resumo do Pedido</Text>
-            </View>
-            {cartItems.map((item) => (
-              <View key={item.id} style={styles.orderItem}>
-                <View style={styles.orderItemInfo}>
-                  <Text style={styles.orderItemName}>{item.name}</Text>
-                  <Text style={styles.orderItemQuantity}>Qtd: {item.quantity}</Text>
-                </View>
-                <Text style={styles.orderItemPrice}>
-                  R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}
-                </Text>
-              </View>
-            ))}
-          </View>
-
           {/* Payment Method */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Forma de Pagamento</Text>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <CreditCard color="#1e3a8a" size={20} />
+                <Text style={styles.sectionTitle}>Forma de Pagamento</Text>
+              </View>
+            </View>
             
+            {/* Opção: Cartão */}
             <TouchableOpacity
-              style={[
-                styles.paymentOption,
-                selectedPayment === 'credit' && styles.paymentOptionSelected,
-              ]}
-              onPress={() => setSelectedPayment('credit')}
+              style={[styles.paymentOption, paymentMethod === 'card' && styles.paymentOptionSelected]}
+              onPress={() => setPaymentMethod('card')}
             >
               <View style={styles.paymentOptionLeft}>
-                <CreditCard color={selectedPayment === 'credit' ? '#1e3a8a' : '#6b7280'} size={24} />
-                <Text style={[
-                  styles.paymentOptionText,
-                  selectedPayment === 'credit' && styles.paymentOptionTextSelected,
-                ]}>
-                  Cartão de Crédito
-                </Text>
-              </View>
-              <View style={[
-                styles.radioButton,
-                selectedPayment === 'credit' && styles.radioButtonSelected,
-              ]}>
-                {selectedPayment === 'credit' && <View style={styles.radioButtonInner} />}
+                <View style={styles.radio}>
+                  {paymentMethod === 'card' && <View style={styles.radioDot} />}
+                </View>
+                <CreditCard color="#1e3a8a" size={20} />
+                <Text style={styles.paymentLabel}>Cartão (Maquininha)</Text>
               </View>
             </TouchableOpacity>
 
+            {/* Opção: Pix com logo oficial */}
             <TouchableOpacity
-              style={[
-                styles.paymentOption,
-                selectedPayment === 'pix' && styles.paymentOptionSelected,
-              ]}
-              onPress={() => setSelectedPayment('pix')}
+              style={[styles.paymentOption, paymentMethod === 'pix' && styles.paymentOptionSelected]}
+              onPress={() => setPaymentMethod('pix')}
             >
               <View style={styles.paymentOptionLeft}>
-                <Smartphone color={selectedPayment === 'pix' ? '#1e3a8a' : '#6b7280'} size={24} />
-                <Text style={[
-                  styles.paymentOptionText,
-                  selectedPayment === 'pix' && styles.paymentOptionTextSelected,
-                ]}>
-                  PIX
-                </Text>
-              </View>
-              <View style={[
-                styles.radioButton,
-                selectedPayment === 'pix' && styles.radioButtonSelected,
-              ]}>
-                {selectedPayment === 'pix' && <View style={styles.radioButtonInner} />}
+                <View style={styles.radio}>
+                  {paymentMethod === 'pix' && <View style={styles.radioDot} />}
+                </View>
+                <Image
+                  source={{ uri: 'https://logodownload.org/wp-content/uploads/2020/02/pix-bc-logo-0.png' }}
+                  style={styles.pixLogo}
+                />
+                <Text style={styles.paymentLabel}>Pix</Text>
               </View>
             </TouchableOpacity>
 
+            {/* Opção: Dinheiro */}
             <TouchableOpacity
-              style={[
-                styles.paymentOption,
-                selectedPayment === 'boleto' && styles.paymentOptionSelected,
-              ]}
-              onPress={() => setSelectedPayment('boleto')}
+              style={[styles.paymentOption, paymentMethod === 'cash' && styles.paymentOptionSelected]}
+              onPress={() => setPaymentMethod('cash')}
             >
               <View style={styles.paymentOptionLeft}>
-                <Barcode color={selectedPayment === 'boleto' ? '#1e3a8a' : '#6b7280'} size={24} />
-                <Text style={[
-                  styles.paymentOptionText,
-                  selectedPayment === 'boleto' && styles.paymentOptionTextSelected,
-                ]}>
-                  Boleto Bancário
-                </Text>
-              </View>
-              <View style={[
-                styles.radioButton,
-                selectedPayment === 'boleto' && styles.radioButtonSelected,
-              ]}>
-                {selectedPayment === 'boleto' && <View style={styles.radioButtonInner} />}
+                <View style={styles.radio}>
+                  {paymentMethod === 'cash' && <View style={styles.radioDot} />}
+                </View>
+                <DollarSign color="#1e3a8a" size={20} />
+                <Text style={styles.paymentLabel}>Dinheiro</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -204,6 +205,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   backButton: {
     marginBottom: 12,
@@ -229,13 +232,23 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
+  },
+  editIconButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
   },
   addressCard: {
     backgroundColor: '#ffffff',
@@ -252,36 +265,7 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginBottom: 4,
   },
-  orderItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  orderItemInfo: {
-    flex: 1,
-  },
-  orderItemName: {
-    fontSize: 15,
-    color: '#1f2937',
-    marginBottom: 4,
-    fontWeight: '500',
-  },
-  orderItemQuantity: {
-    fontSize: 13,
-    color: '#9ca3af',
-  },
-  orderItemPrice: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
   paymentOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
@@ -298,32 +282,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  paymentOptionText: {
+  paymentLabel: {
     fontSize: 16,
-    color: '#6b7280',
+    color: '#1f2937',
     fontWeight: '500',
   },
-  paymentOptionTextSelected: {
-    color: '#1e3a8a',
-    fontWeight: '600',
-  },
-  radioButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: '#d1d5db',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioButtonSelected: {
-    borderColor: '#1e3a8a',
-  },
-  radioButtonInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: '#1e3a8a',
+  },
+  pixLogo: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
   footer: {
     backgroundColor: '#ffffff',
