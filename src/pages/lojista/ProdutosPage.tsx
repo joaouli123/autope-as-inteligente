@@ -251,15 +251,23 @@ export default function ProdutosPage() {
                     {/* Coluna Produto (imagem + nome) */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={product.images?.[0] || 'https://via.placeholder.com/40'} 
-                          alt={product.name}
-                          className="w-10 h-10 rounded-lg object-cover border border-gray-200"
-                        />
+                        {product.images?.[0] ? (
+                          <img 
+                            src={product.images[0]} 
+                            alt={product.name}
+                            className="w-10 h-10 rounded-lg object-cover border border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                            <Package size={20} className="text-gray-400" />
+                          </div>
+                        )}
                         <div>
                           <div className="text-sm font-medium text-gray-900">{product.name}</div>
                           <div className="text-xs text-gray-500">
-                            {product.description?.substring(0, 50)}...
+                            {product.description && product.description.length > 50 
+                              ? `${product.description.substring(0, 50)}...`
+                              : product.description}
                           </div>
                         </div>
                       </div>
