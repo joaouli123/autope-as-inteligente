@@ -6,6 +6,16 @@ Este documento contém os scripts SQL necessários para configurar o banco de da
 
 Execute estes comandos no **Supabase Dashboard** → **SQL Editor** antes de usar a aplicação.
 
+## 🔄 Migrações
+
+As migrações SQL estão organizadas na pasta `/migrations/`. Execute-as em ordem:
+
+1. **001_add_brand_model_columns.sql** - Adiciona colunas `brand` e `model` na tabela `products`
+2. **002_fix_store_ratings.sql** - Corrige valores NULL em `average_rating` e `total_reviews`
+3. **003_create_store_reviews.sql** - Cria tabela `store_reviews` com políticas RLS
+
+Ou copie e execute os scripts SQL completos abaixo (recomendado para setup inicial).
+
 ## 📋 Scripts SQL
 
 ### 1. Criar Tabelas
@@ -181,6 +191,7 @@ CREATE INDEX IF NOT EXISTS idx_products_sku ON public.products(sku);
 CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_brand ON public.products(brand);
+CREATE INDEX IF NOT EXISTS idx_products_model ON public.products(model);
 
 -- Índices para VEHICLES_CATALOG
 CREATE INDEX IF NOT EXISTS idx_vehicles_catalog_brand ON public.vehicles_catalog(brand);
@@ -206,6 +217,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at DES
 -- Índices para STORE_REVIEWS
 CREATE INDEX IF NOT EXISTS idx_store_reviews_store_id ON public.store_reviews(store_id);
 CREATE INDEX IF NOT EXISTS idx_store_reviews_rating ON public.store_reviews(rating);
+CREATE INDEX IF NOT EXISTS idx_store_reviews_created_at ON public.store_reviews(created_at DESC);
 ```
 
 ### 3. Habilitar RLS e Configurar Políticas
