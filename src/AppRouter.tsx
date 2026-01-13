@@ -3,6 +3,7 @@ import { LojistaAuthProvider } from './contexts/LojistaAuthContext';
 import App from './App';
 import LojistaLayout from './pages/lojista/LojistaLayout';
 import LoginPage from './pages/lojista/LoginPage';
+import SignupPage from './pages/lojista/SignupPage';
 import DashboardPage from './pages/lojista/DashboardPage';
 import ProdutosPage from './pages/lojista/ProdutosPage';
 import NovoProdutoPage from './pages/lojista/NovoProdutoPage';
@@ -25,6 +26,7 @@ export default function AppRouter() {
               <Routes>
                 <Route element={<LojistaLayout />}>
                   <Route path="login" element={<LoginPage />} />
+                  <Route path="cadastro" element={<SignupPage />} />
                   <Route path="dashboard" element={<DashboardPage />} />
                   <Route path="produtos" element={<ProdutosPage />} />
                   <Route path="produtos/novo" element={<NovoProdutoPage />} />

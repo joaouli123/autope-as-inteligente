@@ -102,7 +102,14 @@ export default function LojistaLoginPage() {
           </form>
 
           {/* Footer */}
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center space-y-3">
+            <p className="text-sm text-gray-600">
+              Não tem uma conta?{' '}
+              <Link to="/lojista/cadastro" className="text-blue-600 hover:underline font-semibold">
+                Cadastrar loja
+              </Link>
+            </p>
+            
             <Link
               to="/"
               className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
