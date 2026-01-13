@@ -179,8 +179,8 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-      <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
         <ScrollView 
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -190,7 +190,7 @@ export default function ProfileScreen() {
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <ArrowLeft color="#ffffff" size={24} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Perfil</Text>
+            <Text style={styles.headerTitle}>Voltar para tela principal</Text>
           </View>
 
           {/* Avatar Clicável */}
@@ -418,9 +418,10 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 24,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#ffffff',
+    flex: 1,
   },
   avatarContainer: {
     alignItems: 'center',

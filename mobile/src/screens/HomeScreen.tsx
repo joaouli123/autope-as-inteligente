@@ -21,6 +21,8 @@ import {
   Droplet,
   Activity,
   Zap,
+  Settings,
+  BatteryCharging,
 } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 
@@ -98,12 +100,18 @@ export default function HomeScreen() {
         {/* Categories */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categorias</Text>
-          <View style={styles.categoriesGrid}>
+          <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesScroll}
+          >
             <CategoryButton icon={Disc} label="Freios" />
             <CategoryButton icon={Droplet} label="Óleo" />
             <CategoryButton icon={Activity} label="Suspensão" />
             <CategoryButton icon={Zap} label="Elétrica" />
-          </View>
+            <CategoryButton icon={Settings} label="Motor" />
+            <CategoryButton icon={BatteryCharging} label="Bateria" />
+          </ScrollView>
         </View>
 
         {/* Popular Products */}
@@ -187,7 +195,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff',
     marginHorizontal: 20,
-    marginTop: -70,
+    marginTop: -50,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
@@ -206,7 +214,7 @@ const styles = StyleSheet.create({
   vehicleCard: {
     backgroundColor: '#1e3a8a',
     marginHorizontal: 20,
-    marginTop: 24,
+    marginTop: 40,
     padding: 20,
     borderRadius: 16,
     flexDirection: 'row',
@@ -315,15 +323,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginTop: 16,
+  categoriesScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
+    paddingVertical: 8,
   },
   categoryButton: {
-    width: '22%',
-    aspectRatio: 1,
+    width: 90,
+    height: 90,
     backgroundColor: '#ffffff',
     borderRadius: 12,
     alignItems: 'center',
