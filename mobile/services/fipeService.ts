@@ -1,4 +1,3 @@
-
 // Service to interact with FIPE API (using parallelum.com.br/fipe/api/v1)
 
 export interface FipeItem {

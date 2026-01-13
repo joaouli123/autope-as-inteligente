@@ -50,6 +50,8 @@ export interface Product {
   images: string[];
   category: string;
   sku: string;
+  oem_codes?: string[]; // OEM reference codes
+  mpn?: string; // Manufacturer Part Number
   brand?: string;
   model?: string;
   specifications?: {
@@ -58,6 +60,36 @@ export interface Product {
   compatible_vehicles?: string[];
   is_active: boolean;
   sales_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductCompatibility {
+  id: string;
+  product_id: string;
+  brand: string;
+  model: string;
+  year_start: number;
+  year_end?: number;
+  engines?: string[];
+  transmissions?: string[];
+  fuel_types?: string[];
+  notes?: string;
+  created_at: string;
+}
+
+export interface UserVehicle {
+  id: string;
+  user_id: string;
+  brand: string;
+  model: string;
+  year: number;
+  engine?: string;
+  transmission?: string;
+  fuel_type?: string;
+  license_plate?: string;
+  vin?: string;
+  is_primary: boolean;
   created_at: string;
   updated_at: string;
 }
