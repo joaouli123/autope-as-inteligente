@@ -1,8 +1,9 @@
 import 'react-native-get-random-values';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
+import * as Linking from 'expo-linking';
 
 // Types
 import { RootStackParamList } from './src/types/navigation';
@@ -17,15 +18,39 @@ import SignupScreen from './src/screens/SignupScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import EditVehicleScreen from './src/screens/EditVehicleScreen';
+import PasswordResetScreen from './src/screens/PasswordResetScreen';
 import MainTabs from './src/navigation/MainTabs';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
+  const navigationRef = React.useRef<any>(null);
+
+  useEffect(() => {
+    // Listener para deep links quando o app está aberto
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+    
+    // Verificar se o app foi aberto via deep link
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  const handleDeepLink = ({ url }: { url: string }) => {
+    const { path, queryParams } = Linking.parse(url);
+    
+    if (path === 'reset-password' && queryParams?.token) {
+      // Navegar para tela de reset com o token
+      navigationRef.current?.navigate('PasswordReset', { token: queryParams.token as string });
+    }
+  };
+
   return (
     <AuthProvider>
       <StatusBar style="light" />
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           screenOptions={{
             headerShown: false,
@@ -39,6 +64,7 @@ export default function App() {
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
           <Stack.Screen name="EditVehicle" component={EditVehicleScreen} />
+          <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
