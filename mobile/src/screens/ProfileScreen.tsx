@@ -21,11 +21,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 
+type NavigateToEditProfile = () => void;
+type NavigateToEditVehicle = () => void;
+
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user, logout } = useAuth();
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+
+  const navigateToEditProfile: NavigateToEditProfile = () => {
+    navigation.navigate('EditProfile' as any);
+  };
+
+  const navigateToEditVehicle: NavigateToEditVehicle = () => {
+    navigation.navigate('EditVehicle' as any);
+  };
 
   useEffect(() => {
     loadAvatar();
@@ -85,10 +96,17 @@ export default function ProfileScreen() {
       const uri = result.assets[0].uri;
 
       // Validate file size (5MB)
-      const fileInfo = await FileSystem.getInfoAsync(uri);
-      if (fileInfo.exists && 'size' in fileInfo && fileInfo.size > 5 * 1024 * 1024) {
-        Alert.alert('Erro', 'Imagem muito grande! Máximo 5MB.');
-        return;
+      try {
+        const fileInfo = await FileSystem.getInfoAsync(uri);
+        if (fileInfo.exists && 'size' in fileInfo) {
+          const size = fileInfo.size as number;
+          if (size > 5 * 1024 * 1024) {
+            Alert.alert('Erro', 'Imagem muito grande! Máximo 5MB.');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking file size:', error);
       }
 
       await saveAvatar(uri);
@@ -109,6 +127,7 @@ export default function ProfileScreen() {
     const name = user?.name || 'User';
     return name
       .split(' ')
+      .filter((n) => n.length > 0) // Filter out empty strings
       .map((n) => n[0])
       .join('')
       .toUpperCase()
@@ -203,7 +222,7 @@ export default function ProfileScreen() {
                 </View>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() => (navigation as any).navigate('EditProfile')}
+                  onPress={navigateToEditProfile}
                 >
                   <Edit2 color="#1e3a8a" size={20} />
                   <Text style={styles.editButtonText}>Editar</Text>
@@ -236,7 +255,7 @@ export default function ProfileScreen() {
                 </View>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() => (navigation as any).navigate('EditProfile')}
+                  onPress={navigateToEditProfile}
                 >
                   <Edit2 color="#1e3a8a" size={20} />
                   <Text style={styles.editButtonText}>Editar</Text>
@@ -275,7 +294,7 @@ export default function ProfileScreen() {
                 </View>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() => (navigation as any).navigate('EditVehicle')}
+                  onPress={navigateToEditVehicle}
                 >
                   <Edit2 color="#1e3a8a" size={20} />
                   <Text style={styles.editButtonText}>Editar</Text>
