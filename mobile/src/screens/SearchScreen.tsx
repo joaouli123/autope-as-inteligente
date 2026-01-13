@@ -4,22 +4,30 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   Image,
+  FlatList,
+  ListRenderItem,
+  Keyboard,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Search, Filter, X } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 
-// Constants
-const STATUS_BAR_HEIGHT = 60;
+// Mock types
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  store: string;
+  image: string;
+  category: string;
+}
 
-// Mock products (depois vem do Supabase)
-// TODO: Move mock data to a centralized mock data service for better maintainability
-const mockProducts = [
+// Mock products
+const mockProducts: Product[] = [
   {
     id: '1',
     name: 'Pastilha de Freio Dianteira Cerâmica',
@@ -90,8 +98,17 @@ type SearchScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 
 
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
+  const insets = useSafeAreaInsets(); // Hook for dynamic safe area
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(mockProducts);
+
+  // Formatting helper
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -108,84 +125,87 @@ export default function SearchScreen() {
   const clearSearch = () => {
     setSearchQuery('');
     setFilteredProducts(mockProducts);
+    Keyboard.dismiss();
   };
+
+  // Render Item for FlatList
+  const renderProductItem: ListRenderItem<Product> = ({ item }) => (
+    <TouchableOpacity
+      style={styles.productCard}
+      onPress={() => navigation.navigate('Product', { productId: item.id })}
+      activeOpacity={0.7}
+    >
+      <Image
+        source={{ uri: item.image }}
+        style={styles.productImage}
+        resizeMode="cover"
+      />
+      <View style={styles.productInfo}>
+        <Text style={styles.productCategory}>{item.category}</Text>
+        <Text style={styles.productName} numberOfLines={2}>
+          {item.name}
+        </Text>
+        <Text style={styles.productStore}>{item.store}</Text>
+        <Text style={styles.productPrice}>{formatCurrency(item.price)}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.wrapper}>
-      <SafeAreaView style={styles.container} edges={['bottom']}>
-        {/* Header azul arredondado */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Buscar Peças</Text>
-          <Text style={styles.headerSubtitle}>
-            Encontre a peça perfeita para seu veículo
-          </Text>
-        </View>
+      {/* Dynamic Header padding based on device insets */}
+      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+        <Text style={styles.headerTitle}>Buscar Peças</Text>
+        <Text style={styles.headerSubtitle}>
+          Encontre a peça perfeita para seu veículo
+        </Text>
+      </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Search color="#9ca3af" size={20} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Busque por peça ou sintoma..."
-              placeholderTextColor="#9ca3af"
-              value={searchQuery}
-              onChangeText={handleSearch}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={clearSearch}>
-                <X color="#6b7280" size={20} />
-              </TouchableOpacity>
-            )}
-          </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <Filter color="#1e3a8a" size={20} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Results */}
-        <ScrollView 
-          style={styles.results}
-          contentContainerStyle={styles.resultsContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Section Title */}
-          <Text style={styles.sectionTitle}>
-            {searchQuery.trim() === '' ? 'Todos os produtos' : 'Buscar Produtos'}
-          </Text>
-
-          {filteredProducts.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>
-                Nenhum produto encontrado
-              </Text>
-            </View>
-          ) : (
-            filteredProducts.map((product) => (
-              <TouchableOpacity
-                key={product.id}
-                style={styles.productCard}
-                onPress={() => navigation.navigate('Product', { productId: product.id })}
-              >
-                <Image
-                  source={{ uri: product.image }}
-                  style={styles.productImage}
-                />
-                <View style={styles.productInfo}>
-                  <Text style={styles.productCategory}>{product.category}</Text>
-                  <Text style={styles.productName} numberOfLines={2}>
-                    {product.name}
-                  </Text>
-                  <Text style={styles.productStore}>{product.store}</Text>
-                  <Text style={styles.productPrice}>
-                    R$ {product.price.toFixed(2).replace('.', ',')}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))
+      {/* Search Bar - Positioned absolutely or via negative margin */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Search color="#9ca3af" size={20} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Busque por peça ou sintoma..."
+            placeholderTextColor="#9ca3af"
+            value={searchQuery}
+            onChangeText={handleSearch}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={clearSearch}>
+              <X color="#6b7280" size={20} />
+            </TouchableOpacity>
           )}
-        </ScrollView>
-      </SafeAreaView>
+        </View>
+        <TouchableOpacity style={styles.filterButton}>
+          <Filter color="#1e3a8a" size={20} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Results List */}
+      <FlatList
+        data={filteredProducts}
+        renderItem={renderProductItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={[
+          styles.resultsContent,
+          { paddingBottom: insets.bottom + 20 }
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
+        ListHeaderComponent={
+          <Text style={styles.sectionTitle}>
+            {searchQuery.trim() === '' ? 'Todos os produtos' : 'Resultados da busca'}
+          </Text>
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
+          </View>
+        }
+      />
     </View>
   );
 }
@@ -193,16 +213,12 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#1e3a8a',
-  },
-  container: {
-    flex: 1,
+    backgroundColor: '#f3f4f6', // Changed to light gray for better contrast with list
   },
   header: {
     backgroundColor: '#1e3a8a',
     paddingHorizontal: 20,
-    paddingTop: STATUS_BAR_HEIGHT,
-    paddingBottom: 70,
+    paddingBottom: 70, // Space for the overlapping search bar
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
@@ -220,8 +236,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 20,
-    marginTop: -40,
-    marginBottom: 20,
+    marginTop: -40, // Negative margin to overlap header
+    marginBottom: 10,
     zIndex: 10,
   },
   searchInputContainer: {
@@ -246,7 +262,6 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     width: 50,
-    height: 50,
     backgroundColor: '#ffffff',
     borderRadius: 12,
     alignItems: 'center',
@@ -257,17 +272,16 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  results: {
-    flex: 1,
-  },
   resultsContent: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 16,
+    marginTop: 10,
   },
   emptyState: {
     paddingVertical: 60,
@@ -293,7 +307,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 8,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#e5e7eb',
   },
   productInfo: {
     flex: 1,
@@ -310,6 +324,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1f2937',
     marginBottom: 4,
+    lineHeight: 20,
   },
   productStore: {
     fontSize: 12,
