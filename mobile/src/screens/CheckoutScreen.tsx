@@ -14,19 +14,20 @@ import { useCart } from '../contexts/CartContext';
 import type { RootStackParamList } from '../types/navigation';
 
 type CheckoutScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type PaymentMethod = 'credit' | 'pix' | 'boleto';
 
 export default function CheckoutScreen() {
   const navigation = useNavigation<CheckoutScreenNavigationProp>();
   const { cartItems, getCartTotal, createOrder } = useCart();
-  const [selectedPayment, setSelectedPayment] = useState<string>('credit');
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('credit');
 
   const handleConfirmOrder = () => {
-    const paymentMethods = {
+    const paymentMethods: Record<PaymentMethod, string> = {
       credit: 'Cartão de Crédito',
       pix: 'PIX',
       boleto: 'Boleto Bancário',
     };
-    createOrder(paymentMethods[selectedPayment as keyof typeof paymentMethods]);
+    createOrder(paymentMethods[selectedPayment]);
     navigation.navigate('OrderSuccess');
   };
 

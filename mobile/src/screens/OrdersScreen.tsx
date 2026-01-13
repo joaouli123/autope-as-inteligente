@@ -11,6 +11,14 @@ import { ClipboardList, Package, ChevronRight } from 'lucide-react-native';
 import { useCart } from '../contexts/CartContext';
 import { ORDER_STATUS_MAP } from '../types/order';
 
+// Helper function to convert hex color to rgba with opacity
+const hexToRgba = (hex: string, opacity: number): string => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
+
 export default function OrdersScreen() {
   const { orders } = useCart();
 
@@ -68,7 +76,7 @@ export default function OrdersScreen() {
                   <ChevronRight color="#9ca3af" size={20} />
                 </View>
 
-                <View style={[styles.statusBadge, { backgroundColor: statusInfo.color + '20' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: hexToRgba(statusInfo.color, 0.12) }]}>
                   <View
                     style={[styles.statusDot, { backgroundColor: statusInfo.color }]}
                   />

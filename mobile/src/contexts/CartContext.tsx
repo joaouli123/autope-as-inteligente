@@ -176,7 +176,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const createOrder = (paymentMethod: string): Order => {
     const newOrder: Order = {
-      id: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
+      id: `ORD-${Date.now()}`,
       date: new Date().toISOString(),
       status: 'pending',
       items: [...cartItems],
