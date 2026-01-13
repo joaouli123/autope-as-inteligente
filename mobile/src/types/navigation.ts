@@ -12,6 +12,9 @@ export type RootStackParamList = {
   PasswordReset: { token: string };
   Checkout: undefined;
   OrderSuccess: undefined;
+  Product: { productId: string };
+  Cart: undefined;
+  Search: undefined;
 };
 
 // Main Tab Navigator types
