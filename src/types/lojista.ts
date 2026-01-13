@@ -5,6 +5,7 @@ export interface Store {
   slug: string;
   cnpj: string;
   logo_url?: string;
+  description?: string;
   address: {
     street: string;
     number: string;
@@ -16,8 +17,27 @@ export interface Store {
   };
   phone: string;
   email: string;
+  opening_hours?: {
+    [key: string]: { open: string; close: string };
+  };
+  social_media?: {
+    instagram?: string;
+    facebook?: string;
+    whatsapp?: string;
+  };
+  settings?: {
+    notifications_enabled?: boolean;
+    email_notifications?: boolean;
+    return_policy?: string;
+    default_delivery_days?: number;
+    free_shipping_above?: number;
+  };
   is_active: boolean;
+  rating: number;
+  average_rating: number;
+  total_reviews: number;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Product {
@@ -26,29 +46,38 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  stock: number;
+  stock_quantity: number;
   images: string[];
   category: string;
-  tags: string[];
+  sku: string;
+  brand?: string;
+  model?: string;
+  specifications?: {
+    [key: string]: string;
+  };
+  compatible_vehicles?: string[];
   is_active: boolean;
+  sales_count: number;
   created_at: string;
   updated_at: string;
 }
 
 export interface Order {
   id: string;
-  code: string;
+  order_number: string;
   customer_id: string;
   customer_name: string;
   customer_email: string;
+  customer_phone?: string;
   store_id: string;
   items: OrderItem[];
   subtotal: number;
-  shipping: number;
+  shipping_cost: number;
+  discount: number;
   total: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  payment_method: 'card' | 'pix' | 'cash';
-  address: {
+  status: 'pending' | 'confirmed' | 'delivering' | 'delivered' | 'cancelled';
+  payment_method: 'credit_card' | 'pix' | 'cash';
+  delivery_address: {
     name: string;
     street: string;
     number: string;
@@ -58,16 +87,22 @@ export interface Order {
     state: string;
     cep: string;
   };
+  status_history: {
+    status: string;
+    timestamp: string;
+    user?: string;
+  }[];
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface OrderItem {
-  id: string;
   product_id: string;
-  product_name: string;
+  name: string;
   quantity: number;
   price: number;
+  image?: string;
 }
 
 export interface Customer {
@@ -75,9 +110,24 @@ export interface Customer {
   name: string;
   email: string;
   phone: string;
-  cpf_cnpj: string;
+  cpf_cnpj?: string;
+  is_blocked: boolean;
   orders_count: number;
   total_spent: number;
+  last_purchase_at?: string;
+  created_at: string;
+}
+
+export interface StoreReview {
+  id: string;
+  store_id: string;
+  customer_id?: string;
+  customer_name: string;
+  order_id?: string;
+  rating: number;
+  comment?: string;
+  store_response?: string;
+  store_response_at?: string;
   created_at: string;
 }
 
