@@ -78,7 +78,8 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* AI Diagnostic Card */}
+        {/* AI Diagnostic Card - COMMENTED OUT FOR NOW */}
+        {/* 
         <View style={styles.aiCard}>
           <View style={styles.aiHeader}>
             <Sparkles color="#fbbf24" size={24} />
@@ -92,6 +93,7 @@ export default function HomeScreen() {
             <ChevronRight color="#9ca3af" size={20} />
           </TouchableOpacity>
         </View>
+        */}
 
         {/* Categories */}
         <View style={styles.section}>
@@ -128,8 +130,10 @@ interface CategoryButtonProps {
 function CategoryButton({ icon: Icon, label }: CategoryButtonProps) {
   return (
     <TouchableOpacity style={styles.categoryButton}>
-      <Icon color="#1e3a8a" size={32} />
-      <Text style={styles.categoryLabel}>{label}</Text>
+      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <Icon color="#1e3a8a" size={32} />
+        <Text style={styles.categoryLabel}>{label}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -159,7 +163,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 4,
+    marginTop: 2,
   },
   locationText: {
     color: '#d1d5db',
@@ -183,7 +187,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff',
     marginHorizontal: 20,
-    marginTop: -80,
+    marginTop: -70,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
@@ -202,7 +206,7 @@ const styles = StyleSheet.create({
   vehicleCard: {
     backgroundColor: '#1e3a8a',
     marginHorizontal: 20,
-    marginTop: 20,
+    marginTop: 24,
     padding: 20,
     borderRadius: 16,
     flexDirection: 'row',
@@ -324,6 +328,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -335,5 +341,6 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginTop: 8,
     textAlign: 'center',
+    lineHeight: 16,
   },
 });

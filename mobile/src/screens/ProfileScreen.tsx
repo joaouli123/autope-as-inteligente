@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,19 +6,133 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
+  Modal,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Car, LogOut, Trash2, Edit2, ArrowLeft } from 'lucide-react-native';
+import { Car, LogOut, Trash2, Edit2, ArrowLeft, FileText, MapPin, Camera, Image as ImageIcon } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
+
+type NavigateToEditProfile = () => void;
+type NavigateToEditVehicle = () => void;
 
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user, logout } = useAuth();
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+
+  const navigateToEditProfile: NavigateToEditProfile = () => {
+    navigation.navigate('EditProfile' as any);
+  };
+
+  const navigateToEditVehicle: NavigateToEditVehicle = () => {
+    navigation.navigate('EditVehicle' as any);
+  };
+
+  useEffect(() => {
+    loadAvatar();
+  }, []);
+
+  const loadAvatar = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('user_avatar');
+      if (saved) setAvatarUri(saved);
+    } catch (error) {
+      console.error('Error loading avatar:', error);
+    }
+  };
+
+  const saveAvatar = async (uri: string) => {
+    try {
+      await AsyncStorage.setItem('user_avatar', uri);
+      setAvatarUri(uri);
+    } catch (error) {
+      console.error('Error saving avatar:', error);
+    }
+  };
+
+  const handlePickImage = async (source: 'camera' | 'gallery') => {
+    setShowAvatarModal(false);
+
+    // Request permissions
+    if (source === 'camera') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Erro', 'Precisamos de permissão para acessar a câmera');
+        return;
+      }
+    } else {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Erro', 'Precisamos de permissão para acessar a galeria');
+        return;
+      }
+    }
+
+    // Launch camera or gallery
+    const result = await (source === 'camera'
+      ? ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.5,
+        })
+      : ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.5,
+        }));
+
+    if (!result.canceled && result.assets[0]) {
+      const uri = result.assets[0].uri;
+
+      // Validate file size (5MB)
+      try {
+        const fileInfo = await FileSystem.getInfoAsync(uri);
+        if (fileInfo.exists && 'size' in fileInfo) {
+          const size = fileInfo.size as number;
+          if (size > 5 * 1024 * 1024) {
+            Alert.alert('Erro', 'Imagem muito grande! Máximo 5MB.');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking file size:', error);
+      }
+
+      await saveAvatar(uri);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setShowAvatarModal(false);
+    try {
+      await AsyncStorage.removeItem('user_avatar');
+      setAvatarUri(null);
+    } catch (error) {
+      console.error('Error removing avatar:', error);
+    }
+  };
+
+  const getInitials = () => {
+    const name = user?.name || 'User';
+    return name
+      .split(' ')
+      .filter((n) => n.length > 0) // Filter out empty strings
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -64,46 +178,51 @@ export default function ProfileScreen() {
     );
   }
 
-  const initials = user.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
   return (
-    <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
-      <SafeAreaView style={styles.container} edges={['bottom']}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
+    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Header BLUE */}
+          <View style={styles.headerBlue}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
               <ArrowLeft color="#ffffff" size={24} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Perfil</Text>
-            <View style={{ width: 24 }} />
           </View>
 
-          {/* Avatar */}
-          <View style={styles.avatarSection}>
-            <View style={styles.avatarLarge}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
+          {/* Avatar Clicável */}
+          <View style={styles.avatarContainer}>
+            <TouchableOpacity
+              style={styles.avatar}
+              onPress={() => setShowAvatarModal(true)}
+            >
+              {avatarUri ? (
+                <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+              ) : (
+                <Text style={styles.avatarText}>{getInitials()}</Text>
+              )}
+              <View style={styles.avatarEditIcon}>
+                <Camera color="#ffffff" size={16} />
+              </View>
+            </TouchableOpacity>
             <Text style={styles.userName}>{user.name}</Text>
           </View>
 
-          {/* Content with white background */}
-          <View style={styles.content}>
+          {/* Content WHITE */}
+          <View style={styles.contentWhite}>
             {/* Personal Data Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>📋 Dados Pessoais</Text>
+                <View style={styles.sectionTitleRow}>
+                  <FileText color="#1e3a8a" size={24} />
+                  <Text style={styles.sectionTitle}>Dados Pessoais</Text>
+                </View>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() => (navigation as any).navigate('EditProfile')}
+                  onPress={navigateToEditProfile}
                 >
                   <Edit2 color="#1e3a8a" size={20} />
                   <Text style={styles.editButtonText}>Editar</Text>
@@ -129,7 +248,19 @@ export default function ProfileScreen() {
 
             {/* Address Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>📍 Endereço</Text>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleRow}>
+                  <MapPin color="#1e3a8a" size={24} />
+                  <Text style={styles.sectionTitle}>Endereço</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={navigateToEditProfile}
+                >
+                  <Edit2 color="#1e3a8a" size={20} />
+                  <Text style={styles.editButtonText}>Editar</Text>
+                </TouchableOpacity>
+              </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Rua</Text>
                 <Text style={styles.infoValue}>
@@ -157,10 +288,13 @@ export default function ProfileScreen() {
             {/* Vehicle Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>🚗 Seu Veículo</Text>
+                <View style={styles.sectionTitleRow}>
+                  <Car color="#1e3a8a" size={24} />
+                  <Text style={styles.sectionTitle}>Seu Veículo</Text>
+                </View>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() => (navigation as any).navigate('EditVehicle')}
+                  onPress={navigateToEditVehicle}
                 >
                   <Edit2 color="#1e3a8a" size={20} />
                   <Text style={styles.editButtonText}>Editar</Text>
@@ -198,12 +332,63 @@ export default function ProfileScreen() {
             </View>
 
             {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>AutoPeças IA v1.0</Text>
-            </View>
+            <Text style={styles.footer}>AutoPeças IA v1.0</Text>
           </View>
         </ScrollView>
       </SafeAreaView>
+
+      {/* Modal de opções de Avatar */}
+      <Modal
+        visible={showAvatarModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAvatarModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowAvatarModal(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Foto do Perfil</Text>
+
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => handlePickImage('camera')}
+            >
+              <Camera color="#1e3a8a" size={24} />
+              <Text style={styles.modalOptionText}>Tirar Foto</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => handlePickImage('gallery')}
+            >
+              <ImageIcon color="#1e3a8a" size={24} />
+              <Text style={styles.modalOptionText}>Escolher da Galeria</Text>
+            </TouchableOpacity>
+
+            {avatarUri && (
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={handleRemoveAvatar}
+              >
+                <Trash2 color="#ef4444" size={24} />
+                <Text style={[styles.modalOptionText, { color: '#ef4444' }]}>
+                  Remover Foto
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.modalCancel}
+              onPress={() => setShowAvatarModal(false)}
+            >
+              <Text style={styles.modalCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -212,58 +397,78 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 40,
+  },
   noUserText: {
     fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
     marginTop: 40,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  headerBlue: {
+    backgroundColor: '#1e3a8a',
     paddingHorizontal: 20,
     paddingTop: 60,
-    paddingBottom: 20,
-  },
-  backButton: {
-    padding: 8,
+    paddingBottom: 120,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
   },
-  avatarSection: {
+  avatarContainer: {
     alignItems: 'center',
-    paddingBottom: 40,
+    marginTop: -80,
+    marginBottom: 24,
   },
-  avatarLarge: {
+  avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
     backgroundColor: '#3b82f6',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
     marginBottom: 16,
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   avatarText: {
     color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 40,
   },
+  avatarEditIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#1e3a8a',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#ffffff',
+  },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#1f2937',
   },
-  content: {
-    flex: 1,
+  contentWhite: {
     backgroundColor: '#f9fafb',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 24,
     paddingHorizontal: 20,
+    paddingBottom: 40,
   },
   section: {
     backgroundColor: '#ffffff',
@@ -282,11 +487,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 16,
   },
   editButton: {
     flexDirection: 'row',
@@ -373,11 +582,53 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   footer: {
-    paddingVertical: 24,
+    textAlign: 'center',
+    color: '#9ca3af',
+    fontSize: 14,
+    marginTop: 40,
+    marginBottom: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 40,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalOptionText: {
+    fontSize: 16,
+    color: '#1f2937',
+    fontWeight: '500',
+  },
+  modalCancel: {
+    marginTop: 16,
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  footerText: {
-    fontSize: 12,
-    color: '#9ca3af',
+  modalCancelText: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '600',
   },
 });
