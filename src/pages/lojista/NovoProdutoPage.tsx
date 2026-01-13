@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import ImageUpload from '../../components/lojista/ImageUpload';
+import VehicleCompatibilityMatrix, {
+  type VehicleCompatibility,
+} from '../../components/lojista/VehicleCompatibilityMatrix';
 import { supabase } from '../../services/supabaseClient';
 import type { Product } from '../../types/lojista';
 
@@ -10,6 +13,8 @@ interface FormData {
   description: string;
   category: string;
   sku: string;
+  oem_codes: string;
+  mpn: string;
   brand: string;
   model: string;
   price: string;
@@ -17,6 +22,7 @@ interface FormData {
   images: string[];
   specifications: { key: string; value: string }[];
   compatible_vehicles: string[];
+  vehicle_compatibilities: VehicleCompatibility[];
   is_active: boolean;
 }
 
@@ -33,6 +39,20 @@ const categories = [
   'Acessórios',
 ];
 
+// Category-specific specification templates
+const categorySpecifications: Record<string, string[]> = {
+  Freios: ['tipo', 'posição', 'material', 'dimensões', 'espessura'],
+  Suspensão: ['tipo', 'lado', 'posição', 'curso', 'carga_máxima'],
+  Motor: ['tipo', 'cilindros', 'potência', 'torque', 'aplicação'],
+  Elétrica: ['voltagem', 'tipo', 'amperagem', 'potência', 'conectores'],
+  Transmissão: ['tipo', 'marchas', 'torque_suportado', 'relação'],
+  Filtros: ['tipo', 'aplicação', 'dimensões', 'material', 'microns'],
+  'Óleo e Fluidos': ['tipo', 'viscosidade', 'especificação', 'volume', 'aplicação'],
+  Pneus: ['largura', 'perfil', 'aro', 'índice_carga', 'índice_velocidade'],
+  Bateria: ['voltagem', 'amperagem', 'cca', 'dimensões', 'tipo'],
+  Acessórios: ['tipo', 'material', 'compatibilidade', 'cor'],
+};
+
 export default function NovoProdutoPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -44,6 +64,8 @@ export default function NovoProdutoPage() {
     description: '',
     category: '',
     sku: '',
+    oem_codes: '',
+    mpn: '',
     brand: '',
     model: '',
     price: '',
@@ -51,6 +73,7 @@ export default function NovoProdutoPage() {
     images: [],
     specifications: [{ key: '', value: '' }],
     compatible_vehicles: [''],
+    vehicle_compatibilities: [],
     is_active: true,
   });
 
@@ -86,6 +109,8 @@ export default function NovoProdutoPage() {
         description: data.description,
         category: data.category,
         sku: data.sku,
+        oem_codes: (data.oem_codes || []).join(', '),
+        mpn: data.mpn || '',
         brand: data.brand || '',
         model: data.model || '',
         price: data.price.toString(),
@@ -96,6 +121,7 @@ export default function NovoProdutoPage() {
           data.compatible_vehicles && data.compatible_vehicles.length > 0
             ? data.compatible_vehicles
             : [''],
+        vehicle_compatibilities: [],
         is_active: data.is_active,
       });
     } catch (error) {
@@ -109,9 +135,21 @@ export default function NovoProdutoPage() {
 
   const handleChange = (
     field: keyof FormData,
-    value: string | string[] | boolean
+    value: string | string[] | boolean | VehicleCompatibility[]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    
+    // If category changes, update specifications with category-specific fields
+    if (field === 'category' && typeof value === 'string' && value) {
+      const categorySpecs = categorySpecifications[value] || [];
+      const newSpecs = categorySpecs.map((key) => ({ key, value: '' }));
+      setFormData((prev) => ({ 
+        ...prev, 
+        [field]: value,
+        specifications: newSpecs.length > 0 ? newSpecs : [{ key: '', value: '' }]
+      }));
+    }
+    
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
     }
@@ -219,11 +257,18 @@ export default function NovoProdutoPage() {
         v.trim()
       );
 
+      // Parse OEM codes
+      const oem_codes = formData.oem_codes
+        ? formData.oem_codes.split(',').map((s) => s.trim()).filter(Boolean)
+        : null;
+
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
         category: formData.category,
         sku: formData.sku.trim(),
+        oem_codes,
+        mpn: formData.mpn.trim() || null,
         brand: formData.brand.trim() || null,
         model: formData.model.trim() || null,
         price: parseFloat(formData.price),
@@ -243,6 +288,38 @@ export default function NovoProdutoPage() {
 
         if (error) throw error;
 
+        // Update vehicle compatibilities
+        if (formData.vehicle_compatibilities.length > 0) {
+          // Delete existing compatibilities
+          await supabase
+            .from('product_compatibility')
+            .delete()
+            .eq('product_id', id);
+
+          // Insert new compatibilities
+          const compatibilityData = formData.vehicle_compatibilities
+            .filter((comp) => comp.brand && comp.model)
+            .map((comp) => ({
+              product_id: id,
+              brand: comp.brand,
+              model: comp.model,
+              year_start: comp.year_start,
+              year_end: comp.year_end || null,
+              engines: comp.engines.length > 0 ? comp.engines : null,
+              transmissions: comp.transmissions.length > 0 ? comp.transmissions : null,
+              fuel_types: comp.fuel_types.length > 0 ? comp.fuel_types : null,
+              notes: comp.notes || null,
+            }));
+
+          if (compatibilityData.length > 0) {
+            const { error: compError } = await supabase
+              .from('product_compatibility')
+              .insert(compatibilityData);
+
+            if (compError) console.error('Error saving compatibilities:', compError);
+          }
+        }
+
         alert('Produto atualizado com sucesso!');
       } else {
         // Create new product - need to get store_id from session
@@ -258,11 +335,38 @@ export default function NovoProdutoPage() {
 
         if (storeError) throw storeError;
 
-        const { error } = await supabase
+        const { data: newProduct, error } = await supabase
           .from('products')
-          .insert({ ...productData, store_id: storeData.id });
+          .insert({ ...productData, store_id: storeData.id })
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Insert vehicle compatibilities
+        if (formData.vehicle_compatibilities.length > 0 && newProduct) {
+          const compatibilityData = formData.vehicle_compatibilities
+            .filter((comp) => comp.brand && comp.model)
+            .map((comp) => ({
+              product_id: newProduct.id,
+              brand: comp.brand,
+              model: comp.model,
+              year_start: comp.year_start,
+              year_end: comp.year_end || null,
+              engines: comp.engines.length > 0 ? comp.engines : null,
+              transmissions: comp.transmissions.length > 0 ? comp.transmissions : null,
+              fuel_types: comp.fuel_types.length > 0 ? comp.fuel_types : null,
+              notes: comp.notes || null,
+            }));
+
+          if (compatibilityData.length > 0) {
+            const { error: compError } = await supabase
+              .from('product_compatibility')
+              .insert(compatibilityData);
+
+            if (compError) console.error('Error saving compatibilities:', compError);
+          }
+        }
 
         alert('Produto cadastrado com sucesso!');
       }
@@ -386,6 +490,38 @@ export default function NovoProdutoPage() {
               {errors.sku && (
                 <p className="text-red-600 text-sm mt-1">{errors.sku}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Códigos OEM
+              </label>
+              <input
+                type="text"
+                value={formData.oem_codes}
+                onChange={(e) => handleChange('oem_codes', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ex: 123456, 789012 (separados por vírgula)"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Códigos de referência OEM (Original Equipment Manufacturer)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                MPN (Manufacturer Part Number)
+              </label>
+              <input
+                type="text"
+                value={formData.mpn}
+                onChange={(e) => handleChange('mpn', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ex: BP12345"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Número da peça do fabricante
+              </p>
             </div>
 
             <div>
@@ -529,11 +665,24 @@ export default function NovoProdutoPage() {
           </div>
         </div>
 
-        {/* Compatible Vehicles */}
+        {/* Compatible Vehicles - Advanced Matrix */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <VehicleCompatibilityMatrix
+            compatibilities={formData.vehicle_compatibilities}
+            onChange={(compatibilities) =>
+              handleChange('vehicle_compatibilities', compatibilities)
+            }
+          />
+        </div>
+
+        {/* Legacy Compatible Vehicles (Simple Text List) */}
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Veículos Compatíveis
+            Compatibilidade Simplificada (Legado)
           </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Use este campo para descrição simples de compatibilidade ou deixe vazio para usar apenas a matriz acima.
+          </p>
           <div className="space-y-3">
             {formData.compatible_vehicles.map((vehicle, index) => (
               <div key={index} className="flex gap-3">
