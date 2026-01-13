@@ -39,13 +39,15 @@ export default function StatusBadge({ status, type = 'order' }: StatusBadgeProps
   };
 
   const getProductStatusStyle = (status: string) => {
-    return status === 'active' || status === 'true'
+    const isActive = status === 'active' || status === 'true' || status === true;
+    return isActive
       ? 'bg-green-100 text-green-800'
       : 'bg-gray-100 text-gray-800';
   };
 
   const getProductStatusLabel = (status: string) => {
-    return status === 'active' || status === 'true' ? 'Ativo' : 'Inativo';
+    const isActive = status === 'active' || status === 'true' || status === true;
+    return isActive ? 'Ativo' : 'Inativo';
   };
 
   const getCustomerStatusStyle = (status: string) => {

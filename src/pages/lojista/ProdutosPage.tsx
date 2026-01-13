@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Package, Edit, Eye, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import type { Product } from '../../types/lojista';
 import SearchBar from '../../components/lojista/SearchBar';
@@ -10,6 +10,7 @@ import ProductDetailsModal from '../../components/lojista/ProductDetailsModal';
 import { supabase } from '../../services/supabaseClient';
 
 export default function ProdutosPage() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,9 +233,7 @@ export default function ProdutosPage() {
                       {
                         label: 'Editar',
                         icon: <Edit size={16} />,
-                        onClick: () => {
-                          window.location.href = `/lojista/produtos/${product.id}`;
-                        },
+                        onClick: () => navigate(`/lojista/produtos/${product.id}`),
                       },
                       {
                         label: product.is_active ? 'Desativar' : 'Ativar',
