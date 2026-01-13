@@ -179,8 +179,8 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView 
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -190,7 +190,7 @@ export default function ProfileScreen() {
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <ArrowLeft color="#ffffff" size={24} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Voltar para tela principal</Text>
+            <Text style={styles.headerTitle}>Voltar</Text>
           </View>
 
           {/* Avatar Clicável */}
@@ -211,8 +211,8 @@ export default function ProfileScreen() {
             <Text style={styles.userName}>{user.name}</Text>
           </View>
 
-          {/* Content WHITE */}
-          <View style={styles.contentWhite}>
+          {/* Content WRAPPER */}
+          <View style={styles.contentWrapper}>
             {/* Personal Data Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
@@ -301,15 +301,15 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
               <View style={styles.vehicleCard}>
-                <View style={styles.vehicleIcon}>
-                  <Car color="#1e3a8a" size={24} />
+                <View style={styles.vehicleIconContainer}>
+                  <Car color="#ffffff" size={32} />
                 </View>
                 <View style={styles.vehicleInfo}>
                   <Text style={styles.vehicleName}>
                     {user.vehicle.brand} {user.vehicle.model}
                   </Text>
                   <Text style={styles.vehicleDetails}>
-                    {user.vehicle.year} {user.vehicle.engine} {user.vehicle.valves}
+                    {user.vehicle.year} • {user.vehicle.engine} • {user.vehicle.valves}
                   </Text>
                   <Text style={styles.vehicleDetails}>
                     {user.vehicle.fuel} • {user.vehicle.transmission}
@@ -319,17 +319,19 @@ export default function ProfileScreen() {
             </View>
 
             {/* Action Buttons */}
-            <View style={styles.actionsSection}>
-              <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>
-                <LogOut color="#6b7280" size={20} />
-                <Text style={styles.buttonLogoutText}>Sair do App</Text>
-              </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>Sair do App</Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonDelete} onPress={handleDeleteAccount}>
-                <Trash2 color="#ef4444" size={20} />
-                <Text style={styles.buttonDeleteText}>Deletar Conta</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity 
+              style={styles.deleteButton}
+              onPress={handleDeleteAccount}
+            >
+              <Text style={styles.deleteButtonText}>Deletar Conta</Text>
+            </TouchableOpacity>
 
             {/* Footer */}
             <Text style={styles.footer}>AutoPeças IA v1.0</Text>
@@ -418,10 +420,9 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 24,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#ffffff',
-    flex: 1,
   },
   avatarContainer: {
     alignItems: 'center',
@@ -436,7 +437,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    marginBottom: 16,
+    borderWidth: 4,
+    borderColor: '#ffffff',
   },
   avatarImage: {
     width: 100,
@@ -444,9 +446,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   avatarText: {
-    color: '#ffffff',
+    fontSize: 36,
     fontWeight: 'bold',
-    fontSize: 40,
+    color: '#ffffff',
   },
   avatarEditIcon: {
     position: 'absolute',
@@ -465,17 +467,17 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1f2937',
+    marginTop: 12,
   },
-  contentWhite: {
+  contentWrapper: {
     backgroundColor: '#f9fafb',
     paddingHorizontal: 20,
-    paddingBottom: 40,
   },
   section: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 20,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -502,6 +504,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   editButtonText: {
     color: '#1e3a8a',
@@ -509,27 +514,31 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   infoRow: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   infoLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#6b7280',
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 16,
     color: '#1f2937',
+    fontWeight: '500',
   },
   vehicleCard: {
-    flexDirection: 'row',
-    gap: 16,
-    alignItems: 'center',
-  },
-  vehicleIcon: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#1e3a8a',
     borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  vehicleIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -539,45 +548,35 @@ const styles = StyleSheet.create({
   vehicleName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#ffffff',
     marginBottom: 4,
   },
   vehicleDetails: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#d1d5db',
   },
-  actionsSection: {
-    gap: 12,
-    marginTop: 20,
-  },
-  buttonLogout: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#ffffff',
+  logoutButton: {
+    backgroundColor: '#6b7280',
     paddingVertical: 16,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    marginTop: 24,
   },
-  buttonLogoutText: {
-    color: '#6b7280',
+  logoutButtonText: {
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
   },
-  buttonDelete: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#ffffff',
+  deleteButton: {
+    backgroundColor: 'transparent',
     paddingVertical: 16,
     borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 12,
     borderWidth: 1,
-    borderColor: '#fee2e2',
+    borderColor: '#ef4444',
   },
-  buttonDeleteText: {
+  deleteButtonText: {
     color: '#ef4444',
     fontSize: 16,
     fontWeight: '600',
