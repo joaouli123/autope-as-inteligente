@@ -14,6 +14,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Search, Filter, X } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 
+// Constants
+const STATUS_BAR_HEIGHT = 60;
+
 // Mock products (depois vem do Supabase)
 // TODO: Move mock data to a centralized mock data service for better maintainability
 const mockProducts = [
@@ -32,6 +35,54 @@ const mockProducts = [
     store: 'Auto Peças Central',
     image: 'https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=400',
     category: 'Óleo e Filtros',
+  },
+  {
+    id: '3',
+    name: 'Amortecedor Traseiro Esportivo',
+    price: 389.90,
+    store: 'Performance Parts',
+    image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400',
+    category: 'Suspensão',
+  },
+  {
+    id: '4',
+    name: 'Kit Embreagem Completo',
+    price: 650.00,
+    store: 'Auto Peças Premium',
+    image: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400',
+    category: 'Transmissão',
+  },
+  {
+    id: '5',
+    name: 'Bateria 60Ah Livre de Manutenção',
+    price: 425.50,
+    store: 'Baterias Express',
+    image: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400',
+    category: 'Elétrica',
+  },
+  {
+    id: '6',
+    name: 'Jogo de Velas de Ignição Premium',
+    price: 89.90,
+    store: 'Auto Peças Central',
+    image: 'https://images.unsplash.com/photo-1580274455191-1c62238fa333?w=400',
+    category: 'Motor',
+  },
+  {
+    id: '7',
+    name: 'Disco de Freio Ventilado Par',
+    price: 285.00,
+    store: 'Freios & Suspensão',
+    image: 'https://images.unsplash.com/photo-1614359952095-8b2ac2043e0d?w=400',
+    category: 'Freios',
+  },
+  {
+    id: '8',
+    name: 'Radiador de Alumínio Reforçado',
+    price: 520.00,
+    store: 'Refrigeração Auto',
+    image: 'https://images.unsplash.com/photo-1625047508850-1f3c0d67d9fd?w=400',
+    category: 'Arrefecimento',
   },
 ];
 
@@ -60,8 +111,8 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-      <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.wrapper}>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
         {/* Header azul arredondado */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Buscar Peças</Text>
@@ -98,6 +149,11 @@ export default function SearchScreen() {
           contentContainerStyle={styles.resultsContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Section Title */}
+          <Text style={styles.sectionTitle}>
+            {searchQuery.trim() === '' ? 'Todos os produtos' : 'Buscar Produtos'}
+          </Text>
+
           {filteredProducts.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>
@@ -135,14 +191,18 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#1e3a8a',
+  },
   container: {
     flex: 1,
   },
   header: {
     backgroundColor: '#1e3a8a',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 100,
+    paddingTop: STATUS_BAR_HEIGHT,
+    paddingBottom: 70,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
@@ -160,7 +220,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 20,
-    marginTop: -50,
+    marginTop: -40,
     marginBottom: 20,
     zIndex: 10,
   },
@@ -202,6 +262,12 @@ const styles = StyleSheet.create({
   },
   resultsContent: {
     padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 16,
   },
   emptyState: {
     paddingVertical: 60,
