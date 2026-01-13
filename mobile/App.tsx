@@ -10,6 +10,7 @@ import { RootStackParamList } from './src/types/navigation';
 
 // Context
 import { AuthProvider } from './src/contexts/AuthContext';
+import { CartProvider } from './src/contexts/CartContext';
 
 // Screens
 import SplashScreen from './src/screens/SplashScreen';
@@ -19,6 +20,8 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import EditVehicleScreen from './src/screens/EditVehicleScreen';
 import PasswordResetScreen from './src/screens/PasswordResetScreen';
+import CheckoutScreen from './src/screens/CheckoutScreen';
+import OrderSuccessScreen from './src/screens/OrderSuccessScreen';
 import MainTabs from './src/navigation/MainTabs';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -49,24 +52,28 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <StatusBar style="light" />
-      <NavigationContainer ref={navigationRef}>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#1e3a8a' }
-          }}
-        >
-          <Stack.Screen name="Splash" component={SplashScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Signup" component={SignupScreen} />
-          <Stack.Screen name="Main" component={MainTabs} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-          <Stack.Screen name="EditVehicle" component={EditVehicleScreen} />
-          <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <CartProvider>
+        <StatusBar style="light" />
+        <NavigationContainer ref={navigationRef}>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#1e3a8a' }
+            }}
+          >
+            <Stack.Screen name="Splash" component={SplashScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen name="EditVehicle" component={EditVehicleScreen} />
+            <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="OrderSuccess" component={OrderSuccessScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </CartProvider>
     </AuthProvider>
   );
 }
