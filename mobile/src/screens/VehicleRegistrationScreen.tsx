@@ -154,7 +154,14 @@ export default function VehicleRegistrationScreen() {
         user_id: user.id,
         brand: selectedBrand,
         model: selectedModel,
-        year: parseInt(selectedYear.split('-')[0]) || parseInt(selectedYear),
+        year: (() => {
+          const yearParts = selectedYear.split('-');
+          const yearNum = parseInt(yearParts[0]);
+          if (!isNaN(yearNum)) return yearNum;
+          
+          // Fallback to current year if parsing fails
+          return new Date().getFullYear();
+        })(),
         engine: engine || null,
         transmission: transmission || null,
         fuel_type: fuelType || null,

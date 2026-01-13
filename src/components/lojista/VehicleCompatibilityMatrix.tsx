@@ -60,7 +60,7 @@ export default function VehicleCompatibilityMatrix({
     onChange(compatibilities.filter((_, i) => i !== index));
   };
 
-  const updateCompatibility = (index: number, field: keyof VehicleCompatibility, value: any) => {
+  const updateCompatibility = (index: number, field: keyof VehicleCompatibility, value: string | number | string[] | undefined) => {
     const updated = [...compatibilities];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);

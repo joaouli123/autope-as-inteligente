@@ -109,7 +109,7 @@ export default function NovoProdutoPage() {
         description: data.description,
         category: data.category,
         sku: data.sku,
-        oem_codes: (data.oem_codes || []).join(', '),
+        oem_codes: Array.isArray(data.oem_codes) ? data.oem_codes.join(', ') : '',
         mpn: data.mpn || '',
         brand: data.brand || '',
         model: data.model || '',

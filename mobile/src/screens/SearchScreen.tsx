@@ -205,6 +205,10 @@ export default function SearchScreen() {
           const compatibilities = product.product_compatibility || [];
           
           return compatibilities.some((comp: any) => {
+            if (!comp.brand || !comp.model || !userVehicle.brand || !userVehicle.model) {
+              return false;
+            }
+            
             const brandMatch = comp.brand.toLowerCase() === userVehicle.brand.toLowerCase();
             const modelMatch = comp.model.toLowerCase() === userVehicle.model.toLowerCase();
             const yearMatch = 

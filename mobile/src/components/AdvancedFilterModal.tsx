@@ -271,7 +271,7 @@ export default function AdvancedFilterModal({
                   styles.sortOption,
                   localFilters.sortBy === option.value && styles.sortOptionActive,
                 ]}
-                onPress={() => setLocalFilters({ ...localFilters, sortBy: option.value as any })}
+                onPress={() => setLocalFilters({ ...localFilters, sortBy: option.value as FilterOptions['sortBy'] })}
               >
                 <View
                   style={[
