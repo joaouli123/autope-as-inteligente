@@ -4,24 +4,33 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   Image,
+  FlatList,
+  StatusBar,
+  Keyboard,
+  ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Search, Filter, X } from 'lucide-react-native';
+import { Search, Filter, X, ShoppingBag } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import AdvancedFilterModal from '../components/AdvancedFilterModal';
 import { supabase } from '../services/supabaseClient';
 
-// Constants
-const STATUS_BAR_HEIGHT = 60;
+// --- Interfaces ---
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  store: string;
+  image: string;
+  category: string;
+}
 
-// Mock products (depois vem do Supabase)
-// TODO: Move mock data to a centralized mock data service for better maintainability
-const mockProducts = [
+// Mock de segurança (caso a internet falhe)
+const mockProducts: Product[] = [
   {
     id: '1',
     name: 'Pastilha de Freio Dianteira Cerâmica',
@@ -38,54 +47,6 @@ const mockProducts = [
     image: 'https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=400',
     category: 'Óleo e Filtros',
   },
-  {
-    id: '3',
-    name: 'Amortecedor Traseiro Esportivo',
-    price: 389.90,
-    store: 'Performance Parts',
-    image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400',
-    category: 'Suspensão',
-  },
-  {
-    id: '4',
-    name: 'Kit Embreagem Completo',
-    price: 650.00,
-    store: 'Auto Peças Premium',
-    image: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400',
-    category: 'Transmissão',
-  },
-  {
-    id: '5',
-    name: 'Bateria 60Ah Livre de Manutenção',
-    price: 425.50,
-    store: 'Baterias Express',
-    image: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400',
-    category: 'Elétrica',
-  },
-  {
-    id: '6',
-    name: 'Jogo de Velas de Ignição Premium',
-    price: 89.90,
-    store: 'Auto Peças Central',
-    image: 'https://images.unsplash.com/photo-1580274455191-1c62238fa333?w=400',
-    category: 'Motor',
-  },
-  {
-    id: '7',
-    name: 'Disco de Freio Ventilado Par',
-    price: 285.00,
-    store: 'Freios & Suspensão',
-    image: 'https://images.unsplash.com/photo-1614359952095-8b2ac2043e0d?w=400',
-    category: 'Freios',
-  },
-  {
-    id: '8',
-    name: 'Radiador de Alumínio Reforçado',
-    price: 520.00,
-    store: 'Refrigeração Auto',
-    image: 'https://images.unsplash.com/photo-1625047508850-1f3c0d67d9fd?w=400',
-    category: 'Arrefecimento',
-  },
 ];
 
 type SearchScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Search'>;
@@ -100,12 +61,15 @@ interface FilterOptions {
 
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
+  const insets = useSafeAreaInsets();
+  
+  // --- Estados Consolidados ---
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(mockProducts);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [userVehicle, setUserVehicle] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  
+   
   const [filters, setFilters] = useState<FilterOptions>({
     compatibilityGuaranteed: false,
     categories: [],
@@ -114,6 +78,24 @@ export default function SearchScreen() {
     specifications: {},
   });
 
+  // --- Função de Formatação (Recuperada) ---
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
+
+  // --- Contagem de Filtros Ativos ---
+  const activeFiltersCount = () => {
+    let count = 0;
+    if (filters.compatibilityGuaranteed) count++;
+    if (filters.categories.length > 0) count += filters.categories.length;
+    if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) count++;
+    return count;
+  };
+
+  // --- Efeitos (Carregamento de Dados) ---
   useEffect(() => {
     loadUserVehicle();
     loadProducts();
@@ -126,7 +108,6 @@ export default function SearchScreen() {
   const loadUserVehicle = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (user) {
         const { data } = await supabase
           .from('user_vehicles')
@@ -134,10 +115,7 @@ export default function SearchScreen() {
           .eq('user_id', user.id)
           .eq('is_primary', true)
           .single();
-        
-        if (data) {
-          setUserVehicle(data);
-        }
+        if (data) setUserVehicle(data);
       }
     } catch (error) {
       console.error('Error loading user vehicle:', error);
@@ -149,200 +127,171 @@ export default function SearchScreen() {
     try {
       let query = supabase
         .from('products')
-        .select(`
-          *,
-          stores!inner(name),
-          product_compatibility(*)
-        `)
+        .select(`*, stores!inner(name), product_compatibility(*)`)
         .eq('is_active', true);
 
-      // Apply search query
+      // Filtro de Busca Texto
       if (searchQuery.trim()) {
         query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
-
-      // Apply category filter
+      // Filtro de Categoria
       if (filters.categories.length > 0) {
         query = query.in('category', filters.categories);
       }
-
-      // Apply price filter
+      // Filtro de Preço
       query = query
         .gte('price', filters.priceRange.min)
         .lte('price', filters.priceRange.max);
 
-      // Apply compatibility filter
-      if (filters.compatibilityGuaranteed && userVehicle) {
-        // This requires a more complex query - we need to check product_compatibility
-        // For now, we'll filter in memory after fetching
-        // In production, you'd want to use a Postgres function for this
-      }
-
-      // Apply sorting
+      // Ordenação
       switch (filters.sortBy) {
-        case 'price_asc':
-          query = query.order('price', { ascending: true });
-          break;
-        case 'price_desc':
-          query = query.order('price', { ascending: false });
-          break;
-        case 'newest':
-          query = query.order('created_at', { ascending: false });
-          break;
-        default:
-          query = query.order('sales_count', { ascending: false });
+        case 'price_asc': query = query.order('price', { ascending: true }); break;
+        case 'price_desc': query = query.order('price', { ascending: false }); break;
+        case 'newest': query = query.order('created_at', { ascending: false }); break;
+        default: query = query.order('sales_count', { ascending: false });
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
 
-      // Apply compatibility filter in memory if needed
+      // Filtro de Compatibilidade (Feito em memória pois é complexo)
       let products = data || [];
-      
       if (filters.compatibilityGuaranteed && userVehicle) {
         products = products.filter((product: any) => {
           const compatibilities = product.product_compatibility || [];
-          
           return compatibilities.some((comp: any) => {
-            if (!comp.brand || !comp.model || !userVehicle.brand || !userVehicle.model) {
-              return false;
-            }
-            
+            if (!comp.brand || !comp.model) return false;
             const brandMatch = comp.brand.toLowerCase() === userVehicle.brand.toLowerCase();
             const modelMatch = comp.model.toLowerCase() === userVehicle.model.toLowerCase();
-            const yearMatch = 
-              userVehicle.year >= comp.year_start &&
-              (!comp.year_end || userVehicle.year <= comp.year_end);
-            
+            const yearMatch = userVehicle.year >= comp.year_start && (!comp.year_end || userVehicle.year <= comp.year_end);
             return brandMatch && modelMatch && yearMatch;
           });
         });
       }
 
-      setFilteredProducts(products);
+      setFilteredProducts(products.length > 0 ? products : []); 
     } catch (error) {
       console.error('Error loading products:', error);
-      // Fallback to mock data on error
-      setFilteredProducts(mockProducts);
+      if (filteredProducts.length === 0) setFilteredProducts(mockProducts);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApplyFilters = (newFilters: FilterOptions) => {
-    setFilters(newFilters);
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
+  // --- Ações da UI ---
+  const handleApplyFilters = (newFilters: FilterOptions) => setFilters(newFilters);
+  const handleSearch = (query: string) => setSearchQuery(query);
   const clearSearch = () => {
     setSearchQuery('');
+    Keyboard.dismiss();
   };
 
-  const activeFiltersCount = () => {
-    let count = 0;
-    if (filters.compatibilityGuaranteed) count++;
-    if (filters.categories.length > 0) count += filters.categories.length;
-    if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) count++;
-    return count;
-  };
+  const renderProductItem = ({ item }: { item: Product }) => (
+    <TouchableOpacity
+      style={styles.productCard}
+      onPress={() => navigation.navigate('Product', { productId: item.id })}
+      activeOpacity={0.8}
+    >
+      <Image source={{ uri: item.image }} style={styles.productImage} />
+      <View style={styles.productInfo}>
+        <Text style={styles.productCategory}>{item.category}</Text>
+        <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
+        <Text style={styles.productStore}>{item.store}</Text>
+        <Text style={styles.productPrice}>{formatCurrency(item.price)}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.wrapper}>
-      <SafeAreaView style={styles.container} edges={['bottom']}>
-        {/* Header azul arredondado */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Buscar Peças</Text>
-          <Text style={styles.headerSubtitle}>
-            Encontre a peça perfeita para seu veículo
-          </Text>
-        </View>
+      <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Search color="#9ca3af" size={20} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Busque por peça ou sintoma..."
-              placeholderTextColor="#9ca3af"
-              value={searchQuery}
-              onChangeText={handleSearch}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={clearSearch}>
-                <X color="#6b7280" size={20} />
-              </TouchableOpacity>
-            )}
+      {/* Header Azul (Visual Correto) */}
+      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.headerTitle}>Buscar Peças</Text>
+            <Text style={styles.headerSubtitle}>
+              Encontre a peça perfeita para seu veículo
+            </Text>
           </View>
-          <TouchableOpacity 
-            style={[styles.filterButton, activeFiltersCount() > 0 && styles.filterButtonActive]}
-            onPress={() => setShowFilterModal(true)}
-          >
-            <Filter color={activeFiltersCount() > 0 ? "#ffffff" : "#1e3a8a"} size={20} />
-            {activeFiltersCount() > 0 && (
-              <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>{activeFiltersCount()}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <View style={styles.avatarPlaceholder}>
+             <Text style={styles.avatarText}>JL</Text>
+          </View>
         </View>
+      </View>
 
-        {/* Results */}
-        <ScrollView 
-          style={styles.results}
-          contentContainerStyle={styles.resultsContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Section Title */}
-          <Text style={styles.sectionTitle}>
-            {searchQuery.trim() === '' ? 'Todos os produtos' : 'Buscar Produtos'}
-          </Text>
-
-          {filteredProducts.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>
-                Nenhum produto encontrado
-              </Text>
-            </View>
-          ) : (
-            filteredProducts.map((product) => (
-              <TouchableOpacity
-                key={product.id}
-                style={styles.productCard}
-                onPress={() => navigation.navigate('Product', { productId: product.id })}
-              >
-                <Image
-                  source={{ uri: product.image }}
-                  style={styles.productImage}
-                />
-                <View style={styles.productInfo}>
-                  <Text style={styles.productCategory}>{product.category}</Text>
-                  <Text style={styles.productName} numberOfLines={2}>
-                    {product.name}
-                  </Text>
-                  <Text style={styles.productStore}>{product.store}</Text>
-                  <Text style={styles.productPrice}>
-                    R$ {product.price.toFixed(2).replace('.', ',')}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))
+      {/* Barra de Busca + Botão de Filtro (Posição Correta) */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Search color="#9ca3af" size={20} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Busque por peça ou sintoma..."
+            placeholderTextColor="#9ca3af"
+            value={searchQuery}
+            onChangeText={handleSearch}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={clearSearch}>
+              <X color="#6b7280" size={20} />
+            </TouchableOpacity>
           )}
-        </ScrollView>
+        </View>
+        
+        {/* Botão de Filtro Inteligente (Muda de cor se tiver filtro ativo) */}
+        <TouchableOpacity 
+          style={[styles.filterButton, activeFiltersCount() > 0 && styles.filterButtonActive]}
+          onPress={() => setShowFilterModal(true)}
+        >
+          <Filter color={activeFiltersCount() > 0 ? "#ffffff" : "#1e3a8a"} size={20} />
+          {activeFiltersCount() > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFiltersCount()}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
 
-        {/* Advanced Filter Modal */}
-        <AdvancedFilterModal
-          visible={showFilterModal}
-          onClose={() => setShowFilterModal(false)}
-          filters={filters}
-          onApply={handleApplyFilters}
-          userVehicle={userVehicle}
+      {/* Lista de Resultados Otimizada */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1e3a8a" />
+        </View>
+      ) : (
+        <FlatList
+          data={filteredProducts}
+          renderItem={renderProductItem}
+          keyExtractor={(item) => item.id}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: insets.bottom + 20 }
+          ]}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <Text style={styles.sectionTitle}>
+              {searchQuery.trim() === '' ? 'Todos os produtos' : 'Resultados encontrados'}
+            </Text>
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <ShoppingBag color="#9ca3af" size={48} style={{ opacity: 0.5, marginBottom: 12 }} />
+              <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
+            </View>
+          }
         />
-      </SafeAreaView>
+      )}
+
+      {/* Modal de Filtros */}
+      <AdvancedFilterModal
+        visible={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        filters={filters}
+        onApply={handleApplyFilters}
+        userVehicle={userVehicle}
+      />
     </View>
   );
 }
@@ -350,18 +299,20 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#1e3a8a',
-  },
-  container: {
-    flex: 1,
+    backgroundColor: '#f3f4f6',
   },
   header: {
     backgroundColor: '#1e3a8a',
     paddingHorizontal: 20,
-    paddingTop: STATUS_BAR_HEIGHT,
-    paddingBottom: 70,
+    paddingBottom: 80, // Altura ajustada
+    marginBottom: -30,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 28,
@@ -372,13 +323,26 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 14,
     color: '#d1d5db',
+    maxWidth: 250,
+  },
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   searchContainer: {
     flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 20,
-    marginTop: -40,
-    marginBottom: 20,
+    marginTop: -30, // Faz a barra subir
+    marginBottom: 10,
     zIndex: 10,
   },
   searchInputContainer: {
@@ -387,36 +351,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff',
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 12,
+    paddingVertical: 12,
+    borderRadius: 14,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 4,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: '#1f2937',
+    marginLeft: 8,
   },
   filterButton: {
     width: 50,
-    height: 50,
     backgroundColor: '#ffffff',
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 4,
     position: 'relative',
   },
   filterButtonActive: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#3b82f6', // Fica azul quando tem filtro
   },
   filterBadge: {
     position: 'absolute',
@@ -435,68 +398,74 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  results: {
-    flex: 1,
+  listContent: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
   },
-  resultsContent: {
-    padding: 20,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 16,
-  },
-  emptyState: {
-    paddingVertical: 60,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#6b7280',
+    marginTop: 20,
   },
   productCard: {
     flexDirection: 'row',
     backgroundColor: '#ffffff',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 12,
     marginBottom: 16,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 3,
   },
   productImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
+    width: 90,
+    height: 90,
+    borderRadius: 12,
     backgroundColor: '#f3f4f6',
   },
   productInfo: {
     flex: 1,
-    marginLeft: 12,
-    justifyContent: 'space-between',
+    marginLeft: 15,
+    justifyContent: 'center',
   },
   productCategory: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#6b7280',
-    marginBottom: 4,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    marginBottom: 2,
   },
   productName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 4,
   },
   productStore: {
     fontSize: 12,
     color: '#9ca3af',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   productPrice: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1e3a8a',
+  },
+  emptyState: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    color: '#9ca3af',
+    fontSize: 16,
   },
 });
