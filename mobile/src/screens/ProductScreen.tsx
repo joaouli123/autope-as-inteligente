@@ -63,7 +63,7 @@ export default function ProductScreen() {
       brand: mockProduct.store.name,
       partNumber: 'MOCK-001',
     });
-    navigation.navigate('Cart');
+    navigation.navigate('Main', { screen: 'Cart' });
   };
 
   return (
@@ -79,7 +79,7 @@ export default function ProductScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.cartButton}
-            onPress={() => navigation.navigate('Cart')}
+            onPress={() => navigation.navigate('Main', { screen: 'Cart' })}
           >
             <ShoppingCart color="#ffffff" size={24} />
           </TouchableOpacity>
