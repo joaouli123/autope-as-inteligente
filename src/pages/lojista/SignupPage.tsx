@@ -9,6 +9,71 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const translateError = (error: any): string => {
+    const errorMessage = error?.message || '';
+    
+    if (errorMessage.includes('already registered') || errorMessage.includes('already been registered')) {
+      return 'Este email já está cadastrado. Por favor, faça login ou use outro email.';
+    }
+    
+    if (errorMessage.includes('Invalid login credentials')) {
+      return 'Email ou senha inválidos.';
+    }
+    
+    if (errorMessage.includes('Email not confirmed')) {
+      return 'Por favor, confirme seu email antes de fazer login.';
+    }
+    
+    if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
+      if (errorMessage.includes('cnpj')) {
+        return 'Este CNPJ já está cadastrado no sistema.';
+      }
+      if (errorMessage.includes('email')) {
+        return 'Este email já está cadastrado no sistema.';
+      }
+      if (errorMessage.includes('slug')) {
+        return 'Já existe uma loja com este nome. Por favor, escolha outro nome.';
+      }
+      return 'Já existe um registro com estes dados.';
+    }
+    
+    if (errorMessage.includes('violates foreign key constraint')) {
+      return 'Erro ao vincular dados. Entre em contato com o suporte.';
+    }
+    
+    if (errorMessage.includes('violates not-null constraint')) {
+      return 'Erro de validação de dados. Verifique se todos os campos foram preenchidos.';
+    }
+    
+    if (errorMessage.includes('column') && errorMessage.includes('does not exist')) {
+      return 'Erro de configuração do banco de dados. Entre em contato com o suporte.';
+    }
+    
+    if (errorMessage.includes('not found') && errorMessage.includes('column')) {
+      return 'Erro na estrutura do banco de dados. Verifique se todas as tabelas foram criadas corretamente.';
+    }
+    
+    if (errorMessage.includes('Failed to fetch') || errorMessage.includes('Network')) {
+      return 'Erro de conexão. Verifique sua internet e tente novamente.';
+    }
+    
+    return 'Ocorreu um erro inesperado. Por favor, tente novamente.';
+  };
+
+  const generateSlug = (storeName: string): string => {
+    const slug = storeName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+    
+    // Se o slug estiver vazio após a limpeza, usar um valor padrão
+    return slug || 'loja';
+  };
+
   const [formData, setFormData] = useState({
     // Passo 1: Dados da Loja
     storeName: '',
@@ -123,18 +188,49 @@ export default function SignupPage() {
         }
       });
 
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error('Erro ao criar conta.');
+      if (authError) {
+        setError(translateError(authError));
+        setLoading(false);
+        return;
       }
 
-      // 2. Criar registro na tabela stores
+      if (!authData.user) {
+        setError('Erro ao criar conta.');
+        setLoading(false);
+        return;
+      }
+
+      // 2. Gerar slug único
+      let slug = generateSlug(formData.storeName);
+      let slugAttempt = 0;
+      let uniqueSlug = slug;
+      const maxAttempts = 100; // Limite de tentativas para evitar loop infinito
+
+      while (slugAttempt < maxAttempts) {
+        const { data: existingSlug } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('slug', uniqueSlug)
+          .maybeSingle();
+
+        if (!existingSlug) break;
+
+        slugAttempt++;
+        uniqueSlug = `${slug}-${slugAttempt}`;
+      }
+
+      // Se atingir o limite máximo, usar um timestamp para garantir unicidade
+      if (slugAttempt >= maxAttempts) {
+        uniqueSlug = `${slug}-${Date.now()}`;
+      }
+
+      // 3. Criar registro na tabela stores
       const { error: storeError } = await supabase
         .from('stores')
         .insert({
           owner_id: authData.user.id,
           name: formData.storeName,
+          slug: uniqueSlug,
           cnpj: formData.cnpj,
           phone: formData.phone,
           email: formData.email,
@@ -150,14 +246,19 @@ export default function SignupPage() {
           is_active: true,
         });
 
-      if (storeError) throw storeError;
+      if (storeError) {
+        console.error('Erro ao criar loja:', storeError);
+        setError(translateError(storeError));
+        setLoading(false);
+        return;
+      }
 
       // Sucesso! Redirecionar para login com mensagem
       setError('');
       navigate('/lojista/login', { state: { message: 'Conta criada com sucesso! Faça login para acessar o painel.' } });
     } catch (err: any) {
       console.error('Erro ao cadastrar:', err);
-      setError(err.message || 'Erro ao criar conta. Tente novamente.');
+      setError(translateError(err));
     } finally {
       setLoading(false);
     }
