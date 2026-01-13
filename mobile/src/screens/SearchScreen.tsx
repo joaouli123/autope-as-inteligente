@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Search, Filter, X } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
+import AdvancedFilterModal from '../components/AdvancedFilterModal';
+import { supabase } from '../services/supabaseClient';
 
 // Constants
 const STATUS_BAR_HEIGHT = 60;
@@ -88,26 +90,160 @@ const mockProducts = [
 
 type SearchScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Search'>;
 
+interface FilterOptions {
+  compatibilityGuaranteed: boolean;
+  categories: string[];
+  priceRange: { min: number; max: number };
+  sortBy: 'relevance' | 'price_asc' | 'price_desc' | 'newest';
+  specifications: { [key: string]: string[] };
+}
+
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [userVehicle, setUserVehicle] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  
+  const [filters, setFilters] = useState<FilterOptions>({
+    compatibilityGuaranteed: false,
+    categories: [],
+    priceRange: { min: 0, max: 10000 },
+    sortBy: 'relevance',
+    specifications: {},
+  });
+
+  useEffect(() => {
+    loadUserVehicle();
+    loadProducts();
+  }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [filters, searchQuery]);
+
+  const loadUserVehicle = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data } = await supabase
+          .from('user_vehicles')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_primary', true)
+          .single();
+        
+        if (data) {
+          setUserVehicle(data);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user vehicle:', error);
+    }
+  };
+
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from('products')
+        .select(`
+          *,
+          stores!inner(name),
+          product_compatibility(*)
+        `)
+        .eq('is_active', true);
+
+      // Apply search query
+      if (searchQuery.trim()) {
+        query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
+
+      // Apply category filter
+      if (filters.categories.length > 0) {
+        query = query.in('category', filters.categories);
+      }
+
+      // Apply price filter
+      query = query
+        .gte('price', filters.priceRange.min)
+        .lte('price', filters.priceRange.max);
+
+      // Apply compatibility filter
+      if (filters.compatibilityGuaranteed && userVehicle) {
+        // This requires a more complex query - we need to check product_compatibility
+        // For now, we'll filter in memory after fetching
+        // In production, you'd want to use a Postgres function for this
+      }
+
+      // Apply sorting
+      switch (filters.sortBy) {
+        case 'price_asc':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price_desc':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'newest':
+          query = query.order('created_at', { ascending: false });
+          break;
+        default:
+          query = query.order('sales_count', { ascending: false });
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      // Apply compatibility filter in memory if needed
+      let products = data || [];
+      
+      if (filters.compatibilityGuaranteed && userVehicle) {
+        products = products.filter((product: any) => {
+          const compatibilities = product.product_compatibility || [];
+          
+          return compatibilities.some((comp: any) => {
+            const brandMatch = comp.brand.toLowerCase() === userVehicle.brand.toLowerCase();
+            const modelMatch = comp.model.toLowerCase() === userVehicle.model.toLowerCase();
+            const yearMatch = 
+              userVehicle.year >= comp.year_start &&
+              (!comp.year_end || userVehicle.year <= comp.year_end);
+            
+            return brandMatch && modelMatch && yearMatch;
+          });
+        });
+      }
+
+      setFilteredProducts(products);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      // Fallback to mock data on error
+      setFilteredProducts(mockProducts);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApplyFilters = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (query.trim() === '') {
-      setFilteredProducts(mockProducts);
-    } else {
-      const filtered = mockProducts.filter((product) =>
-        product.name.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredProducts(filtered);
-    }
   };
 
   const clearSearch = () => {
     setSearchQuery('');
-    setFilteredProducts(mockProducts);
+  };
+
+  const activeFiltersCount = () => {
+    let count = 0;
+    if (filters.compatibilityGuaranteed) count++;
+    if (filters.categories.length > 0) count += filters.categories.length;
+    if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) count++;
+    return count;
   };
 
   return (
@@ -138,8 +274,16 @@ export default function SearchScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <Filter color="#1e3a8a" size={20} />
+          <TouchableOpacity 
+            style={[styles.filterButton, activeFiltersCount() > 0 && styles.filterButtonActive]}
+            onPress={() => setShowFilterModal(true)}
+          >
+            <Filter color={activeFiltersCount() > 0 ? "#ffffff" : "#1e3a8a"} size={20} />
+            {activeFiltersCount() > 0 && (
+              <View style={styles.filterBadge}>
+                <Text style={styles.filterBadgeText}>{activeFiltersCount()}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -185,6 +329,15 @@ export default function SearchScreen() {
             ))
           )}
         </ScrollView>
+
+        {/* Advanced Filter Modal */}
+        <AdvancedFilterModal
+          visible={showFilterModal}
+          onClose={() => setShowFilterModal(false)}
+          filters={filters}
+          onApply={handleApplyFilters}
+          userVehicle={userVehicle}
+        />
       </SafeAreaView>
     </View>
   );
@@ -256,6 +409,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    position: 'relative',
+  },
+  filterButtonActive: {
+    backgroundColor: '#3b82f6',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  filterBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   results: {
     flex: 1,
