@@ -38,11 +38,12 @@ export default function CheckoutScreen() {
     const order = createOrder(paymentMethods[paymentMethod]);
     
     // Send order confirmation emails
+    // TODO: Replace hardcoded customer info with actual user data from AuthContext
     try {
       await sendOrderEmails({
         orderCode: order.id,
-        customerName: 'Cliente',
-        customerEmail: 'cliente@example.com',
+        customerName: 'Cliente', // TODO: Get from user profile
+        customerEmail: 'cliente@example.com', // TODO: Get from user profile
         storeEmail: 'loja@autopecascentral.com',
         storeName: 'Auto Peças Central',
         items: cartItems.map(item => ({
@@ -94,7 +95,7 @@ export default function CheckoutScreen() {
                 <Text style={styles.sectionTitle}>Endereço de Entrega</Text>
               </View>
               <TouchableOpacity
-                onPress={() => navigation.navigate('EditProfile' as any)}
+                onPress={() => navigation.navigate('EditProfile')}
                 style={styles.editIconButton}
               >
                 <Edit2 color="#1e3a8a" size={18} />

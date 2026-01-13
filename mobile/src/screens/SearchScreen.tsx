@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import {
   View,
@@ -110,7 +108,7 @@ export default function SearchScreen() {
               <TouchableOpacity
                 key={product.id}
                 style={styles.productCard}
-                onPress={() => navigation.navigate('Product' as any, { productId: product.id })}
+                onPress={() => navigation.navigate('Product', { productId: product.id })}
               >
                 <Image
                   source={{ uri: product.image }}

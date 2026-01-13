@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import {
   View,
@@ -64,7 +62,7 @@ export default function ProductScreen() {
       brand: mockProduct.store.name,
       partNumber: 'MOCK-001',
     });
-    navigation.navigate('Cart' as any);
+    navigation.navigate('Cart');
   };
 
   return (
@@ -80,7 +78,7 @@ export default function ProductScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.cartButton}
-            onPress={() => navigation.navigate('Cart' as any)}
+            onPress={() => navigation.navigate('Cart')}
           >
             <ShoppingCart color="#ffffff" size={24} />
           </TouchableOpacity>

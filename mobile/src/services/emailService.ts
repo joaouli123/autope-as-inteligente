@@ -255,7 +255,7 @@ export const sendOrderEmails = async (data: OrderEmailData) => {
               <!-- Footer -->
               <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
                 <p style="color: #6b7280; margin: 0; font-size: 14px;">
-                  © 2026 AutoPeças IA. Todos os direitos reservados.
+                  © ${new Date().getFullYear()} AutoPeças IA. Todos os direitos reservados.
                 </p>
               </div>
               
@@ -330,7 +330,7 @@ export const sendOrderEmails = async (data: OrderEmailData) => {
               <!-- Footer -->
               <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
                 <p style="color: #6b7280; margin: 0; font-size: 14px;">
-                  © 2026 AutoPeças IA. Todos os direitos reservados.
+                  © ${new Date().getFullYear()} AutoPeças IA. Todos os direitos reservados.
                 </p>
               </div>
               
