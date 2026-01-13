@@ -1502,32 +1502,11 @@ const App: React.FC = () => {
     </div>
   );
 
-  const renderWebPortalLogin = () => (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-           <div className="flex justify-center mb-6 text-blue-900"><LayoutDashboard size={48} /></div>
-           <h2 className="text-2xl font-bold text-center text-gray-900 mb-1">Portal do Vendedor</h2>
-           <p className="text-center text-gray-500 mb-8">Gerencie sua loja e vendas</p>
-           
-           <div className="space-y-4">
-               <div>
-                   <label className="block text-sm font-bold text-gray-700 mb-1">Email Corporativo</label>
-                   <input type="email" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:outline-none" />
-               </div>
-               <div>
-                   <label className="block text-sm font-bold text-gray-700 mb-1">Senha</label>
-                   <input type="password" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:outline-none" />
-               </div>
-               <button onClick={() => handleLogin('SELLER')} className="w-full bg-blue-900 text-white font-bold py-3 rounded-lg hover:bg-blue-800 transition-colors">
-                   Acessar Painel
-               </button>
-               <button onClick={() => setCurrentView(ViewState.LOGIN)} className="w-full text-gray-500 text-sm font-medium hover:text-gray-700">
-                   Voltar para App do Cliente
-               </button>
-           </div>
-       </div>
-    </div>
-  );
+  const renderWebPortalLogin = () => {
+    // Redirect to the new lojista panel route
+    window.location.href = '/lojista/login';
+    return null;
+  };
 
   const renderSellerDashboard = () => (
     <div className="min-h-screen bg-gray-100 flex">
