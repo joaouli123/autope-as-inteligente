@@ -133,7 +133,6 @@ export default function SignupPage() {
       const { error: storeError } = await supabase
         .from('stores')
         .insert({
-          id: crypto.randomUUID(),
           owner_id: authData.user.id,
           name: formData.storeName,
           cnpj: formData.cnpj,
@@ -149,14 +148,13 @@ export default function SignupPage() {
             state: formData.state,
           },
           is_active: true,
-          created_at: new Date().toISOString(),
         });
 
       if (storeError) throw storeError;
 
-      // Sucesso! Redirecionar para login
-      alert('Conta criada com sucesso! Faça login para acessar o painel.');
-      navigate('/lojista/login');
+      // Sucesso! Redirecionar para login com mensagem
+      setError('');
+      navigate('/lojista/login', { state: { message: 'Conta criada com sucesso! Faça login para acessar o painel.' } });
     } catch (err: any) {
       console.error('Erro ao cadastrar:', err);
       setError(err.message || 'Erro ao criar conta. Tente novamente.');
