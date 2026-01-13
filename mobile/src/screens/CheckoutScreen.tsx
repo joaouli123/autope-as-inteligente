@@ -22,6 +22,12 @@ export default function CheckoutScreen() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('credit');
 
   const handleConfirmOrder = () => {
+    // Validate cart is not empty
+    if (cartItems.length === 0) {
+      navigation.goBack();
+      return;
+    }
+    
     const paymentMethods: Record<PaymentMethod, string> = {
       credit: 'Cartão de Crédito',
       pix: 'PIX',

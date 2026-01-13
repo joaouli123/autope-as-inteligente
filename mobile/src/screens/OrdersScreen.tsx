@@ -62,7 +62,7 @@ export default function OrdersScreen() {
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {orders.map((order) => {
-            const statusInfo = ORDER_STATUS_MAP[order.status];
+            const statusInfo = ORDER_STATUS_MAP[order.status] || ORDER_STATUS_MAP.pending;
             return (
               <TouchableOpacity key={order.id} style={styles.orderCard}>
                 <View style={styles.orderHeader}>
