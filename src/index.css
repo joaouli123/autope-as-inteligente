@@ -30,6 +30,32 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
+
+  /* Hide scrollbar but keep functionality (for mobile app) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Mobile safe area utilities (for mobile app) */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 20px);
+  }
+  .pt-safe-plus {
+    padding-top: calc(env(safe-area-inset-top, 20px) + 1.5rem);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  .pb-safe-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 4.5rem);
+  }
+  .pb-safe-nav-plus {
+    padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 6.5rem);
+  }
 }
 
 @layer components {
@@ -47,5 +73,15 @@
 
   .animate-fade-in {
     animation: fadeIn 0.4s ease-out;
+  }
+
+  /* Slide up animation (for mobile app) */
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
 }
