@@ -39,6 +39,20 @@ interface AuthContextData {
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
+// Helper function to map vehicle data from database to UserProfile vehicle
+const mapVehicleData = (vehicleData: any): Vehicle => {
+  return {
+    type: 'carros', // Default to carros for now, can be extended later
+    brand: vehicleData.brand,
+    model: vehicleData.model,
+    year: vehicleData.year.toString(),
+    engine: vehicleData.engine || '',
+    valves: vehicleData.valves ? vehicleData.valves.toString() : '',
+    fuel: vehicleData.fuel_type || '',
+    transmission: '',
+  };
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
 
@@ -101,16 +115,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (vehicleData) {
         console.log('[AuthContext] Veículo carregado:', vehicleData);
-        userProfile.vehicle = {
-          type: 'carros',
-          brand: vehicleData.brand,
-          model: vehicleData.model,
-          year: vehicleData.year.toString(),
-          engine: vehicleData.engine || '',
-          valves: vehicleData.valves?.toString() || '',
-          fuel: vehicleData.fuel_type || '',
-          transmission: '',
-        };
+        userProfile.vehicle = mapVehicleData(vehicleData);
       }
 
       setUser(userProfile);
@@ -251,16 +256,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           .single();
 
         if (vehicleData) {
-          userProfile.vehicle = {
-            type: 'carros',
-            brand: vehicleData.brand,
-            model: vehicleData.model,
-            year: vehicleData.year.toString(),
-            engine: vehicleData.engine || '',
-            valves: vehicleData.valves?.toString() || '',
-            fuel: vehicleData.fuel_type || '',
-            transmission: '',
-          };
+          userProfile.vehicle = mapVehicleData(vehicleData);
         }
 
         setUser(userProfile);
