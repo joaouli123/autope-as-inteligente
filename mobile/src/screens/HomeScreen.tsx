@@ -19,12 +19,17 @@ import {
   Edit2,
   Sparkles,
   ChevronRight,
-  Disc,
-  Droplet,
-  Activity,
-  Zap,
-  Settings,
+  Wrench,
+  Gauge,
   BatteryCharging,
+  Wind,
+  Armchair,
+  Droplet,
+  Zap,
+  Hammer,
+  Settings,
+  CircleDot,
+  MoreHorizontal,
 } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 
@@ -89,12 +94,17 @@ export default function HomeScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.categoriesScroll}
               >
-                <CategoryButton icon={Disc} label="Freios" />
-                <CategoryButton icon={Droplet} label="Óleo" />
-                <CategoryButton icon={Activity} label="Suspensão" />
-                <CategoryButton icon={Zap} label="Elétrica" />
-                <CategoryButton icon={Settings} label="Motor" />
+                <CategoryButton icon={Wrench} label="Acessórios" />
+                <CategoryButton icon={Gauge} label="Alinhamento" />
                 <CategoryButton icon={BatteryCharging} label="Bateria" />
+                <CategoryButton icon={Wind} label="Escapamento" />
+                <CategoryButton icon={Armchair} label="Estofamento" />
+                <CategoryButton icon={Droplet} label="Lubrificantes" />
+                <CategoryButton icon={Zap} label="Elétrica" />
+                <CategoryButton icon={Hammer} label="Funilaria" />
+                <CategoryButton icon={Settings} label="Mecânica" />
+                <CategoryButton icon={CircleDot} label="Pneus" />
+                <CategoryButton icon={MoreHorizontal} label="Outros" />
               </ScrollView>
             </View>
 
