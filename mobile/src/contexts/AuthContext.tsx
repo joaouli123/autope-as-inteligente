@@ -128,6 +128,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .eq('is_primary', true)
         .single();
 
+      if (vehicleError && vehicleError.code !== 'PGRST116') {
+        // PGRST116 = no rows returned, which is acceptable
+        console.error('[AuthContext] Erro ao carregar veículo:', vehicleError.message);
+      }
+
       if (vehicleData) {
         console.log('[AuthContext] Veículo carregado:', vehicleData);
         userProfile.vehicle = mapVehicleData(vehicleData);
@@ -167,15 +172,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (userData.vehicle && userData.vehicle.brand && userData.vehicle.model) {
         console.log('[AuthContext] Salvando veículo...');
         
+        // Validate numeric fields before inserting
+        const year = parseInt(userData.vehicle.year, 10);
+        const valves = userData.vehicle.valves ? parseInt(userData.vehicle.valves, 10) : null;
+        
+        if (isNaN(year)) {
+          console.error('[AuthContext] Ano inválido:', userData.vehicle.year);
+          // Continue without saving vehicle - don't fail the entire signup
+          setUser(userData);
+          console.log('[AuthContext] Cadastro completo (sem veículo)!');
+          return true;
+        }
+        
+        if (valves !== null && isNaN(valves)) {
+          console.warn('[AuthContext] Válvulas inválidas, salvando como null:', userData.vehicle.valves);
+        }
+        
         const { error: vehicleError } = await supabase
           .from('user_vehicles')
           .insert({
             user_id: data.user.id,
             brand: userData.vehicle.brand,
             model: userData.vehicle.model,
-            year: parseInt(userData.vehicle.year, 10),
+            year: year,
             engine: userData.vehicle.engine || null,
-            valves: userData.vehicle.valves ? parseInt(userData.vehicle.valves, 10) : null,
+            valves: valves !== null && !isNaN(valves) ? valves : null,
             fuel_type: userData.vehicle.fuel || null,
             is_primary: true,
           });
@@ -241,12 +262,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const userProfile = createEmptyUserProfile(session.user.email || '');
 
           // Carregar veículo
-          const { data: vehicleData } = await supabase
+          const { data: vehicleData, error: vehicleError } = await supabase
             .from('user_vehicles')
             .select('*')
             .eq('user_id', session.user.id)
             .eq('is_primary', true)
             .single();
+
+          if (vehicleError && vehicleError.code !== 'PGRST116') {
+            // PGRST116 = no rows returned, which is acceptable
+            console.error('[AuthContext] Erro ao carregar veículo na sessão:', vehicleError.message);
+          }
 
           if (vehicleData) {
             userProfile.vehicle = mapVehicleData(vehicleData);
