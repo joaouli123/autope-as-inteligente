@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Theme configuration inline no CSS */
+/* Theme configuration defined inline in CSS */
 @theme {
   /* Colors */
   --color-primary-50: #eff6ff;
