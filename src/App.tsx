@@ -1148,13 +1148,17 @@ const App: React.FC = () => {
               attributes: filters.attributes,
             }}
             onRemoveCategory={() => {
-              setFilters({ ...filters, category: '', attributes: {} });
+              setFilters({ ...filters, category: '' });
               handleSearch();
             }}
             onRemoveAttribute={(key) => {
               const newAttributes = { ...filters.attributes };
               delete newAttributes[key];
               setFilters({ ...filters, attributes: newAttributes });
+              handleSearch();
+            }}
+            onToggleVehicleFilter={() => {
+              setFilters({ ...filters, useMyVehicle: !filters.useMyVehicle });
               handleSearch();
             }}
             onOpenFilterModal={() => setShowFilterModal(true)}

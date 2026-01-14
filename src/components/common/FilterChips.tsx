@@ -10,6 +10,7 @@ interface FilterChipsProps {
   onRemoveCategory: () => void;
   onRemoveAttribute: (key: string) => void;
   onOpenFilterModal: () => void;
+  onToggleVehicleFilter?: () => void;
 }
 
 export default function FilterChips({
@@ -17,12 +18,8 @@ export default function FilterChips({
   onRemoveCategory,
   onRemoveAttribute,
   onOpenFilterModal,
+  onToggleVehicleFilter,
 }: FilterChipsProps) {
-  const hasActiveFilters = !!(
-    activeFilters.category ||
-    (activeFilters.attributes && Object.keys(activeFilters.attributes).length > 0)
-  );
-
   return (
     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
       {/* Filter Button */}
@@ -63,9 +60,13 @@ export default function FilterChips({
 
       {/* My Vehicle Indicator */}
       {activeFilters.useMyVehicle && (
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium whitespace-nowrap border border-green-200">
+        <button
+          onClick={onToggleVehicleFilter}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium whitespace-nowrap border border-green-200 hover:bg-green-100 transition-colors"
+        >
           <span>✓ Meu Veículo</span>
-        </div>
+          {onToggleVehicleFilter && <X size={12} />}
+        </button>
       )}
     </div>
   );
