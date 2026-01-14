@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   headerTitle: {
-    fontSize:  24,
+    fontSize:  28,
     fontWeight: 'bold',
     color: '#ffffff',
   },
