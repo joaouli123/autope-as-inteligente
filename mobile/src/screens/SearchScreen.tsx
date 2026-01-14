@@ -58,7 +58,7 @@ interface FilterState {
   specifications: string[];
   priceMin: number;
   priceMax: number;
-  sortBy:  'relevance' | 'price_asc' | 'price_desc' | 'newest';
+  sortBy: 'price_asc' | 'price_desc';
   partCode: string;
   partName: string;
   position: string;
@@ -82,7 +82,7 @@ export default function SearchScreen() {
     specifications: [],
     priceMin: 0,
     priceMax: 5000,
-    sortBy: 'relevance',
+    sortBy: 'price_asc',
     partCode: '',
     partName: '',
     position: '',
@@ -231,11 +231,6 @@ export default function SearchScreen() {
         break;
       case 'price_desc':
         filtered. sort((a, b) => b.price - a.price);
-        break;
-      case 'newest':
-        filtered.sort((a:  any, b: any) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
         break;
       default:
         break;
