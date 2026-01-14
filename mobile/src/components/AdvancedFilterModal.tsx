@@ -139,6 +139,16 @@ export default function AdvancedFilterModal({
     }
   }, [visible]);
 
+  // Auto-activate compatibility toggle when userVehicle exists
+  useEffect(() => {
+    if (userVehicle && visible) {
+      setLocalFilters(prev => ({
+        ...prev,
+        compatibilityGuaranteed: true,
+      }));
+    }
+  }, [userVehicle, visible]);
+
   const handleClose = () => {
     // Trigger animation, then close
     Animated.parallel([
@@ -240,7 +250,7 @@ export default function AdvancedFilterModal({
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Compatibility Guarantee Toggle - Green Box */}
+            {/* 1. Compatibility Guarantee Toggle - Green Box */}
             {userVehicle && (
               <View style={styles.section}>
                 <View style={styles.greenBox}>
@@ -262,7 +272,36 @@ export default function AdvancedFilterModal({
               </View>
             )}
 
-            {/* Categories */}
+            {/* 2. Part Name Search - NO OPCIONAL */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>NOME DA PEÇA</Text>
+              <TextInput
+                style={styles.textInput}
+                value={localFilters.partName}
+                onChangeText={(text) => setLocalFilters({ ...localFilters, partName: text })}
+                placeholder="Ex: Amortecedor"
+                placeholderTextColor="#9ca3af"
+              />
+              <Text style={styles.helperText}>
+                Busca inteligente por primeiras letras
+              </Text>
+            </View>
+
+            {/* 3. Part Code Search - OPCIONAL */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                CÓDIGO DA PEÇA <Text style={styles.optionalLabel}>(Opcional)</Text>
+              </Text>
+              <TextInput
+                style={styles.textInput}
+                value={localFilters.partCode}
+                onChangeText={(text) => setLocalFilters({ ...localFilters, partCode: text })}
+                placeholder="Ex: KL1045008"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+
+            {/* 4. Categories - OPCIONAL */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
                 CATEGORIA <Text style={styles.optionalLabel}>(Opcional)</Text>
@@ -300,7 +339,7 @@ export default function AdvancedFilterModal({
                 })}
               </ScrollView>
 
-              {/* Specifications for selected category */}
+              {/* 5. Specifications for selected category */}
               {localFilters.category && (
                 <>
                   {(() => {
@@ -340,39 +379,10 @@ export default function AdvancedFilterModal({
               )}
             </View>
 
-            {/* Part Code Search */}
+            {/* 6. Position Filter - OPCIONAL */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
-                Código da Peça <Text style={styles.optionalLabel}>(Opcional)</Text>
-              </Text>
-              <TextInput
-                style={styles.textInput}
-                value={localFilters.partCode}
-                onChangeText={(text) => setLocalFilters({ ...localFilters, partCode: text })}
-                placeholder="Ex: KL1045008"
-                placeholderTextColor="#9ca3af"
-              />
-            </View>
-
-            {/* Part Name Search */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Nome da Peça</Text>
-              <TextInput
-                style={styles.textInput}
-                value={localFilters.partName}
-                onChangeText={(text) => setLocalFilters({ ...localFilters, partName: text })}
-                placeholder="Ex: Amortecedor"
-                placeholderTextColor="#9ca3af"
-              />
-              <Text style={styles.helperText}>
-                Busca inteligente por primeiras letras
-              </Text>
-            </View>
-
-            {/* Position Filter */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                Posição <Text style={styles.optionalLabel}>(Opcional)</Text>
+                POSIÇÃO <Text style={styles.optionalLabel}>(Opcional)</Text>
               </Text>
               <View style={styles.positionContainer}>
                 {POSITIONS.map((pos) => (
@@ -402,10 +412,10 @@ export default function AdvancedFilterModal({
               </View>
             </View>
 
-            {/* Price Range */}
+            {/* 7. Price Range */}
             <View style={styles.section}>
               <View style={styles.priceHeader}>
-                <Text style={styles.sectionTitle}>Preço Máximo</Text>
+                <Text style={styles.sectionTitle}>PREÇO MÁXIMO</Text>
                 <Text style={styles.priceRange}>
                   R$ {localFilters.priceMax}
                 </Text>
@@ -429,9 +439,9 @@ export default function AdvancedFilterModal({
               </View>
             </View>
 
-            {/* Sort By */}
+            {/* 8. Sort By */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Ordenar Por</Text>
+              <Text style={styles.sectionTitle}>ORDENAR POR</Text>
               <View style={styles.sortContainer}>
                 {SORT_OPTIONS.map((option) => (
                   <TouchableOpacity
