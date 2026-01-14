@@ -16,7 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, Eye, EyeOff, Car, Bike, Truck } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, type UserProfile } from '../contexts/AuthContext';
 import { validateEmail, validateCPForCNPJ, validateYear } from '../utils/validators';
 import { maskCPForCNPJ, maskPhone, maskCEP } from '../utils/masks';
 import { fetchAddressByCEP } from '../services/cepService';
@@ -182,7 +182,8 @@ export default function SignupScreen() {
   const handleFinish = async () => {
     if (!validateStep3()) return;
 
-    const userData = {
+    const userData: UserProfile = {
+      id: '', // Será preenchido pelo Supabase
       name,
       email,
       cpfCnpj,
@@ -207,7 +208,8 @@ export default function SignupScreen() {
       },
     };
 
-    const success = await signup(userData);
+    // MUDANÇA AQUI: passar a senha como segundo parâmetro
+    const success = await signup(userData, password);
     if (success) {
       // Enviar email de boas-vindas
       try {
@@ -217,9 +219,11 @@ export default function SignupScreen() {
         // Não bloquear o cadastro por erro no email
       }
       
-      Alert.alert('Sucesso!', 'Conta criada! Verifique seu email.', [
+      Alert.alert('Sucesso!', 'Conta criada com sucesso!', [
         { text: 'OK', onPress: () => navigation.navigate('Main', { screen: 'Home' }) },
       ]);
+    } else {
+      Alert.alert('Erro', 'Não foi possível criar a conta. Tente novamente.');
     }
   };
 
