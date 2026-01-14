@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { X, Car, ArrowUp, ArrowDown, Wrench, Gauge, BatteryCharging, Wind, Armchair, Droplet, Zap, Hammer, Settings, CircleDot, MoreHorizontal, Filter } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
+import { PART_POSITION_OPTIONS } from '../constants/parts';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.85;
@@ -60,15 +61,6 @@ const CATEGORIES = [
   { id: 'Pneus', name: 'Pneus', icon: CircleDot, specs: ['Aro 13', 'Aro 14', 'Aro 15', 'Aro 16', 'Aro 17'] },
   { id: 'Outros', name: 'Outros', icon: MoreHorizontal, specs: [] },
 ];
-
-const POSITIONS = [
-  { value: 'Dianteiro Direito', label: 'Dianteiro Direito' },
-  { value: 'Dianteiro Esquerdo', label: 'Dianteiro Esquerdo' },
-  { value: 'Traseiro Direito', label: 'Traseiro Direito' },
-  { value: 'Traseiro Esquerdo', label: 'Traseiro Esquerdo' },
-  { value: 'Central', label: 'Central' },
-  { value: 'Universal', label: 'Universal' },
-] as const;
 
 const SORT_OPTIONS = [
   { value: 'price_asc', label: 'Menor Preço' },
@@ -394,7 +386,7 @@ export default function AdvancedFilterModal({
                 POSIÇÃO <Text style={styles.optionalLabel}>(Opcional)</Text>
               </Text>
               <View style={styles.positionContainer}>
-                {POSITIONS.map((pos) => (
+                {PART_POSITION_OPTIONS.map((pos) => (
                   <TouchableOpacity
                     key={pos.value}
                     style={[
