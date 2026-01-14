@@ -1,17 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
+/* Theme configuration defined inline in CSS */
+@theme {
+  /* Colors */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  /* Box Shadows */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  --shadow-card-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+  --shadow-card-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+
+  /* Animations */
+  --animate-blob: blob 7s infinite;
+}
+
+/* Base styles */
 @layer base {
-  /* Improve font rendering */
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 }
 
+/* Custom utilities */
 @layer utilities {
-  /* Custom scrollbar styling */
+  /* Custom scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -31,7 +53,7 @@
     background: #94a3b8;
   }
 
-  /* Hide scrollbar but keep functionality (for mobile app) */
+  /* Hide scrollbar */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -40,7 +62,7 @@
     scrollbar-width: none;
   }
 
-  /* Mobile safe area utilities (for mobile app) */
+  /* Safe area utilities (mobile) */
   .pt-safe {
     padding-top: env(safe-area-inset-top, 20px);
   }
@@ -58,6 +80,7 @@
   }
 }
 
+/* Custom components */
 @layer components {
   /* Fade in animation */
   @keyframes fadeIn {
@@ -75,13 +98,29 @@
     animation: fadeIn 0.4s ease-out;
   }
 
-  /* Slide up animation (for mobile app) */
+  /* Slide up animation */
   @keyframes slideUp {
     from {
       transform: translateY(100%);
     }
     to {
       transform: translateY(0);
+    }
+  }
+
+  /* Blob animation */
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
     }
   }
 }
