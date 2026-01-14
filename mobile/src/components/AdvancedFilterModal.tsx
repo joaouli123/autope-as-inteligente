@@ -62,10 +62,10 @@ const CATEGORIES = [
 ];
 
 const POSITIONS = [
-  { value: 'dianteiro_direito', label: 'Dianteiro Direito' },
-  { value: 'dianteiro_esquerdo', label: 'Dianteiro Esquerdo' },
-  { value: 'traseiro_direito', label: 'Traseiro Direito' },
-  { value: 'traseiro_esquerdo', label: 'Traseiro Esquerdo' },
+  { value: 'Dianteiro Direito', label: 'Dianteiro Direito' },
+  { value: 'Dianteiro Esquerdo', label: 'Dianteiro Esquerdo' },
+  { value: 'Traseiro Direito', label: 'Traseiro Direito' },
+  { value: 'Traseiro Esquerdo', label: 'Traseiro Esquerdo' },
 ];
 
 const SORT_OPTIONS = [
