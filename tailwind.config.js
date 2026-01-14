@@ -27,7 +27,6 @@ export default {
       },
       animation: {
         'blob': 'blob 7s infinite',
-        'fade-in': 'fadeIn 0.3s ease-in-out',
       },
       keyframes: {
         blob: {
@@ -43,10 +42,6 @@ export default {
           '100%': {
             transform: 'translate(0px, 0px) scale(1)',
           },
-        },
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
         },
       },
     },
