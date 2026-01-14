@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical:  14,
+    paddingVertical:Platform.OS === 'ios' ?  10 : 4,
     ... Platform.select({
       ios: {
         shadowColor: '#000',
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   filterButton: {
     backgroundColor: '#ffffff',
     width: 52,
-    height:  52,
+    height:  Platform.OS === 'ios' ?  42 :52,
     borderRadius:  12,
     alignItems: 'center',
     justifyContent:  'center',
