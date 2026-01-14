@@ -106,28 +106,28 @@ export default function DashboardPage() {
   const [recentOrders] = useState<Order[]>(mockOrders);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       {/* Page Title */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Visão Geral</h1>
-        <p className="text-sm text-gray-600 mt-1">Acompanhe o desempenho da sua loja</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Visão Geral</h1>
+        <p className="text-base text-gray-600">Acompanhe o desempenho da sua loja em tempo real</p>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Faturamento Hoje"
           value={`R$ ${metrics.revenue_today.toFixed(2).replace('.', ',')}`}
           icon={DollarSign}
           trend={{ value: `${metrics.revenue_growth}%`, isPositive: true }}
-          iconBgColor="bg-green-100"
-          iconColor="text-green-600"
+          iconBgColor="bg-emerald-100"
+          iconColor="text-emerald-600"
         />
         <MetricCard
           title="Pedidos Pendentes"
           value={`${metrics.pending_orders}`}
           icon={ShoppingCart}
-          trend={{ value: `+${metrics.processing_orders}`, isPositive: false }}
+          trend={{ value: `${metrics.processing_orders} processando`, isPositive: false }}
           iconBgColor="bg-blue-100"
           iconColor="text-blue-600"
         />
@@ -135,7 +135,7 @@ export default function DashboardPage() {
           title="Produtos Ativos"
           value={`${metrics.active_products}`}
           icon={Package}
-          trend={{ value: `+${metrics.low_stock_products}`, isPositive: true }}
+          trend={{ value: `${metrics.low_stock_products} em baixa`, isPositive: false }}
           iconBgColor="bg-purple-100"
           iconColor="text-purple-600"
         />
@@ -143,54 +143,63 @@ export default function DashboardPage() {
           title="Total de Clientes"
           value={`${metrics.total_customers}`}
           icon={TrendingUp}
-          iconBgColor="bg-orange-100"
-          iconColor="text-orange-600"
+          iconBgColor="bg-amber-100"
+          iconColor="text-amber-600"
         />
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Pedidos Recentes</h2>
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+        <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+          <h2 className="text-xl font-bold text-gray-900">Pedidos Recentes</h2>
+          <p className="text-sm text-gray-600 mt-1">Últimos pedidos realizados na sua loja</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  ID
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Código
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Cliente
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Total
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {recentOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {order.code}
+                <tr 
+                  key={order.id} 
+                  className="odd:bg-white even:bg-gray-50/50 hover:bg-blue-50/50 transition-colors duration-150"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm font-bold text-gray-900">{order.code}</span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {order.customer_name}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">{order.customer_name}</div>
+                      <div className="text-xs text-gray-500">{order.customer_email}</div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold ${
                         statusConfig[order.status].color
                       }`}
                     >
                       {statusConfig[order.status].label}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                    R$ {order.total.toFixed(2).replace('.', ',')}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm font-bold text-gray-900">
+                      R$ {order.total.toFixed(2).replace('.', ',')}
+                    </span>
                   </td>
                 </tr>
               ))}

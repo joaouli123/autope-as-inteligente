@@ -21,14 +21,14 @@ export default function MetricCard({
   iconColor,
 }: MetricCardProps) {
   return (
-    <div className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 group">
       <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 ${iconBgColor} rounded-lg flex items-center justify-center`}>
-          <Icon size={24} className={iconColor} />
+        <div className={`w-14 h-14 ${iconBgColor} rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300`}>
+          <Icon size={28} className={iconColor} strokeWidth={2.5} />
         </div>
         {trend && (
           <div
-            className={`px-3 py-1 rounded-full text-sm font-semibold ${
+            className={`px-3 py-1.5 rounded-full text-xs font-bold ${
               trend.isPositive
                 ? 'bg-green-100 text-green-700'
                 : 'bg-red-100 text-red-700'
@@ -39,8 +39,8 @@ export default function MetricCard({
         )}
       </div>
       <div>
-        <p className="text-sm text-gray-600 mb-1">{title}</p>
-        <p className="text-3xl font-bold text-gray-900">{value}</p>
+        <p className="text-sm font-medium text-gray-600 mb-2">{title}</p>
+        <p className="text-3xl font-bold text-gray-900 tracking-tight">{value}</p>
       </div>
     </div>
   );
