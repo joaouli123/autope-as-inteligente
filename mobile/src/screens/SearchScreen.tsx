@@ -61,7 +61,7 @@ interface FilterState {
   sortBy: 'price_asc' | 'price_desc';
   partCode: string;
   partName: string;
-  part_position: string;
+  partPosition: string;
   make: string;
   model: string;
 }
@@ -85,7 +85,7 @@ export default function SearchScreen() {
     sortBy: 'price_asc',
     partCode: '',
     partName: '',
-    part_position: '',
+    partPosition: '',
     make: '',
     model: '',
   });
@@ -206,8 +206,8 @@ export default function SearchScreen() {
     }
 
     // 3. Filtro por posição (NOVO)
-    if (filters.part_position) {
-      filtered = filtered.filter(p => p.part_position === filters.part_position);
+    if (filters.partPosition) {
+      filtered = filtered.filter(p => p.part_position === filters.partPosition);
     }
 
     if (filters.compatibilityGuaranteed && userVehicle) {
