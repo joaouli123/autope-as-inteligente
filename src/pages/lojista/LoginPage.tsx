@@ -88,7 +88,7 @@ export default function LojistaLoginPage() {
                 Email Corporativo
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors peer-focus:text-blue-600" size={20} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors" size={20} />
                 <input
                   type="email"
                   value={email}
@@ -105,7 +105,7 @@ export default function LojistaLoginPage() {
                 Senha
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors peer-focus:text-blue-600" size={20} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors" size={20} />
                 <input
                   type="password"
                   value={password}
