@@ -107,6 +107,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Page Title */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800">Visão Geral</h1>
+        <p className="text-sm text-gray-600 mt-1">Acompanhe o desempenho da sua loja</p>
+      </div>
+
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
@@ -143,9 +149,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl border border-gray-200">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Pedidos Recentes</h2>
+          <h2 className="text-xl font-bold text-gray-800">Pedidos Recentes</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
