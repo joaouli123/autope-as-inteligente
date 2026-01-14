@@ -10,6 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import { X, ChevronDown, Filter, Sliders } from 'lucide-react-native';
+import Slider from '@react-native-community/slider';
 
 interface FilterState {
   compatibilityGuaranteed: boolean;
@@ -18,6 +19,11 @@ interface FilterState {
   priceMin: number;
   priceMax: number;
   sortBy: 'relevance' | 'price_asc' | 'price_desc' | 'newest';
+  partCode: string;
+  partName: string;
+  position: string;
+  make: string;
+  model: string;
 }
 
 interface AdvancedFilterModalProps {
@@ -33,12 +39,24 @@ interface AdvancedFilterModalProps {
 }
 
 const CATEGORIES = [
-  { id: 'Freios', name: 'Freios', specs: ['Dianteiro', 'Traseiro', 'Cerâmica', 'Metálica', 'Orgânica'] },
-  { id: 'Motor', name: 'Motor', specs: ['Filtro', 'Velas', 'Bobina', 'Sensor', 'Correia'] },
-  { id: 'Suspensão', name: 'Suspensão', specs: ['Amortecedor', 'Mola', 'Barra', 'Cubo', 'Bandeja'] },
-  { id: 'Elétrica', name: 'Elétrica', specs: ['12V', '24V', 'Bateria', 'Alternador', 'Motor de Partida'] },
-  { id: 'Transmissão', name: 'Transmissão', specs: ['Embreagem', 'Cabo', 'Óleo', 'Rolamento'] },
-  { id: 'Filtros', name: 'Filtros', specs: ['Óleo', 'Ar', 'Combustível', 'Cabine', 'Transmissão'] },
+  { id: 'Acessórios', name: 'Acessórios', specs: ['Vidros', 'Retrovisores', 'Parachoques', 'Paralamas'] },
+  { id: 'Alinhamento e Balanceamento', name: 'Alinhamento e Balanceamento', specs: ['Serviço', 'Peças'] },
+  { id: 'Bateria', name: 'Bateria', specs: ['45Ah', '60Ah', '70Ah', '100Ah'] },
+  { id: 'Escapamento', name: 'Escapamento', specs: ['Silencioso', 'Catalisador', 'Coletor', 'Intermediário'] },
+  { id: 'Estofamento/Interior', name: 'Estofamento/Interior', specs: ['Bancos', 'Forração', 'Painel', 'Tapetes'] },
+  { id: 'Lubrificantes', name: 'Lubrificantes', specs: ['Motor', 'Câmbio', 'Freio', 'Direção'] },
+  { id: 'Elétrica/Injeção', name: 'Elétrica/Injeção', specs: ['Sensores', 'Módulos', 'Chicotes', 'Faróis'] },
+  { id: 'Funilaria', name: 'Funilaria', specs: ['Lanternagem', 'Pintura', 'Metais', 'Solda'] },
+  { id: 'Mecânica', name: 'Mecânica', specs: ['Suspensão', 'Motor', 'Câmbio', 'Direção', 'Freios'] },
+  { id: 'Pneus', name: 'Pneus', specs: ['Aro 13', 'Aro 14', 'Aro 15', 'Aro 16', 'Aro 17'] },
+  { id: 'Outros', name: 'Outros', specs: [] },
+];
+
+const POSITIONS = [
+  { value: 'dianteiro_direito', label: 'Dianteiro Direito' },
+  { value: 'dianteiro_esquerdo', label: 'Dianteiro Esquerdo' },
+  { value: 'traseiro_direito', label: 'Traseiro Direito' },
+  { value: 'traseiro_esquerdo', label: 'Traseiro Esquerdo' },
 ];
 
 const SORT_OPTIONS = [
@@ -65,6 +83,11 @@ export default function AdvancedFilterModal({
       priceMin: 0,
       priceMax: 5000,
       sortBy: 'relevance',
+      partCode: '',
+      partName: '',
+      position: '',
+      make: '',
+      model: '',
     });
   };
 
@@ -146,6 +169,64 @@ export default function AdvancedFilterModal({
             )}
           </View>
 
+          {/* Part Code Search */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Busca por Código da Peça</Text>
+            <TextInput
+              style={styles.textInput}
+              value={localFilters.partCode}
+              onChangeText={(text) => setLocalFilters({ ...localFilters, partCode: text })}
+              placeholder="Ex: KL1045008"
+              placeholderTextColor="#9ca3af"
+            />
+          </View>
+
+          {/* Part Name Search */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Busca por Nome da Peça</Text>
+            <TextInput
+              style={styles.textInput}
+              value={localFilters.partName}
+              onChangeText={(text) => setLocalFilters({ ...localFilters, partName: text })}
+              placeholder="Ex: Amortecedor"
+              placeholderTextColor="#9ca3af"
+            />
+            <Text style={styles.helperText}>
+              Busca inteligente por primeiras letras
+            </Text>
+          </View>
+
+          {/* Position Filter */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Posição da Peça</Text>
+            <View style={styles.positionContainer}>
+              {POSITIONS.map((pos) => (
+                <TouchableOpacity
+                  key={pos.value}
+                  style={[
+                    styles.positionButton,
+                    localFilters.position === pos.value && styles.positionButtonActive,
+                  ]}
+                  onPress={() =>
+                    setLocalFilters({
+                      ...localFilters,
+                      position: localFilters.position === pos.value ? '' : pos.value,
+                    })
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.positionButtonText,
+                      localFilters.position === pos.value && styles.positionButtonTextActive,
+                    ]}
+                  >
+                    {pos.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
           {/* Categories */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Categorias</Text>
@@ -203,45 +284,27 @@ export default function AdvancedFilterModal({
           {/* Price Range */}
           <View style={styles.section}>
             <View style={styles.priceHeader}>
-              <Text style={styles.sectionTitle}>Faixa de Preço</Text>
+              <Text style={styles.sectionTitle}>Preço Máximo</Text>
               <Text style={styles.priceRange}>
-                R$ {localFilters.priceMin} - R$ {localFilters.priceMax}
+                R$ {localFilters.priceMax}
               </Text>
             </View>
-            <View style={styles.priceInputContainer}>
-              <View style={styles.priceInputWrapper}>
-                <Text style={styles.priceInputLabel}>Mín</Text>
-                <TextInput
-                  style={styles.priceInput}
-                  value={localFilters.priceMin.toString()}
-                  onChangeText={(text) => {
-                    const value = parseInt(text) || 0;
-                    setLocalFilters({
-                      ...localFilters,
-                      priceMin: value,
-                    });
-                  }}
-                  keyboardType="numeric"
-                  placeholder="0"
-                />
-              </View>
-              <Text style={styles.priceSeparator}>até</Text>
-              <View style={styles.priceInputWrapper}>
-                <Text style={styles.priceInputLabel}>Máx</Text>
-                <TextInput
-                  style={styles.priceInput}
-                  value={localFilters.priceMax.toString()}
-                  onChangeText={(text) => {
-                    const value = parseInt(text) || 5000;
-                    setLocalFilters({
-                      ...localFilters,
-                      priceMax: value,
-                    });
-                  }}
-                  keyboardType="numeric"
-                  placeholder="5000"
-                />
-              </View>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={5000}
+              step={50}
+              value={localFilters.priceMax}
+              onValueChange={(value) =>
+                setLocalFilters({ ...localFilters, priceMax: value })
+              }
+              minimumTrackTintColor="#3b82f6"
+              maximumTrackTintColor="#d1d5db"
+              thumbTintColor="#3b82f6"
+            />
+            <View style={styles.priceLabels}>
+              <Text style={styles.priceLabelText}>R$ 0</Text>
+              <Text style={styles.priceLabelText}>R$ 5.000+</Text>
             </View>
           </View>
 
@@ -369,6 +432,48 @@ const styles = StyleSheet.create({
     color: '#065f46',
     fontWeight: '500',
   },
+  textInput: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#1f2937',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 6,
+  },
+  positionContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  positionButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    flex: 1,
+    minWidth: '45%',
+    alignItems: 'center',
+  },
+  positionButtonActive: {
+    backgroundColor: '#1e3a8a',
+    borderColor: '#1e3a8a',
+  },
+  positionButtonText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  positionButtonTextActive: {
+    color: '#ffffff',
+  },
   chipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -431,6 +536,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#3b82f6',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  priceLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  priceLabelText: {
+    fontSize: 12,
+    color: '#6b7280',
   },
   priceInputContainer: {
     flexDirection: 'row',

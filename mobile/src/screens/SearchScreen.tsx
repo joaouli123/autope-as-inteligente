@@ -57,6 +57,11 @@ interface FilterState {
   priceMin: number;
   priceMax: number;
   sortBy:  'relevance' | 'price_asc' | 'price_desc' | 'newest';
+  partCode: string;
+  partName: string;
+  position: string;
+  make: string;
+  model: string;
 }
 
 export default function SearchScreen() {
@@ -76,6 +81,11 @@ export default function SearchScreen() {
     priceMin: 0,
     priceMax: 5000,
     sortBy: 'relevance',
+    partCode: '',
+    partName: '',
+    position: '',
+    make: '',
+    model: '',
   });
 
   const formatCurrency = (value: number) => {
@@ -148,6 +158,33 @@ export default function SearchScreen() {
         p.name.toLowerCase().includes(query) ||
         p.category.toLowerCase().includes(query)
       );
+    }
+
+    // 1. Busca por código da peça (NOVO)
+    if (filters.partCode.trim()) {
+      filtered = filtered.filter(p => 
+        (p as any).part_code?.toLowerCase() === filters.partCode.toLowerCase()
+      );
+    }
+
+    // 2. Busca por nome da peça com primeiras letras (NOVO)
+    if (filters.partName.trim()) {
+      const searchTerm = filters.partName.toLowerCase();
+      filtered = filtered.filter(p => {
+        const productName = p.name.toLowerCase();
+        // Busca por 7, 6, 5, 4, 3, 2 primeiras letras
+        for (let i = Math.min(7, searchTerm.length); i >= 2; i--) {
+          if (productName.startsWith(searchTerm.substring(0, i))) {
+            return true;
+          }
+        }
+        return false;
+      });
+    }
+
+    // 3. Filtro por posição (NOVO)
+    if (filters.position) {
+      filtered = filtered.filter(p => (p as any).position === filters.position);
     }
 
     if (filters.compatibilityGuaranteed && userVehicle) {

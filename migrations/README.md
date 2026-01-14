@@ -44,9 +44,23 @@ Execute these SQL scripts in order via **Supabase Dashboard** → **SQL Editor**
 
 ---
 
+### 4. 004_add_part_fields_and_update_categories.sql
+**Purpose:** Adds new search fields and updates category system.
+
+**Problem Solved:** Enables advanced filtering by part code, part name, and position. Updates category system to match new business requirements.
+
+**What it does:**
+- Adds `part_code` column for exact part code searches
+- Adds `position` column for filtering by part position (front/rear, left/right)
+- Creates optimized indexes for new search fields
+- Updates category constraint to new category list
+- Migrates existing category data to new categories
+
+---
+
 ## Migration Order
 
-**IMPORTANT:** Execute migrations in numerical order (001, 002, 003, etc.) to ensure proper database structure.
+**IMPORTANT:** Execute migrations in numerical order (001, 002, 003, 004, etc.) to ensure proper database structure.
 
 ## Verification
 
@@ -57,7 +71,7 @@ After running migrations, verify with:
 SELECT column_name, data_type 
 FROM information_schema.columns 
 WHERE table_name = 'products' 
-  AND column_name IN ('brand', 'model');
+  AND column_name IN ('brand', 'model', 'part_code', 'position');
 
 -- Check store rating columns
 SELECT column_name, column_default, is_nullable
