@@ -28,7 +28,7 @@ interface Product {
   image: string;
   category: string;
   part_code?: string;
-  position?: string;
+  part_position?: string;
 }
 
 const mockProducts: Product[] = [
@@ -61,7 +61,7 @@ interface FilterState {
   sortBy: 'price_asc' | 'price_desc';
   partCode: string;
   partName: string;
-  position: string;
+  part_position: string;
   make: string;
   model: string;
 }
@@ -85,7 +85,7 @@ export default function SearchScreen() {
     sortBy: 'price_asc',
     partCode: '',
     partName: '',
-    position: '',
+    part_position: '',
     make: '',
     model: '',
   });
@@ -206,8 +206,8 @@ export default function SearchScreen() {
     }
 
     // 3. Filtro por posição (NOVO)
-    if (filters.position) {
-      filtered = filtered.filter(p => p.position === filters.position);
+    if (filters.part_position) {
+      filtered = filtered.filter(p => p.part_position === filters.part_position);
     }
 
     if (filters.compatibilityGuaranteed && userVehicle) {
