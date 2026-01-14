@@ -17,6 +17,8 @@ interface FormData {
   mpn: string;
   brand: string;
   model: string;
+  part_code: string;
+  position: string;
   price: string;
   stock_quantity: string;
   images: string[];
@@ -27,30 +29,32 @@ interface FormData {
 }
 
 const categories = [
-  'Freios',
-  'Motor',
-  'Suspensão',
-  'Elétrica',
-  'Transmissão',
-  'Filtros',
-  'Óleo e Fluidos',
-  'Pneus',
-  'Bateria',
   'Acessórios',
+  'Alinhamento e Balanceamento',
+  'Bateria',
+  'Escapamento',
+  'Estofamento/Interior',
+  'Lubrificantes',
+  'Elétrica/Injeção',
+  'Funilaria',
+  'Mecânica',
+  'Pneus',
+  'Outros',
 ];
 
 // Category-specific specification templates
 const categorySpecifications: Record<string, string[]> = {
-  Freios: ['tipo', 'posição', 'material', 'dimensões', 'espessura'],
-  Suspensão: ['tipo', 'lado', 'posição', 'curso', 'carga_máxima'],
-  Motor: ['tipo', 'cilindros', 'potência', 'torque', 'aplicação'],
-  Elétrica: ['voltagem', 'tipo', 'amperagem', 'potência', 'conectores'],
-  Transmissão: ['tipo', 'marchas', 'torque_suportado', 'relação'],
-  Filtros: ['tipo', 'aplicação', 'dimensões', 'material', 'microns'],
-  'Óleo e Fluidos': ['tipo', 'viscosidade', 'especificação', 'volume', 'aplicação'],
-  Pneus: ['largura', 'perfil', 'aro', 'índice_carga', 'índice_velocidade'],
-  Bateria: ['voltagem', 'amperagem', 'cca', 'dimensões', 'tipo'],
-  Acessórios: ['tipo', 'material', 'compatibilidade', 'cor'],
+  'Acessórios': ['tipo', 'material', 'compatibilidade', 'cor', 'aplicação'],
+  'Alinhamento e Balanceamento': ['tipo_serviço', 'aplicação', 'especificações'],
+  'Bateria': ['voltagem', 'amperagem', 'cca', 'dimensões', 'tipo'],
+  'Escapamento': ['tipo', 'posição', 'material', 'diâmetro', 'aplicação'],
+  'Estofamento/Interior': ['tipo', 'material', 'cor', 'posição', 'compatibilidade'],
+  'Lubrificantes': ['tipo', 'viscosidade', 'especificação', 'volume', 'aplicação'],
+  'Elétrica/Injeção': ['voltagem', 'tipo', 'amperagem', 'potência', 'conectores'],
+  'Funilaria': ['tipo', 'posição', 'material', 'acabamento', 'cor'],
+  'Mecânica': ['tipo', 'posição', 'material', 'dimensões', 'especificação'],
+  'Pneus': ['largura', 'perfil', 'aro', 'índice_carga', 'índice_velocidade'],
+  'Outros': ['tipo', 'aplicação', 'especificações'],
 };
 
 export default function NovoProdutoPage() {
@@ -68,6 +72,8 @@ export default function NovoProdutoPage() {
     mpn: '',
     brand: '',
     model: '',
+    part_code: '',
+    position: '',
     price: '',
     stock_quantity: '0',
     images: [],
@@ -113,6 +119,8 @@ export default function NovoProdutoPage() {
         mpn: data.mpn || '',
         brand: data.brand || '',
         model: data.model || '',
+        part_code: data.part_code || '',
+        position: data.position || '',
         price: data.price.toString(),
         stock_quantity: data.stock_quantity.toString(),
         images: data.images || [],
@@ -276,6 +284,8 @@ export default function NovoProdutoPage() {
         mpn: formData.mpn.trim() || null,
         brand: formData.brand.trim() || null,
         model: formData.model.trim() || null,
+        part_code: formData.part_code.trim() || null,
+        position: formData.position || null,
         price: parseFloat(formData.price),
         stock_quantity: parseInt(formData.stock_quantity) || 0,
         images: formData.images,
@@ -588,6 +598,39 @@ export default function NovoProdutoPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Ex: Cerâmica Plus"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Código da Peça
+              </label>
+              <input
+                type="text"
+                value={formData.part_code}
+                onChange={(e) => handleChange('part_code', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ex: KL1045008"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Código único da peça para busca exata
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Posição da Peça
+              </label>
+              <select
+                value={formData.position}
+                onChange={(e) => handleChange('position', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Selecione a posição (opcional)</option>
+                <option value="dianteiro_direito">Dianteiro Direito</option>
+                <option value="dianteiro_esquerdo">Dianteiro Esquerdo</option>
+                <option value="traseiro_direito">Traseiro Direito</option>
+                <option value="traseiro_esquerdo">Traseiro Esquerdo</option>
+              </select>
             </div>
 
             <div>
