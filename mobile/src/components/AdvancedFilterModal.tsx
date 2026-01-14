@@ -9,7 +9,7 @@ import {
   Switch,
   TextInput,
 } from 'react-native';
-import { X, ChevronDown, Filter, Sliders } from 'lucide-react-native';
+import { X, Car, ArrowUp, ArrowDown, Wrench, Gauge, BatteryCharging, Wind, Armchair, Droplet, Zap, Hammer, Settings, CircleDot, MoreHorizontal, Filter } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 
 interface FilterState {
@@ -39,17 +39,17 @@ interface AdvancedFilterModalProps {
 }
 
 const CATEGORIES = [
-  { id: 'Acessórios', name: 'Acessórios', specs: ['Vidros', 'Retrovisores', 'Parachoques', 'Paralamas'] },
-  { id: 'Alinhamento e Balanceamento', name: 'Alinhamento e Balanceamento', specs: ['Serviço', 'Peças'] },
-  { id: 'Bateria', name: 'Bateria', specs: ['45Ah', '60Ah', '70Ah', '100Ah'] },
-  { id: 'Escapamento', name: 'Escapamento', specs: ['Silencioso', 'Catalisador', 'Coletor', 'Intermediário'] },
-  { id: 'Estofamento/Interior', name: 'Estofamento/Interior', specs: ['Bancos', 'Forração', 'Painel', 'Tapetes'] },
-  { id: 'Lubrificantes', name: 'Lubrificantes', specs: ['Motor', 'Câmbio', 'Freio', 'Direção'] },
-  { id: 'Elétrica/Injeção', name: 'Elétrica/Injeção', specs: ['Sensores', 'Módulos', 'Chicotes', 'Faróis'] },
-  { id: 'Funilaria', name: 'Funilaria', specs: ['Lanternagem', 'Pintura', 'Metais', 'Solda'] },
-  { id: 'Mecânica', name: 'Mecânica', specs: ['Suspensão', 'Motor', 'Câmbio', 'Direção', 'Freios'] },
-  { id: 'Pneus', name: 'Pneus', specs: ['Aro 13', 'Aro 14', 'Aro 15', 'Aro 16', 'Aro 17'] },
-  { id: 'Outros', name: 'Outros', specs: [] },
+  { id: 'Acessórios', name: 'Acessórios', icon: Wrench, specs: ['Vidros', 'Retrovisores', 'Parachoques', 'Paralamas'] },
+  { id: 'Alinhamento e Balanceamento', name: 'Alinhamento', icon: Gauge, specs: ['Serviço', 'Peças'] },
+  { id: 'Bateria', name: 'Bateria', icon: BatteryCharging, specs: ['45Ah', '60Ah', '70Ah', '100Ah'] },
+  { id: 'Escapamento', name: 'Escapamento', icon: Wind, specs: ['Silencioso', 'Catalisador', 'Coletor', 'Intermediário'] },
+  { id: 'Estofamento/Interior', name: 'Estofamento', icon: Armchair, specs: ['Bancos', 'Forração', 'Painel', 'Tapetes'] },
+  { id: 'Lubrificantes', name: 'Lubrificantes', icon: Droplet, specs: ['Motor', 'Câmbio', 'Freio', 'Direção'] },
+  { id: 'Elétrica/Injeção', name: 'Elétrica', icon: Zap, specs: ['Sensores', 'Módulos', 'Chicotes', 'Faróis'] },
+  { id: 'Funilaria', name: 'Funilaria', icon: Hammer, specs: ['Lanternagem', 'Pintura', 'Metais', 'Solda'] },
+  { id: 'Mecânica', name: 'Mecânica', icon: Settings, specs: ['Suspensão', 'Motor', 'Câmbio', 'Direção', 'Freios'] },
+  { id: 'Pneus', name: 'Pneus', icon: CircleDot, specs: ['Aro 13', 'Aro 14', 'Aro 15', 'Aro 16', 'Aro 17'] },
+  { id: 'Outros', name: 'Outros', icon: MoreHorizontal, specs: [] },
 ];
 
 const POSITIONS = [
@@ -230,30 +230,47 @@ export default function AdvancedFilterModal({
           {/* Categories */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Categorias</Text>
-            <View style={styles.chipsContainer}>
-              {CATEGORIES.map((category) => (
-                <View key={category.id}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesScroll}
+            >
+              {CATEGORIES.map((category) => {
+                const Icon = category.icon;
+                return (
                   <TouchableOpacity
+                    key={category.id}
                     style={[
-                      styles.chip,
-                      localFilters.category === category.id && styles.chipActive,
+                      styles.categoryCard,
+                      localFilters.category === category.id && styles.categoryCardActive,
                     ]}
                     onPress={() => toggleCategory(category.id)}
                   >
+                    <Icon 
+                      color={localFilters.category === category.id ? "#ffffff" : "#1e3a8a"} 
+                      size={28} 
+                    />
                     <Text
                       style={[
-                        styles.chipText,
-                        localFilters.category === category.id && styles.chipTextActive,
+                        styles.categoryCardText,
+                        localFilters.category === category.id && styles.categoryCardTextActive,
                       ]}
                     >
                       {category.name}
                     </Text>
                   </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
 
-                  {/* Specifications for selected category */}
-                  {localFilters.category === category.id && category.specs.length > 0 && (
-                    <View style={styles.specsContainer}>
-                      {category.specs.map((spec) => (
+            {/* Specifications for selected category */}
+            {localFilters.category && (
+              <>
+                {CATEGORIES.find(c => c.id === localFilters.category)?.specs.length! > 0 && (
+                  <View style={styles.specsContainer}>
+                    <Text style={styles.specsTitle}>Especificações</Text>
+                    <View style={styles.specsChipsWrapper}>
+                      {CATEGORIES.find(c => c.id === localFilters.category)?.specs.map((spec) => (
                         <TouchableOpacity
                           key={spec}
                           style={[
@@ -275,10 +292,10 @@ export default function AdvancedFilterModal({
                         </TouchableOpacity>
                       ))}
                     </View>
-                  )}
-                </View>
-              ))}
-            </View>
+                  </View>
+                )}
+              </>
+            )}
           </View>
 
           {/* Price Range */}
@@ -479,6 +496,36 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+  categoriesScroll: {
+    paddingVertical: 8,
+    gap: 12,
+  },
+  categoryCard: {
+    width: 90,
+    height: 90,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+  },
+  categoryCardActive: {
+    backgroundColor: '#1e3a8a',
+    borderColor: '#1e3a8a',
+  },
+  categoryCardText: {
+    fontSize: 11,
+    color: '#374151',
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 14,
+  },
+  categoryCardTextActive: {
+    color: '#ffffff',
+  },
   chip: {
     backgroundColor: '#ffffff',
     borderRadius: 20,
@@ -500,11 +547,21 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   specsContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+  },
+  specsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  specsChipsWrapper: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 8,
-    marginLeft: 12,
+    gap: 8,
   },
   specChip: {
     backgroundColor: '#f3f4f6',
