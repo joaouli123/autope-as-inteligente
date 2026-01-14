@@ -266,34 +266,39 @@ export default function AdvancedFilterModal({
             {/* Specifications for selected category */}
             {localFilters.category && (
               <>
-                {CATEGORIES.find(c => c.id === localFilters.category)?.specs.length! > 0 && (
-                  <View style={styles.specsContainer}>
-                    <Text style={styles.specsTitle}>Especificações</Text>
-                    <View style={styles.specsChipsWrapper}>
-                      {CATEGORIES.find(c => c.id === localFilters.category)?.specs.map((spec) => (
-                        <TouchableOpacity
-                          key={spec}
-                          style={[
-                            styles.specChip,
-                            localFilters.specifications.includes(spec) &&
-                              styles.specChipActive,
-                          ]}
-                          onPress={() => toggleSpecification(spec)}
-                        >
-                          <Text
+                {(() => {
+                  const selectedCategory = CATEGORIES.find(c => c.id === localFilters.category);
+                  if (!selectedCategory || !selectedCategory.specs.length) return null;
+                  
+                  return (
+                    <View style={styles.specsContainer}>
+                      <Text style={styles.specsTitle}>Especificações</Text>
+                      <View style={styles.specsChipsWrapper}>
+                        {selectedCategory.specs.map((spec) => (
+                          <TouchableOpacity
+                            key={spec}
                             style={[
-                              styles.specChipText,
+                              styles.specChip,
                               localFilters.specifications.includes(spec) &&
-                                styles.specChipTextActive,
+                                styles.specChipActive,
                             ]}
+                            onPress={() => toggleSpecification(spec)}
                           >
-                            {spec}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
+                            <Text
+                              style={[
+                                styles.specChipText,
+                                localFilters.specifications.includes(spec) &&
+                                  styles.specChipTextActive,
+                              ]}
+                            >
+                              {spec}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
                     </View>
-                  </View>
-                )}
+                  );
+                })()}
               </>
             )}
           </View>

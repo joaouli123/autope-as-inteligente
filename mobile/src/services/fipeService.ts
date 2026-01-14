@@ -64,6 +64,9 @@ export const getYears = async (
     const response = await fetch(
       `${BASE_URL}/${type}/marcas/${brandCode}/modelos/${modelCode}/anos`
     );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     return await response.json();
   } catch (error) {
     console.error('FIPE Years Error:', error);
@@ -81,6 +84,9 @@ export const getVehicleDetails = async (
     const response = await fetch(
       `${BASE_URL}/${type}/marcas/${brandCode}/modelos/${modelCode}/anos/${yearCode}`
     );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     return await response.json();
   } catch (error) {
     console.error('FIPE Vehicle Details Error:', error);

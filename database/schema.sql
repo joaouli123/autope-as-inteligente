@@ -274,7 +274,24 @@ RETURNS TABLE (
   store_id UUID,
   match_length INTEGER
 ) AS $$
+DECLARE
+  term_lower TEXT;
+  term_7 TEXT;
+  term_6 TEXT;
+  term_5 TEXT;
+  term_4 TEXT;
+  term_3 TEXT;
+  term_2 TEXT;
 BEGIN
+  -- Pre-compute lowercased substrings
+  term_lower := LOWER(search_term);
+  term_7 := SUBSTRING(term_lower FROM 1 FOR 7) || '%';
+  term_6 := SUBSTRING(term_lower FROM 1 FOR 6) || '%';
+  term_5 := SUBSTRING(term_lower FROM 1 FOR 5) || '%';
+  term_4 := SUBSTRING(term_lower FROM 1 FOR 4) || '%';
+  term_3 := SUBSTRING(term_lower FROM 1 FOR 3) || '%';
+  term_2 := SUBSTRING(term_lower FROM 1 FOR 2) || '%';
+
   RETURN QUERY
   SELECT 
     p.id,
@@ -285,23 +302,23 @@ BEGIN
     p.position,
     p.store_id,
     CASE 
-      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 7)) || '%' THEN 7
-      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 6)) || '%' THEN 6
-      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 5)) || '%' THEN 5
-      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 4)) || '%' THEN 4
-      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 3)) || '%' THEN 3
-      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 2)) || '%' THEN 2
+      WHEN LOWER(p.name) LIKE term_7 THEN 7
+      WHEN LOWER(p.name) LIKE term_6 THEN 6
+      WHEN LOWER(p.name) LIKE term_5 THEN 5
+      WHEN LOWER(p.name) LIKE term_4 THEN 4
+      WHEN LOWER(p.name) LIKE term_3 THEN 3
+      WHEN LOWER(p.name) LIKE term_2 THEN 2
       ELSE 0
     END as match_length
   FROM public.products p
   WHERE p.is_active = true
     AND (
-      LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 7)) || '%' OR
-      LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 6)) || '%' OR
-      LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 5)) || '%' OR
-      LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 4)) || '%' OR
-      LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 3)) || '%' OR
-      LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 2)) || '%'
+      LOWER(p.name) LIKE term_7 OR
+      LOWER(p.name) LIKE term_6 OR
+      LOWER(p.name) LIKE term_5 OR
+      LOWER(p.name) LIKE term_4 OR
+      LOWER(p.name) LIKE term_3 OR
+      LOWER(p.name) LIKE term_2
     )
   ORDER BY match_length DESC, p.name;
 END;
