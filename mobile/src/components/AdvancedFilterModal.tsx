@@ -68,7 +68,7 @@ const POSITIONS = [
   { value: 'Traseiro Esquerdo', label: 'Traseiro Esquerdo' },
   { value: 'Central', label: 'Central' },
   { value: 'Universal', label: 'Universal' },
-];
+] as const;
 
 const SORT_OPTIONS = [
   { value: 'price_asc', label: 'Menor Preço' },

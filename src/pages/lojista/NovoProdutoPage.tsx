@@ -7,6 +7,7 @@ import VehicleCompatibilityMatrix, {
 } from '../../components/lojista/VehicleCompatibilityMatrix';
 import { supabase } from '../../services/supabaseClient';
 import type { Product } from '../../types/lojista';
+import { PART_POSITION_OPTIONS } from '../../constants/vehicles';
 
 interface FormData {
   name: string;
@@ -626,12 +627,11 @@ export default function NovoProdutoPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Selecione a posição (opcional)</option>
-                <option value="Dianteiro Direito">Dianteiro Direito</option>
-                <option value="Dianteiro Esquerdo">Dianteiro Esquerdo</option>
-                <option value="Traseiro Direito">Traseiro Direito</option>
-                <option value="Traseiro Esquerdo">Traseiro Esquerdo</option>
-                <option value="Central">Central</option>
-                <option value="Universal">Universal</option>
+                {PART_POSITION_OPTIONS.map((position) => (
+                  <option key={position} value={position}>
+                    {position}
+                  </option>
+                ))}
               </select>
             </div>
 

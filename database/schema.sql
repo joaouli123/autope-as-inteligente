@@ -88,14 +88,17 @@ CREATE TABLE IF NOT EXISTS stores (
 -- Garantir que colunas existem (para scripts de atualização)
 DO $$ 
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stores' AND column_name='city') THEN
-    ALTER TABLE stores ADD COLUMN city VARCHAR(100);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stores' AND column_name='state') THEN
-    ALTER TABLE stores ADD COLUMN state VARCHAR(2);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stores' AND column_name='description') THEN
-    ALTER TABLE stores ADD COLUMN description TEXT;
+  -- Check if stores table exists first
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'stores') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='stores' AND column_name='city') THEN
+      ALTER TABLE stores ADD COLUMN city VARCHAR(100);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='stores' AND column_name='state') THEN
+      ALTER TABLE stores ADD COLUMN state VARCHAR(2);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='stores' AND column_name='description') THEN
+      ALTER TABLE stores ADD COLUMN description TEXT;
+    END IF;
   END IF;
 END $$;
 
@@ -131,16 +134,19 @@ CREATE TABLE IF NOT EXISTS products (
 -- Garantir colunas (IMPORTANTE: usar part_position, não position!)
 DO $$ 
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='part_code') THEN
-    ALTER TABLE products ADD COLUMN part_code VARCHAR(50);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='part_position') THEN
-    ALTER TABLE products ADD COLUMN part_position VARCHAR(50);
-  END IF;
-  
-  -- Se ainda existir coluna 'position' (palavra reservada), renomear
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='position') THEN
-    ALTER TABLE products RENAME COLUMN position TO part_position;
+  -- Check if products table exists first
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'products') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='products' AND column_name='part_code') THEN
+      ALTER TABLE products ADD COLUMN part_code VARCHAR(50);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='products' AND column_name='part_position') THEN
+      ALTER TABLE products ADD COLUMN part_position VARCHAR(50);
+    END IF;
+    
+    -- Se ainda existir coluna 'position' (palavra reservada), renomear
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='products' AND column_name='position') THEN
+      ALTER TABLE products RENAME COLUMN position TO part_position;
+    END IF;
   END IF;
 END $$;
 
@@ -254,8 +260,11 @@ CREATE TABLE IF NOT EXISTS user_vehicles (
 -- Garantir coluna is_primary
 DO $$ 
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user_vehicles' AND column_name='is_primary') THEN
-    ALTER TABLE user_vehicles ADD COLUMN is_primary BOOLEAN DEFAULT false;
+  -- Check if user_vehicles table exists first
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_vehicles') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='user_vehicles' AND column_name='is_primary') THEN
+      ALTER TABLE user_vehicles ADD COLUMN is_primary BOOLEAN DEFAULT false;
+    END IF;
   END IF;
 END $$;
 
