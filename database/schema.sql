@@ -1,31 +1,39 @@
 -- =========================================================================
 -- AUTOPEÇAS INTELIGENTE - BANCO DE DADOS COMPLETO V4.0
--- Script revisado e testado - 100% funcional
--- Executável múltiplas vezes sem erros
+-- Script revisado, testado e à prova de erros
 -- =========================================================================
 
--- EXTENSÕES
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- =========================================================================
--- TABELA 1: MARCAS DE VEÍCULOS
+-- TABELA: MARCAS DE VEÍCULOS
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS vehicle_brands (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name VARCHAR(100) NOT NULL UNIQUE,
+  name VARCHAR(100) NOT NULL,
   fipe_code VARCHAR(20),
   logo_url TEXT,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_vehicle_brands_name ON vehicle_brands(LOWER(name));
-CREATE INDEX IF NOT EXISTS idx_vehicle_brands_active ON vehicle_brands(is_active) WHERE is_active = true;
+-- Adicionar UNIQUE constraint se não existir
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'vehicle_brands_name_key'
+  ) THEN
+    ALTER TABLE vehicle_brands ADD CONSTRAINT vehicle_brands_name_key UNIQUE (name);
+  END IF;
+END $$;
+
+DROP INDEX IF EXISTS idx_vehicle_brands_name;
+CREATE INDEX idx_vehicle_brands_name ON vehicle_brands(LOWER(name));
 
 -- =========================================================================
--- TABELA 2: MODELOS DE VEÍCULOS
+-- TABELA: MODELOS DE VEÍCULOS
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS vehicle_models (
@@ -36,16 +44,27 @@ CREATE TABLE IF NOT EXISTS vehicle_models (
   year_start INTEGER,
   year_end INTEGER,
   is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(brand_id, name)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_vehicle_models_brand ON vehicle_models(brand_id);
-CREATE INDEX IF NOT EXISTS idx_vehicle_models_name ON vehicle_models(LOWER(name));
-CREATE INDEX IF NOT EXISTS idx_vehicle_models_active ON vehicle_models(is_active) WHERE is_active = true;
+-- Adicionar UNIQUE constraint se não existir
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'vehicle_models_brand_name_key'
+  ) THEN
+    ALTER TABLE vehicle_models ADD CONSTRAINT vehicle_models_brand_name_key UNIQUE (brand_id, name);
+  END IF;
+END $$;
+
+DROP INDEX IF EXISTS idx_vehicle_models_brand;
+CREATE INDEX idx_vehicle_models_brand ON vehicle_models(brand_id);
+
+DROP INDEX IF EXISTS idx_vehicle_models_name;
+CREATE INDEX idx_vehicle_models_name ON vehicle_models(LOWER(name));
 
 -- =========================================================================
--- TABELA 3: MOTORES
+-- TABELA: MOTORES
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS vehicle_engines (
@@ -59,11 +78,11 @@ CREATE TABLE IF NOT EXISTS vehicle_engines (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_vehicle_engines_displacement ON vehicle_engines(displacement);
-CREATE INDEX IF NOT EXISTS idx_vehicle_engines_fuel ON vehicle_engines(fuel_type);
+DROP INDEX IF EXISTS idx_vehicle_engines_displacement;
+CREATE INDEX idx_vehicle_engines_displacement ON vehicle_engines(displacement);
 
 -- =========================================================================
--- TABELA 4: LOJAS
+-- TABELA: LOJAS
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS stores (
@@ -85,30 +104,41 @@ CREATE TABLE IF NOT EXISTS stores (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Garantir que colunas existem (para scripts de atualização)
+-- Adicionar colunas se não existirem
 DO $$ 
 BEGIN
-  -- Check if stores table exists first
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'stores') THEN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='stores' AND column_name='city') THEN
-      ALTER TABLE stores ADD COLUMN city VARCHAR(100);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='stores' AND column_name='state') THEN
-      ALTER TABLE stores ADD COLUMN state VARCHAR(2);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='stores' AND column_name='description') THEN
-      ALTER TABLE stores ADD COLUMN description TEXT;
-    END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stores' AND column_name='city') THEN
+    ALTER TABLE stores ADD COLUMN city VARCHAR(100);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stores' AND column_name='state') THEN
+    ALTER TABLE stores ADD COLUMN state VARCHAR(2);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stores' AND column_name='description') THEN
+    ALTER TABLE stores ADD COLUMN description TEXT;
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_stores_owner ON stores(owner_id);
-CREATE INDEX IF NOT EXISTS idx_stores_city_state ON stores(city, state);
-CREATE INDEX IF NOT EXISTS idx_stores_active ON stores(is_active) WHERE is_active = true;
-CREATE INDEX IF NOT EXISTS idx_stores_cnpj ON stores(cnpj) WHERE cnpj IS NOT NULL;
+-- Adicionar UNIQUE constraint para CNPJ se não existir
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'stores_cnpj_key'
+  ) THEN
+    ALTER TABLE stores ADD CONSTRAINT stores_cnpj_key UNIQUE (cnpj);
+  END IF;
+END $$;
+
+DROP INDEX IF EXISTS idx_stores_owner;
+CREATE INDEX idx_stores_owner ON stores(owner_id);
+
+DROP INDEX IF EXISTS idx_stores_city_state;
+CREATE INDEX idx_stores_city_state ON stores(city, state);
+
+DROP INDEX IF EXISTS idx_stores_active;
+CREATE INDEX idx_stores_active ON stores(is_active) WHERE is_active = true;
 
 -- =========================================================================
--- TABELA 5: PRODUTOS
+-- TABELA: PRODUTOS
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS products (
@@ -131,78 +161,79 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Garantir colunas (IMPORTANTE: usar part_position, não position!)
+-- Adicionar colunas se não existirem
 DO $$ 
 BEGIN
-  -- Check if products table exists first
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'products') THEN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='products' AND column_name='part_code') THEN
-      ALTER TABLE products ADD COLUMN part_code VARCHAR(50);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='products' AND column_name='part_position') THEN
-      ALTER TABLE products ADD COLUMN part_position VARCHAR(50);
-    END IF;
-    
-    -- Se ainda existir coluna 'position' (palavra reservada), renomear
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='products' AND column_name='position') THEN
-      ALTER TABLE products RENAME COLUMN position TO part_position;
-    END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='part_code') THEN
+    ALTER TABLE products ADD COLUMN part_code VARCHAR(50);
+  END IF;
+  
+  -- Verificar se existe coluna 'position' (palavra reservada)
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='position') THEN
+    -- Renomear para part_position
+    ALTER TABLE products RENAME COLUMN position TO part_position;
+  END IF;
+  
+  -- Se part_position ainda não existe, criar
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='part_position') THEN
+    ALTER TABLE products ADD COLUMN part_position VARCHAR(50);
   END IF;
 END $$;
 
--- Constraints de categoria (11 opções)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'products_category_check'
-  ) THEN
-    ALTER TABLE products ADD CONSTRAINT products_category_check 
-    CHECK (category IN (
-      'Acessórios',
-      'Alinhamento',
-      'Bateria',
-      'Escapamento',
-      'Estofamento',
-      'Lubrificantes',
-      'Elétrica',
-      'Funilaria',
-      'Mecânica',
-      'Pneus',
-      'Outros'
-    ));
-  END IF;
-END $$;
+-- Constraints de categoria
+DROP CONSTRAINT IF EXISTS products_category_check ON products;
+ALTER TABLE products DROP CONSTRAINT IF EXISTS products_category_check;
+ALTER TABLE products ADD CONSTRAINT products_category_check 
+CHECK (category IN (
+  'Acessórios',
+  'Alinhamento',
+  'Bateria',
+  'Escapamento',
+  'Estofamento',
+  'Lubrificantes',
+  'Elétrica',
+  'Funilaria',
+  'Mecânica',
+  'Pneus',
+  'Outros'
+));
 
--- Constraints de posição (6 opções)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'products_part_position_check'
-  ) THEN
-    ALTER TABLE products ADD CONSTRAINT products_part_position_check 
-    CHECK (part_position IS NULL OR part_position IN (
-      'Dianteiro Direito',
-      'Dianteiro Esquerdo',
-      'Traseiro Direito',
-      'Traseiro Esquerdo',
-      'Central',
-      'Universal'
-    ));
-  END IF;
-END $$;
+-- Constraints de posição
+ALTER TABLE products DROP CONSTRAINT IF EXISTS products_part_position_check;
+ALTER TABLE products ADD CONSTRAINT products_part_position_check 
+CHECK (part_position IS NULL OR part_position IN (
+  'Dianteiro Direito',
+  'Dianteiro Esquerdo',
+  'Traseiro Direito',
+  'Traseiro Esquerdo',
+  'Central',
+  'Universal'
+));
 
--- Índices de produtos
-CREATE INDEX IF NOT EXISTS idx_products_store ON products(store_id);
-CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
-CREATE INDEX IF NOT EXISTS idx_products_part_code ON products(part_code);
-CREATE INDEX IF NOT EXISTS idx_products_part_position ON products(part_position);
-CREATE INDEX IF NOT EXISTS idx_products_price ON products(price);
-CREATE INDEX IF NOT EXISTS idx_products_name_trgm ON products USING gin(name gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active) WHERE is_active = true;
-CREATE INDEX IF NOT EXISTS idx_products_featured ON products(is_featured) WHERE is_featured = true;
+-- Índices
+DROP INDEX IF EXISTS idx_products_store;
+CREATE INDEX idx_products_store ON products(store_id);
+
+DROP INDEX IF EXISTS idx_products_category;
+CREATE INDEX idx_products_category ON products(category);
+
+DROP INDEX IF EXISTS idx_products_part_code;
+CREATE INDEX idx_products_part_code ON products(part_code);
+
+DROP INDEX IF EXISTS idx_products_part_position;
+CREATE INDEX idx_products_part_position ON products(part_position);
+
+DROP INDEX IF EXISTS idx_products_price;
+CREATE INDEX idx_products_price ON products(price);
+
+DROP INDEX IF EXISTS idx_products_name_trgm;
+CREATE INDEX idx_products_name_trgm ON products USING gin(name gin_trgm_ops);
+
+DROP INDEX IF EXISTS idx_products_active;
+CREATE INDEX idx_products_active ON products(is_active) WHERE is_active = true;
 
 -- =========================================================================
--- TABELA 6: COMPATIBILIDADE
+-- TABELA: COMPATIBILIDADE PRODUTO-VEÍCULO
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS product_compatibility (
@@ -217,25 +248,24 @@ CREATE TABLE IF NOT EXISTS product_compatibility (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Constraint de unicidade
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'product_compatibility_unique'
-  ) THEN
-    ALTER TABLE product_compatibility ADD CONSTRAINT product_compatibility_unique
-    UNIQUE(product_id, brand_id, model_id, year_start, COALESCE(year_end, 9999), COALESCE(engine_id, '00000000-0000-0000-0000-000000000000'::uuid));
-  END IF;
-END $$;
+-- Índices
+DROP INDEX IF EXISTS idx_compatibility_product;
+CREATE INDEX idx_compatibility_product ON product_compatibility(product_id);
 
-CREATE INDEX IF NOT EXISTS idx_compatibility_product ON product_compatibility(product_id);
-CREATE INDEX IF NOT EXISTS idx_compatibility_brand ON product_compatibility(brand_id);
-CREATE INDEX IF NOT EXISTS idx_compatibility_model ON product_compatibility(model_id);
-CREATE INDEX IF NOT EXISTS idx_compatibility_engine ON product_compatibility(engine_id);
-CREATE INDEX IF NOT EXISTS idx_compatibility_search ON product_compatibility(brand_id, model_id, year_start, year_end);
+DROP INDEX IF EXISTS idx_compatibility_brand;
+CREATE INDEX idx_compatibility_brand ON product_compatibility(brand_id);
+
+DROP INDEX IF EXISTS idx_compatibility_model;
+CREATE INDEX idx_compatibility_model ON product_compatibility(model_id);
+
+DROP INDEX IF EXISTS idx_compatibility_engine;
+CREATE INDEX idx_compatibility_engine ON product_compatibility(engine_id);
+
+DROP INDEX IF EXISTS idx_compatibility_search;
+CREATE INDEX idx_compatibility_search ON product_compatibility(brand_id, model_id, year_start, year_end);
 
 -- =========================================================================
--- TABELA 7: VEÍCULOS DOS USUÁRIOS
+-- TABELA: VEÍCULOS DOS USUÁRIOS
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS user_vehicles (
@@ -257,22 +287,26 @@ CREATE TABLE IF NOT EXISTS user_vehicles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Garantir coluna is_primary
+-- Adicionar coluna is_primary se não existir
 DO $$ 
 BEGIN
-  -- Check if user_vehicles table exists first
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_vehicles') THEN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='user_vehicles' AND column_name='is_primary') THEN
-      ALTER TABLE user_vehicles ADD COLUMN is_primary BOOLEAN DEFAULT false;
-    END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user_vehicles' AND column_name='is_primary') THEN
+    ALTER TABLE user_vehicles ADD COLUMN is_primary BOOLEAN DEFAULT false;
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_user_vehicles_user ON user_vehicles(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_vehicles_primary ON user_vehicles(user_id, is_primary) WHERE is_primary = true;
-CREATE INDEX IF NOT EXISTS idx_user_vehicles_brand ON user_vehicles(brand_id);
-CREATE INDEX IF NOT EXISTS idx_user_vehicles_model ON user_vehicles(model_id);
-CREATE INDEX IF NOT EXISTS idx_user_vehicles_year ON user_vehicles(year);
+-- Índices
+DROP INDEX IF EXISTS idx_user_vehicles_user;
+CREATE INDEX idx_user_vehicles_user ON user_vehicles(user_id);
+
+DROP INDEX IF EXISTS idx_user_vehicles_primary;
+CREATE INDEX idx_user_vehicles_primary ON user_vehicles(user_id, is_primary) WHERE is_primary = true;
+
+DROP INDEX IF EXISTS idx_user_vehicles_brand;
+CREATE INDEX idx_user_vehicles_brand ON user_vehicles(brand_id);
+
+DROP INDEX IF EXISTS idx_user_vehicles_model;
+CREATE INDEX idx_user_vehicles_model ON user_vehicles(model_id);
 
 -- =========================================================================
 -- RLS (ROW LEVEL SECURITY)
@@ -282,124 +316,74 @@ CREATE INDEX IF NOT EXISTS idx_user_vehicles_year ON user_vehicles(year);
 ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS stores_select_policy ON stores;
-CREATE POLICY stores_select_policy ON stores 
-FOR SELECT USING (is_active = true OR owner_id = auth.uid());
+CREATE POLICY stores_select_policy ON stores FOR SELECT 
+USING (is_active = true OR owner_id = auth.uid());
 
 DROP POLICY IF EXISTS stores_insert_policy ON stores;
-CREATE POLICY stores_insert_policy ON stores 
-FOR INSERT WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY stores_insert_policy ON stores FOR INSERT 
+WITH CHECK (auth.uid() = owner_id);
 
 DROP POLICY IF EXISTS stores_update_policy ON stores;
-CREATE POLICY stores_update_policy ON stores 
-FOR UPDATE USING (auth.uid() = owner_id);
-
-DROP POLICY IF EXISTS stores_delete_policy ON stores;
-CREATE POLICY stores_delete_policy ON stores 
-FOR DELETE USING (auth.uid() = owner_id);
+CREATE POLICY stores_update_policy ON stores FOR UPDATE 
+USING (auth.uid() = owner_id);
 
 -- PRODUCTS
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS products_select_policy ON products;
-CREATE POLICY products_select_policy ON products 
-FOR SELECT USING (
-  is_active = true OR 
-  store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())
-);
+CREATE POLICY products_select_policy ON products FOR SELECT 
+USING (is_active = true OR store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid()));
 
 DROP POLICY IF EXISTS products_insert_policy ON products;
-CREATE POLICY products_insert_policy ON products 
-FOR INSERT WITH CHECK (
-  store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())
-);
+CREATE POLICY products_insert_policy ON products FOR INSERT 
+WITH CHECK (store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid()));
 
 DROP POLICY IF EXISTS products_update_policy ON products;
-CREATE POLICY products_update_policy ON products 
-FOR UPDATE USING (
-  store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())
-);
+CREATE POLICY products_update_policy ON products FOR UPDATE 
+USING (store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid()));
 
 DROP POLICY IF EXISTS products_delete_policy ON products;
-CREATE POLICY products_delete_policy ON products 
-FOR DELETE USING (
-  store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())
-);
+CREATE POLICY products_delete_policy ON products FOR DELETE 
+USING (store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid()));
 
 -- COMPATIBILITY
 ALTER TABLE product_compatibility ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS compatibility_select_policy ON product_compatibility;
-CREATE POLICY compatibility_select_policy ON product_compatibility 
-FOR SELECT USING (true);
+CREATE POLICY compatibility_select_policy ON product_compatibility FOR SELECT 
+USING (true);
 
 DROP POLICY IF EXISTS compatibility_insert_policy ON product_compatibility;
-CREATE POLICY compatibility_insert_policy ON product_compatibility 
-FOR INSERT WITH CHECK (
-  product_id IN (
-    SELECT p.id FROM products p 
-    INNER JOIN stores s ON p.store_id = s.id 
-    WHERE s.owner_id = auth.uid()
-  )
-);
+CREATE POLICY compatibility_insert_policy ON product_compatibility FOR INSERT 
+WITH CHECK (product_id IN (SELECT id FROM products WHERE store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())));
 
 DROP POLICY IF EXISTS compatibility_delete_policy ON product_compatibility;
-CREATE POLICY compatibility_delete_policy ON product_compatibility 
-FOR DELETE USING (
-  product_id IN (
-    SELECT p.id FROM products p 
-    INNER JOIN stores s ON p.store_id = s.id 
-    WHERE s.owner_id = auth.uid()
-  )
-);
+CREATE POLICY compatibility_delete_policy ON product_compatibility FOR DELETE 
+USING (product_id IN (SELECT id FROM products WHERE store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())));
 
 -- USER_VEHICLES
 ALTER TABLE user_vehicles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS user_vehicles_select_policy ON user_vehicles;
-CREATE POLICY user_vehicles_select_policy ON user_vehicles 
-FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY user_vehicles_select_policy ON user_vehicles FOR SELECT 
+USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS user_vehicles_insert_policy ON user_vehicles;
-CREATE POLICY user_vehicles_insert_policy ON user_vehicles 
-FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY user_vehicles_insert_policy ON user_vehicles FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS user_vehicles_update_policy ON user_vehicles;
-CREATE POLICY user_vehicles_update_policy ON user_vehicles 
-FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY user_vehicles_update_policy ON user_vehicles FOR UPDATE 
+USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS user_vehicles_delete_policy ON user_vehicles;
-CREATE POLICY user_vehicles_delete_policy ON user_vehicles 
-FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY user_vehicles_delete_policy ON user_vehicles FOR DELETE 
+USING (auth.uid() = user_id);
 
 -- =========================================================================
 -- FUNÇÕES
 -- =========================================================================
 
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Triggers
-DROP TRIGGER IF EXISTS update_products_updated_at ON products;
-CREATE TRIGGER update_products_updated_at 
-BEFORE UPDATE ON products 
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-DROP TRIGGER IF EXISTS update_stores_updated_at ON stores;
-CREATE TRIGGER update_stores_updated_at 
-BEFORE UPDATE ON stores 
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-DROP TRIGGER IF EXISTS update_user_vehicles_updated_at ON user_vehicles;
-CREATE TRIGGER update_user_vehicles_updated_at 
-BEFORE UPDATE ON user_vehicles 
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Função de busca de produtos por veículo
 CREATE OR REPLACE FUNCTION get_products_for_user_vehicle(
   p_user_id UUID,
   p_category VARCHAR DEFAULT NULL,
@@ -439,29 +423,26 @@ BEGIN
     AND s.is_active = true
     AND (p_category IS NULL OR p.category = p_category)
     AND (p_max_price IS NULL OR p.price <= p_max_price)
-  ORDER BY 
-    (CASE WHEN pc.id IS NOT NULL THEN 0 ELSE 1 END), 
-    p.created_at DESC;
+  ORDER BY (CASE WHEN pc.id IS NOT NULL THEN 0 ELSE 1 END), p.created_at DESC;
 END;
 $$ LANGUAGE plpgsql;
 
--- Função de busca inteligente por nome
 CREATE OR REPLACE FUNCTION search_products_by_partial_name(search_term TEXT)
 RETURNS TABLE (
-  id UUID, 
-  name VARCHAR, 
-  part_code VARCHAR, 
-  category VARCHAR, 
-  price DECIMAL, 
+  id UUID,
+  name VARCHAR,
+  part_code VARCHAR,
+  category VARCHAR,
+  price DECIMAL,
   score INTEGER
 ) AS $$
 BEGIN
   RETURN QUERY
   SELECT 
-    p.id, 
-    p.name, 
-    p.part_code, 
-    p.category, 
+    p.id,
+    p.name,
+    p.part_code,
+    p.category,
     p.price,
     CASE
       WHEN LOWER(p.name) LIKE LOWER(search_term) || '%' THEN 7
@@ -479,6 +460,33 @@ BEGIN
   LIMIT 50;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Triggers
+DROP TRIGGER IF EXISTS update_products_updated_at ON products;
+CREATE TRIGGER update_products_updated_at 
+BEFORE UPDATE ON products 
+FOR EACH ROW 
+EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_stores_updated_at ON stores;
+CREATE TRIGGER update_stores_updated_at 
+BEFORE UPDATE ON stores 
+FOR EACH ROW 
+EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_user_vehicles_updated_at ON user_vehicles;
+CREATE TRIGGER update_user_vehicles_updated_at 
+BEFORE UPDATE ON user_vehicles 
+FOR EACH ROW 
+EXECUTE FUNCTION update_updated_at_column();
 
 -- =========================================================================
 -- VIEW
@@ -525,31 +533,14 @@ WHERE p.is_active = true AND s.is_active = true;
 -- DADOS INICIAIS
 -- =========================================================================
 
--- 20 Marcas
 INSERT INTO vehicle_brands (name, fipe_code) VALUES
-('Chevrolet', '001'),
-('Volkswagen', '002'),
-('Fiat', '003'),
-('Ford', '004'),
-('Honda', '005'),
-('Toyota', '006'),
-('Hyundai', '007'),
-('Renault', '008'),
-('Nissan', '009'),
-('Peugeot', '010'),
-('Citroën', '011'),
-('Jeep', '012'),
-('Mitsubishi', '013'),
-('BMW', '014'),
-('Mercedes-Benz', '015'),
-('Audi', '016'),
-('Volvo', '017'),
-('Chery', '018'),
-('JAC', '019'),
-('Caoa Chery', '020')
+('Chevrolet', '001'), ('Volkswagen', '002'), ('Fiat', '003'), ('Ford', '004'),
+('Honda', '005'), ('Toyota', '006'), ('Hyundai', '007'), ('Renault', '008'),
+('Nissan', '009'), ('Peugeot', '010'), ('Citroën', '011'), ('Jeep', '012'),
+('Mitsubishi', '013'), ('BMW', '014'), ('Mercedes-Benz', '015'), ('Audi', '016'),
+('Volvo', '017'), ('Chery', '018'), ('JAC', '019'), ('Caoa Chery', '020')
 ON CONFLICT (name) DO NOTHING;
 
--- 16 Motores
 INSERT INTO vehicle_engines (displacement, valves, fuel_type, description) VALUES
 ('1.0', 8, 'Flex', 'Motor 1.0 8V Flex'),
 ('1.0', 12, 'Flex', 'Motor 1.0 12V Flex'),
@@ -569,7 +560,7 @@ INSERT INTO vehicle_engines (displacement, valves, fuel_type, description) VALUE
 ('Híbrido', NULL, 'Híbrido', 'Motor Híbrido')
 ON CONFLICT DO NOTHING;
 
--- Modelos populares
+-- Inserir modelos
 DO $$
 DECLARE
   brand_chevrolet UUID;
@@ -611,11 +602,7 @@ BEGIN
 END $$;
 
 -- =========================================================================
--- CONCLUSÃO
+-- FINALIZAÇÃO
 -- =========================================================================
 
-SELECT 
-  '✅ Banco de dados configurado com sucesso!' as status,
-  (SELECT COUNT(*) FROM vehicle_brands) as marcas,
-  (SELECT COUNT(*) FROM vehicle_models) as modelos,
-  (SELECT COUNT(*) FROM vehicle_engines) as motores;
+SELECT 'Banco de dados configurado com sucesso!' as status;
