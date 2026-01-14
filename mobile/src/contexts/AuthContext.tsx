@@ -174,7 +174,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // Validate numeric fields before inserting
         const year = parseInt(userData.vehicle.year, 10);
-        const valves = userData.vehicle.valves ? parseInt(userData.vehicle.valves, 10) : null;
+        let valves: number | null = null;
+        
+        if (userData.vehicle.valves) {
+          const parsedValves = parseInt(userData.vehicle.valves, 10);
+          if (!isNaN(parsedValves)) {
+            valves = parsedValves;
+          } else {
+            console.warn('[AuthContext] Válvulas inválidas, salvando como null:', userData.vehicle.valves);
+          }
+        }
         
         if (isNaN(year)) {
           console.error('[AuthContext] Ano inválido:', userData.vehicle.year);
@@ -182,10 +191,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(userData);
           console.log('[AuthContext] Cadastro completo (sem veículo)!');
           return true;
-        }
-        
-        if (valves !== null && isNaN(valves)) {
-          console.warn('[AuthContext] Válvulas inválidas, salvando como null:', userData.vehicle.valves);
         }
         
         const { error: vehicleError } = await supabase
@@ -196,7 +201,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             model: userData.vehicle.model,
             year: year,
             engine: userData.vehicle.engine || null,
-            valves: valves !== null && !isNaN(valves) ? valves : null,
+            valves: valves,
             fuel_type: userData.vehicle.fuel || null,
             is_primary: true,
           });
