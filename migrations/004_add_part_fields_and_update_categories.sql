@@ -54,7 +54,7 @@ UPDATE products SET category = 'Elétrica/Injeção' WHERE category = 'Elétrica
 UPDATE products SET category = 'Lubrificantes' WHERE category IN ('Filtros', 'Óleo', 'Óleo e Filtros');
 
 -- Map bateria-related products to 'Bateria'
-UPDATE products SET category = 'Bateria' WHERE category LIKE '%Bateria%' OR name LIKE '%bateria%';
+UPDATE products SET category = 'Bateria' WHERE category LIKE '%Bateria%' OR LOWER(name) LIKE '%bateria%';
 
 -- Map any remaining unmapped categories to 'Outros'
 UPDATE products SET category = 'Outros' 

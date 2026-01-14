@@ -27,6 +27,8 @@ interface Product {
   store: string;
   image: string;
   category: string;
+  part_code?: string;
+  position?: string;
 }
 
 const mockProducts: Product[] = [
@@ -163,7 +165,7 @@ export default function SearchScreen() {
     // 1. Busca por código da peça (NOVO)
     if (filters.partCode.trim()) {
       filtered = filtered.filter(p => 
-        (p as any).part_code?.toLowerCase() === filters.partCode.toLowerCase()
+        p.part_code?.toLowerCase() === filters.partCode.toLowerCase()
       );
     }
 
@@ -184,7 +186,7 @@ export default function SearchScreen() {
 
     // 3. Filtro por posição (NOVO)
     if (filters.position) {
-      filtered = filtered.filter(p => (p as any).position === filters.position);
+      filtered = filtered.filter(p => p.position === filters.position);
     }
 
     if (filters.compatibilityGuaranteed && userVehicle) {
