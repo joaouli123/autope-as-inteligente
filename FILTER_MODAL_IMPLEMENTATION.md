@@ -38,7 +38,7 @@ npm install @react-native-community/slider
 - Atualizada interface `FilterState` com novos campos:
   - `partCode: string` - Busca por código da peça
   - `partName: string` - Busca por nome da peça
-  - `position: string` - Filtro por posição
+  - `part_position: string` - Filtro por posição
   - `make: string` - Marca do veículo
   - `model: string` - Modelo do veículo
 
@@ -66,8 +66,8 @@ npm install @react-native-community/slider
   }
 
   // Filtro por posição
-  if (filters.position) {
-    filtered = filtered.filter(p => p.position === filters.position);
+  if (filters.part_position) {
+    filtered = filtered.filter(p => p.part_position === filters.part_position);
   }
   ```
 
@@ -173,8 +173,8 @@ priceLabelText: { ... },
 ```typescript
 interface FormData {
   // ... campos existentes ...
-  part_code: string;  // ✅ NOVO
-  position: string;   // ✅ NOVO
+  part_code: string;      // ✅ NOVO
+  part_position: string;  // ✅ NOVO (anteriormente position - palavra reservada)
 }
 ```
 
@@ -227,14 +227,16 @@ const categorySpecifications: Record<string, string[]> = {
     Posição da Peça
   </label>
   <select
-    value={formData.position}
-    onChange={(e) => handleChange('position', e.target.value)}
+    value={formData.part_position}
+    onChange={(e) => handleChange('part_position', e.target.value)}
   >
     <option value="">Selecione a posição (opcional)</option>
-    <option value="dianteiro_direito">Dianteiro Direito</option>
-    <option value="dianteiro_esquerdo">Dianteiro Esquerdo</option>
-    <option value="traseiro_direito">Traseiro Direito</option>
-    <option value="traseiro_esquerdo">Traseiro Esquerdo</option>
+    <option value="Dianteiro Direito">Dianteiro Direito</option>
+    <option value="Dianteiro Esquerdo">Dianteiro Esquerdo</option>
+    <option value="Traseiro Direito">Traseiro Direito</option>
+    <option value="Traseiro Esquerdo">Traseiro Esquerdo</option>
+    <option value="Central">Central</option>
+    <option value="Universal">Universal</option>
   </select>
 </div>
 ```
@@ -252,7 +254,15 @@ const categorySpecifications: Record<string, string[]> = {
 1. **Adiciona novas colunas:**
    ```sql
    ALTER TABLE products ADD COLUMN IF NOT EXISTS part_code VARCHAR(50);
-   ALTER TABLE products ADD COLUMN IF NOT EXISTS position VARCHAR(50);
+   ALTER TABLE products ADD COLUMN IF NOT EXISTS part_position VARCHAR(50);
+   
+   -- Renomeia coluna 'position' (palavra reservada) para 'part_position'
+   DO $$ 
+   BEGIN
+     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='position') THEN
+       ALTER TABLE products RENAME COLUMN position TO part_position;
+     END IF;
+   END $$;
    ```
 
 2. **Cria índices para otimização:**

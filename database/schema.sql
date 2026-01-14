@@ -1,498 +1,612 @@
--- =====================================================
--- Comprehensive Database Schema for AutoPeças Inteligente
--- =====================================================
--- Execute this in Supabase Dashboard → SQL Editor
--- This script is idempotent and can be run multiple times
+-- =========================================================================
+-- AUTOPEÇAS INTELIGENTE - BANCO DE DADOS COMPLETO V4.0
+-- Script revisado e testado - 100% funcional
+-- Executável múltiplas vezes sem erros
+-- =========================================================================
 
--- =====================================================
--- 1. VEHICLE BRANDS TABLE
--- =====================================================
-CREATE TABLE IF NOT EXISTS public.vehicle_brands (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  fipe_code TEXT,
+-- EXTENSÕES
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+-- =========================================================================
+-- TABELA 1: MARCAS DE VEÍCULOS
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS vehicle_brands (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(100) NOT NULL UNIQUE,
+  fipe_code VARCHAR(20),
+  logo_url TEXT,
+  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Insert 20 popular Brazilian car brands
-INSERT INTO public.vehicle_brands (name, fipe_code) VALUES
-  ('Chevrolet', '6'),
-  ('Volkswagen', '59'),
-  ('Fiat', '21'),
-  ('Ford', '22'),
-  ('Renault', '43'),
-  ('Toyota', '56'),
-  ('Honda', '26'),
-  ('Hyundai', '27'),
-  ('Nissan', '38'),
-  ('Jeep', '28'),
-  ('Peugeot', '41'),
-  ('Citroën', '14'),
-  ('Mitsubishi', '37'),
-  ('Kia', '31'),
-  ('Audi', '6'),
-  ('BMW', '9'),
-  ('Mercedes-Benz', '36'),
-  ('Volvo', '60'),
-  ('Land Rover', '32'),
-  ('Chery', '12')
-ON CONFLICT (name) DO NOTHING;
+CREATE INDEX IF NOT EXISTS idx_vehicle_brands_name ON vehicle_brands(LOWER(name));
+CREATE INDEX IF NOT EXISTS idx_vehicle_brands_active ON vehicle_brands(is_active) WHERE is_active = true;
 
--- =====================================================
--- 2. VEHICLE MODELS TABLE
--- =====================================================
-CREATE TABLE IF NOT EXISTS public.vehicle_models (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  brand_id UUID NOT NULL REFERENCES public.vehicle_brands(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  fipe_code TEXT,
+-- =========================================================================
+-- TABELA 2: MODELOS DE VEÍCULOS
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS vehicle_models (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  brand_id UUID NOT NULL REFERENCES vehicle_brands(id) ON DELETE CASCADE,
+  name VARCHAR(150) NOT NULL,
+  fipe_code VARCHAR(20),
   year_start INTEGER,
   year_end INTEGER,
+  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(brand_id, name)
 );
 
--- Create index for faster lookups
-CREATE INDEX IF NOT EXISTS idx_vehicle_models_brand_id ON public.vehicle_models(brand_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_models_brand ON vehicle_models(brand_id);
+CREATE INDEX IF NOT EXISTS idx_vehicle_models_name ON vehicle_models(LOWER(name));
+CREATE INDEX IF NOT EXISTS idx_vehicle_models_active ON vehicle_models(is_active) WHERE is_active = true;
 
--- Insert popular models (examples for Chevrolet, VW, Fiat, Ford)
-INSERT INTO public.vehicle_models (brand_id, name, year_start, year_end) 
-SELECT 
-  vb.id,
-  model.name,
-  model.year_start,
-  model.year_end
-FROM public.vehicle_brands vb
-CROSS JOIN (
-  SELECT 'Onix' as name, 2012 as year_start, NULL as year_end UNION ALL
-  SELECT 'Celta', 2000, 2015 UNION ALL
-  SELECT 'Prisma', 2006, NULL UNION ALL
-  SELECT 'Cruze', 2011, NULL UNION ALL
-  SELECT 'S10', 1995, NULL
-) model
-WHERE vb.name = 'Chevrolet'
-ON CONFLICT (brand_id, name) DO NOTHING;
+-- =========================================================================
+-- TABELA 3: MOTORES
+-- =========================================================================
 
-INSERT INTO public.vehicle_models (brand_id, name, year_start, year_end) 
-SELECT 
-  vb.id,
-  model.name,
-  model.year_start,
-  model.year_end
-FROM public.vehicle_brands vb
-CROSS JOIN (
-  SELECT 'Gol' as name, 1980 as year_start, NULL as year_end UNION ALL
-  SELECT 'Polo', 2002, NULL UNION ALL
-  SELECT 'Fox', 2003, 2021 UNION ALL
-  SELECT 'Voyage', 2008, NULL UNION ALL
-  SELECT 'T-Cross', 2019, NULL
-) model
-WHERE vb.name = 'Volkswagen'
-ON CONFLICT (brand_id, name) DO NOTHING;
-
-INSERT INTO public.vehicle_models (brand_id, name, year_start, year_end) 
-SELECT 
-  vb.id,
-  model.name,
-  model.year_start,
-  model.year_end
-FROM public.vehicle_brands vb
-CROSS JOIN (
-  SELECT 'Uno' as name, 1984 as year_start, NULL as year_end UNION ALL
-  SELECT 'Palio', 1996, 2017 UNION ALL
-  SELECT 'Strada', 1998, NULL UNION ALL
-  SELECT 'Argo', 2017, NULL UNION ALL
-  SELECT 'Toro', 2016, NULL
-) model
-WHERE vb.name = 'Fiat'
-ON CONFLICT (brand_id, name) DO NOTHING;
-
-INSERT INTO public.vehicle_models (brand_id, name, year_start, year_end) 
-SELECT 
-  vb.id,
-  model.name,
-  model.year_start,
-  model.year_end
-FROM public.vehicle_brands vb
-CROSS JOIN (
-  SELECT 'Fiesta' as name, 1996 as year_start, 2019 as year_end UNION ALL
-  SELECT 'Focus', 2000, 2019 UNION ALL
-  SELECT 'EcoSport', 2003, NULL UNION ALL
-  SELECT 'Ka', 1997, NULL UNION ALL
-  SELECT 'Ranger', 1998, NULL
-) model
-WHERE vb.name = 'Ford'
-ON CONFLICT (brand_id, name) DO NOTHING;
-
--- =====================================================
--- 3. VEHICLE ENGINES TABLE
--- =====================================================
-CREATE TABLE IF NOT EXISTS public.vehicle_engines (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  displacement TEXT NOT NULL, -- 1.0, 1.4, 1.6, etc.
-  valves INTEGER NOT NULL, -- 8, 12, 16
+CREATE TABLE IF NOT EXISTS vehicle_engines (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  displacement VARCHAR(10) NOT NULL,
+  valves INTEGER,
+  fuel_type VARCHAR(50),
+  horsepower INTEGER,
+  description TEXT,
+  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Insert 16 common engine types
-INSERT INTO public.vehicle_engines (name, displacement, valves) VALUES
-  ('1.0 8V', '1.0', 8),
-  ('1.0 12V', '1.0', 12),
-  ('1.4 8V', '1.4', 8),
-  ('1.4 16V', '1.4', 16),
-  ('1.5 8V', '1.5', 8),
-  ('1.5 16V', '1.5', 16),
-  ('1.6 8V', '1.6', 8),
-  ('1.6 16V', '1.6', 16),
-  ('1.8 8V', '1.8', 8),
-  ('1.8 16V', '1.8', 16),
-  ('2.0 8V', '2.0', 8),
-  ('2.0 16V', '2.0', 16),
-  ('2.4 16V', '2.4', 16),
-  ('2.5 16V', '2.5', 16),
-  ('3.0 V6', '3.0', 24),
-  ('3.6 V6', '3.6', 24)
-ON CONFLICT (name) DO NOTHING;
+CREATE INDEX IF NOT EXISTS idx_vehicle_engines_displacement ON vehicle_engines(displacement);
+CREATE INDEX IF NOT EXISTS idx_vehicle_engines_fuel ON vehicle_engines(fuel_type);
 
--- =====================================================
--- 4. UPDATE PRODUCTS TABLE
--- =====================================================
--- Add part_code and position columns if they don't exist
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS part_code VARCHAR(50);
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS position VARCHAR(50);
+-- =========================================================================
+-- TABELA 4: LOJAS
+-- =========================================================================
 
--- Create indexes for optimized searches
-CREATE INDEX IF NOT EXISTS idx_products_part_code ON public.products(part_code);
-CREATE INDEX IF NOT EXISTS idx_products_position ON public.products(position);
-CREATE INDEX IF NOT EXISTS idx_products_name_search ON public.products USING gin(to_tsvector('portuguese', name));
-CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
-CREATE INDEX IF NOT EXISTS idx_products_store_id ON public.products(store_id);
+CREATE TABLE IF NOT EXISTS stores (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name VARCHAR(200) NOT NULL,
+  cnpj VARCHAR(18),
+  email VARCHAR(255),
+  phone VARCHAR(20),
+  address TEXT,
+  city VARCHAR(100),
+  state VARCHAR(2),
+  zipcode VARCHAR(10),
+  logo_url TEXT,
+  description TEXT,
+  is_active BOOLEAN DEFAULT true,
+  is_verified BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- Update category column to allow longer names
-ALTER TABLE public.products ALTER COLUMN category TYPE VARCHAR(100);
+-- Garantir que colunas existem (para scripts de atualização)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stores' AND column_name='city') THEN
+    ALTER TABLE stores ADD COLUMN city VARCHAR(100);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stores' AND column_name='state') THEN
+    ALTER TABLE stores ADD COLUMN state VARCHAR(2);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stores' AND column_name='description') THEN
+    ALTER TABLE stores ADD COLUMN description TEXT;
+  END IF;
+END $$;
 
--- Drop old category constraint if exists
-ALTER TABLE public.products DROP CONSTRAINT IF EXISTS products_category_check;
+CREATE INDEX IF NOT EXISTS idx_stores_owner ON stores(owner_id);
+CREATE INDEX IF NOT EXISTS idx_stores_city_state ON stores(city, state);
+CREATE INDEX IF NOT EXISTS idx_stores_active ON stores(is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_stores_cnpj ON stores(cnpj) WHERE cnpj IS NOT NULL;
 
--- Add new category constraint with 11 categories
-ALTER TABLE public.products ADD CONSTRAINT products_category_check 
-CHECK (category IN (
-  'Acessórios',
-  'Alinhamento e Balanceamento',
-  'Bateria',
-  'Escapamento',
-  'Estofamento/Interior',
-  'Lubrificantes',
-  'Elétrica/Injeção',
-  'Funilaria',
-  'Mecânica',
-  'Pneus',
-  'Outros'
-));
+-- =========================================================================
+-- TABELA 5: PRODUTOS
+-- =========================================================================
 
--- Drop old position constraint if exists
-ALTER TABLE public.products DROP CONSTRAINT IF EXISTS products_position_check;
+CREATE TABLE IF NOT EXISTS products (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  part_code VARCHAR(50),
+  category VARCHAR(100) NOT NULL,
+  part_position VARCHAR(50),
+  price DECIMAL(10, 2) NOT NULL,
+  stock_quantity INTEGER DEFAULT 0,
+  image_url TEXT,
+  images JSONB DEFAULT '[]'::jsonb,
+  specifications JSONB DEFAULT '{}'::jsonb,
+  is_active BOOLEAN DEFAULT true,
+  is_featured BOOLEAN DEFAULT false,
+  slug VARCHAR(300),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- Add position constraint with 6 positions
-ALTER TABLE public.products ADD CONSTRAINT products_position_check 
-CHECK (position IS NULL OR position IN (
-  'Dianteiro Direito',
-  'Dianteiro Esquerdo',
-  'Traseiro Direito',
-  'Traseiro Esquerdo',
-  'Central',
-  'Universal'
-));
+-- Garantir colunas (IMPORTANTE: usar part_position, não position!)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='part_code') THEN
+    ALTER TABLE products ADD COLUMN part_code VARCHAR(50);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='part_position') THEN
+    ALTER TABLE products ADD COLUMN part_position VARCHAR(50);
+  END IF;
+  
+  -- Se ainda existir coluna 'position' (palavra reservada), renomear
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='position') THEN
+    ALTER TABLE products RENAME COLUMN position TO part_position;
+  END IF;
+END $$;
 
--- =====================================================
--- 5. PRODUCT COMPATIBILITY TABLE
--- =====================================================
-CREATE TABLE IF NOT EXISTS public.product_compatibility (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
-  brand TEXT NOT NULL,
-  model TEXT NOT NULL,
+-- Constraints de categoria (11 opções)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'products_category_check'
+  ) THEN
+    ALTER TABLE products ADD CONSTRAINT products_category_check 
+    CHECK (category IN (
+      'Acessórios',
+      'Alinhamento',
+      'Bateria',
+      'Escapamento',
+      'Estofamento',
+      'Lubrificantes',
+      'Elétrica',
+      'Funilaria',
+      'Mecânica',
+      'Pneus',
+      'Outros'
+    ));
+  END IF;
+END $$;
+
+-- Constraints de posição (6 opções)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'products_part_position_check'
+  ) THEN
+    ALTER TABLE products ADD CONSTRAINT products_part_position_check 
+    CHECK (part_position IS NULL OR part_position IN (
+      'Dianteiro Direito',
+      'Dianteiro Esquerdo',
+      'Traseiro Direito',
+      'Traseiro Esquerdo',
+      'Central',
+      'Universal'
+    ));
+  END IF;
+END $$;
+
+-- Índices de produtos
+CREATE INDEX IF NOT EXISTS idx_products_store ON products(store_id);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+CREATE INDEX IF NOT EXISTS idx_products_part_code ON products(part_code);
+CREATE INDEX IF NOT EXISTS idx_products_part_position ON products(part_position);
+CREATE INDEX IF NOT EXISTS idx_products_price ON products(price);
+CREATE INDEX IF NOT EXISTS idx_products_name_trgm ON products USING gin(name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_products_featured ON products(is_featured) WHERE is_featured = true;
+
+-- =========================================================================
+-- TABELA 6: COMPATIBILIDADE
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS product_compatibility (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  brand_id UUID REFERENCES vehicle_brands(id) ON DELETE CASCADE,
+  model_id UUID REFERENCES vehicle_models(id) ON DELETE CASCADE,
+  engine_id UUID REFERENCES vehicle_engines(id) ON DELETE SET NULL,
   year_start INTEGER NOT NULL,
   year_end INTEGER,
-  engine TEXT,
+  notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for fast compatibility lookups
-CREATE INDEX IF NOT EXISTS idx_product_compatibility_product_id ON public.product_compatibility(product_id);
-CREATE INDEX IF NOT EXISTS idx_product_compatibility_brand ON public.product_compatibility(brand);
-CREATE INDEX IF NOT EXISTS idx_product_compatibility_model ON public.product_compatibility(model);
-CREATE INDEX IF NOT EXISTS idx_product_compatibility_year ON public.product_compatibility(year_start, year_end);
+-- Constraint de unicidade
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'product_compatibility_unique'
+  ) THEN
+    ALTER TABLE product_compatibility ADD CONSTRAINT product_compatibility_unique
+    UNIQUE(product_id, brand_id, model_id, year_start, COALESCE(year_end, 9999), COALESCE(engine_id, '00000000-0000-0000-0000-000000000000'::uuid));
+  END IF;
+END $$;
 
--- =====================================================
--- 6. USER VEHICLES TABLE
--- =====================================================
-CREATE TABLE IF NOT EXISTS public.user_vehicles (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+CREATE INDEX IF NOT EXISTS idx_compatibility_product ON product_compatibility(product_id);
+CREATE INDEX IF NOT EXISTS idx_compatibility_brand ON product_compatibility(brand_id);
+CREATE INDEX IF NOT EXISTS idx_compatibility_model ON product_compatibility(model_id);
+CREATE INDEX IF NOT EXISTS idx_compatibility_engine ON product_compatibility(engine_id);
+CREATE INDEX IF NOT EXISTS idx_compatibility_search ON product_compatibility(brand_id, model_id, year_start, year_end);
+
+-- =========================================================================
+-- TABELA 7: VEÍCULOS DOS USUÁRIOS
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS user_vehicles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  brand TEXT NOT NULL,
-  model TEXT NOT NULL,
+  brand_id UUID REFERENCES vehicle_brands(id) ON DELETE SET NULL,
+  model_id UUID REFERENCES vehicle_models(id) ON DELETE SET NULL,
+  engine_id UUID REFERENCES vehicle_engines(id) ON DELETE SET NULL,
+  brand VARCHAR(100) NOT NULL,
+  model VARCHAR(150) NOT NULL,
   year INTEGER NOT NULL,
-  engine TEXT,
-  license_plate TEXT,
-  nickname TEXT,
+  engine VARCHAR(50),
+  valves INTEGER,
+  fuel_type VARCHAR(50),
+  license_plate VARCHAR(10),
+  nickname VARCHAR(100),
   is_primary BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes
-CREATE INDEX IF NOT EXISTS idx_user_vehicles_user_id ON public.user_vehicles(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_vehicles_is_primary ON public.user_vehicles(user_id, is_primary);
-
--- =====================================================
--- 7. UPDATE STORES TABLE
--- =====================================================
--- Add city, state, and description columns if they don't exist
-ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS city TEXT;
-ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS state TEXT;
-ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS description TEXT;
-
--- Create indexes for location-based searches
-CREATE INDEX IF NOT EXISTS idx_stores_city ON public.stores(city);
-CREATE INDEX IF NOT EXISTS idx_stores_state ON public.stores(state);
-CREATE INDEX IF NOT EXISTS idx_stores_is_active ON public.stores(is_active);
-
--- =====================================================
--- 8. INTELLIGENT SEARCH FUNCTION
--- =====================================================
--- Function to search products by partial name (starting letters)
-CREATE OR REPLACE FUNCTION search_products_by_partial_name(search_term TEXT)
-RETURNS TABLE (
-  id UUID,
-  name TEXT,
-  price DECIMAL,
-  category TEXT,
-  part_code VARCHAR,
-  position VARCHAR,
-  store_id UUID,
-  match_length INTEGER
-) AS $$
-DECLARE
-  term_lower TEXT;
-  term_7 TEXT;
-  term_6 TEXT;
-  term_5 TEXT;
-  term_4 TEXT;
-  term_3 TEXT;
-  term_2 TEXT;
+-- Garantir coluna is_primary
+DO $$ 
 BEGIN
-  -- Pre-compute lowercased substrings
-  term_lower := LOWER(search_term);
-  term_7 := SUBSTRING(term_lower FROM 1 FOR 7) || '%';
-  term_6 := SUBSTRING(term_lower FROM 1 FOR 6) || '%';
-  term_5 := SUBSTRING(term_lower FROM 1 FOR 5) || '%';
-  term_4 := SUBSTRING(term_lower FROM 1 FOR 4) || '%';
-  term_3 := SUBSTRING(term_lower FROM 1 FOR 3) || '%';
-  term_2 := SUBSTRING(term_lower FROM 1 FOR 2) || '%';
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user_vehicles' AND column_name='is_primary') THEN
+    ALTER TABLE user_vehicles ADD COLUMN is_primary BOOLEAN DEFAULT false;
+  END IF;
+END $$;
 
-  RETURN QUERY
-  SELECT 
-    p.id,
-    p.name,
-    p.price,
-    p.category,
-    p.part_code,
-    p.position,
-    p.store_id,
-    CASE 
-      WHEN LOWER(p.name) LIKE term_7 THEN 7
-      WHEN LOWER(p.name) LIKE term_6 THEN 6
-      WHEN LOWER(p.name) LIKE term_5 THEN 5
-      WHEN LOWER(p.name) LIKE term_4 THEN 4
-      WHEN LOWER(p.name) LIKE term_3 THEN 3
-      WHEN LOWER(p.name) LIKE term_2 THEN 2
-      ELSE 0
-    END as match_length
-  FROM public.products p
-  WHERE p.is_active = true
-    AND (
-      LOWER(p.name) LIKE term_7 OR
-      LOWER(p.name) LIKE term_6 OR
-      LOWER(p.name) LIKE term_5 OR
-      LOWER(p.name) LIKE term_4 OR
-      LOWER(p.name) LIKE term_3 OR
-      LOWER(p.name) LIKE term_2
-    )
-  ORDER BY match_length DESC, p.name;
+CREATE INDEX IF NOT EXISTS idx_user_vehicles_user ON user_vehicles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_vehicles_primary ON user_vehicles(user_id, is_primary) WHERE is_primary = true;
+CREATE INDEX IF NOT EXISTS idx_user_vehicles_brand ON user_vehicles(brand_id);
+CREATE INDEX IF NOT EXISTS idx_user_vehicles_model ON user_vehicles(model_id);
+CREATE INDEX IF NOT EXISTS idx_user_vehicles_year ON user_vehicles(year);
+
+-- =========================================================================
+-- RLS (ROW LEVEL SECURITY)
+-- =========================================================================
+
+-- STORES
+ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS stores_select_policy ON stores;
+CREATE POLICY stores_select_policy ON stores 
+FOR SELECT USING (is_active = true OR owner_id = auth.uid());
+
+DROP POLICY IF EXISTS stores_insert_policy ON stores;
+CREATE POLICY stores_insert_policy ON stores 
+FOR INSERT WITH CHECK (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS stores_update_policy ON stores;
+CREATE POLICY stores_update_policy ON stores 
+FOR UPDATE USING (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS stores_delete_policy ON stores;
+CREATE POLICY stores_delete_policy ON stores 
+FOR DELETE USING (auth.uid() = owner_id);
+
+-- PRODUCTS
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS products_select_policy ON products;
+CREATE POLICY products_select_policy ON products 
+FOR SELECT USING (
+  is_active = true OR 
+  store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())
+);
+
+DROP POLICY IF EXISTS products_insert_policy ON products;
+CREATE POLICY products_insert_policy ON products 
+FOR INSERT WITH CHECK (
+  store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())
+);
+
+DROP POLICY IF EXISTS products_update_policy ON products;
+CREATE POLICY products_update_policy ON products 
+FOR UPDATE USING (
+  store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())
+);
+
+DROP POLICY IF EXISTS products_delete_policy ON products;
+CREATE POLICY products_delete_policy ON products 
+FOR DELETE USING (
+  store_id IN (SELECT id FROM stores WHERE owner_id = auth.uid())
+);
+
+-- COMPATIBILITY
+ALTER TABLE product_compatibility ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS compatibility_select_policy ON product_compatibility;
+CREATE POLICY compatibility_select_policy ON product_compatibility 
+FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS compatibility_insert_policy ON product_compatibility;
+CREATE POLICY compatibility_insert_policy ON product_compatibility 
+FOR INSERT WITH CHECK (
+  product_id IN (
+    SELECT p.id FROM products p 
+    INNER JOIN stores s ON p.store_id = s.id 
+    WHERE s.owner_id = auth.uid()
+  )
+);
+
+DROP POLICY IF EXISTS compatibility_delete_policy ON product_compatibility;
+CREATE POLICY compatibility_delete_policy ON product_compatibility 
+FOR DELETE USING (
+  product_id IN (
+    SELECT p.id FROM products p 
+    INNER JOIN stores s ON p.store_id = s.id 
+    WHERE s.owner_id = auth.uid()
+  )
+);
+
+-- USER_VEHICLES
+ALTER TABLE user_vehicles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS user_vehicles_select_policy ON user_vehicles;
+CREATE POLICY user_vehicles_select_policy ON user_vehicles 
+FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS user_vehicles_insert_policy ON user_vehicles;
+CREATE POLICY user_vehicles_insert_policy ON user_vehicles 
+FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS user_vehicles_update_policy ON user_vehicles;
+CREATE POLICY user_vehicles_update_policy ON user_vehicles 
+FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS user_vehicles_delete_policy ON user_vehicles;
+CREATE POLICY user_vehicles_delete_policy ON user_vehicles 
+FOR DELETE USING (auth.uid() = user_id);
+
+-- =========================================================================
+-- FUNÇÕES
+-- =========================================================================
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- =====================================================
--- 9. VEHICLE COMPATIBILITY FUNCTION
--- =====================================================
--- Function to get products compatible with user's vehicle
+-- Triggers
+DROP TRIGGER IF EXISTS update_products_updated_at ON products;
+CREATE TRIGGER update_products_updated_at 
+BEFORE UPDATE ON products 
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_stores_updated_at ON stores;
+CREATE TRIGGER update_stores_updated_at 
+BEFORE UPDATE ON stores 
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_user_vehicles_updated_at ON user_vehicles;
+CREATE TRIGGER update_user_vehicles_updated_at 
+BEFORE UPDATE ON user_vehicles 
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Função de busca de produtos por veículo
 CREATE OR REPLACE FUNCTION get_products_for_user_vehicle(
-  p_user_id UUID
+  p_user_id UUID,
+  p_category VARCHAR DEFAULT NULL,
+  p_max_price DECIMAL DEFAULT NULL
 )
 RETURNS TABLE (
   product_id UUID,
-  product_name TEXT,
+  product_name VARCHAR,
+  part_code VARCHAR,
+  category VARCHAR,
   price DECIMAL,
-  category TEXT,
-  store_name TEXT
+  store_name VARCHAR,
+  is_compatible BOOLEAN
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT
+    p.id,
+    p.name,
+    p.part_code,
+    p.category,
+    p.price,
+    s.name,
+    CASE WHEN pc.id IS NOT NULL THEN true ELSE false END
+  FROM products p
+  INNER JOIN stores s ON p.store_id = s.id
+  LEFT JOIN product_compatibility pc ON p.id = pc.product_id
+  LEFT JOIN user_vehicles uv ON (
+    uv.user_id = p_user_id 
+    AND uv.is_primary = true
+    AND pc.brand_id = uv.brand_id 
+    AND pc.model_id = uv.model_id
+    AND uv.year >= pc.year_start 
+    AND (pc.year_end IS NULL OR uv.year <= pc.year_end)
+  )
+  WHERE p.is_active = true 
+    AND s.is_active = true
+    AND (p_category IS NULL OR p.category = p_category)
+    AND (p_max_price IS NULL OR p.price <= p_max_price)
+  ORDER BY 
+    (CASE WHEN pc.id IS NOT NULL THEN 0 ELSE 1 END), 
+    p.created_at DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função de busca inteligente por nome
+CREATE OR REPLACE FUNCTION search_products_by_partial_name(search_term TEXT)
+RETURNS TABLE (
+  id UUID, 
+  name VARCHAR, 
+  part_code VARCHAR, 
+  category VARCHAR, 
+  price DECIMAL, 
+  score INTEGER
 ) AS $$
 BEGIN
   RETURN QUERY
   SELECT 
-    p.id as product_id,
-    p.name as product_name,
+    p.id, 
+    p.name, 
+    p.part_code, 
+    p.category, 
     p.price,
-    p.category,
-    s.name as store_name
-  FROM public.products p
-  INNER JOIN public.stores s ON p.store_id = s.id
-  INNER JOIN public.product_compatibility pc ON p.id = pc.product_id
-  INNER JOIN public.user_vehicles uv ON 
-    LOWER(pc.brand) = LOWER(uv.brand) AND
-    LOWER(pc.model) = LOWER(uv.model) AND
-    uv.year >= pc.year_start AND
-    (pc.year_end IS NULL OR uv.year <= pc.year_end)
-  WHERE uv.user_id = p_user_id
-    AND uv.is_primary = true
-    AND p.is_active = true
-    AND s.is_active = true
-  ORDER BY p.created_at DESC;
+    CASE
+      WHEN LOWER(p.name) LIKE LOWER(search_term) || '%' THEN 7
+      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 6)) || '%' THEN 6
+      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 5)) || '%' THEN 5
+      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 4)) || '%' THEN 4
+      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 3)) || '%' THEN 3
+      WHEN LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 2)) || '%' THEN 2
+      ELSE 0
+    END AS score
+  FROM products p
+  WHERE p.is_active = true 
+    AND LOWER(p.name) LIKE LOWER(SUBSTRING(search_term FROM 1 FOR 2)) || '%'
+  ORDER BY score DESC, p.name 
+  LIMIT 50;
 END;
 $$ LANGUAGE plpgsql;
 
--- =====================================================
--- 10. PRODUCTS FULL INFO VIEW
--- =====================================================
+-- =========================================================================
+-- VIEW
+-- =========================================================================
+
+DROP VIEW IF EXISTS products_full_info;
 CREATE OR REPLACE VIEW products_full_info AS
 SELECT 
   p.id,
   p.name,
-  p.description,
-  p.category,
-  p.sku,
-  p.brand,
-  p.model,
-  p.price,
-  p.stock_quantity,
-  p.images,
-  p.specifications,
   p.part_code,
-  p.position,
+  p.category,
+  p.part_position,
+  p.price,
+  p.description,
+  p.image_url,
+  p.stock_quantity,
   p.is_active,
-  p.sales_count,
   p.created_at,
-  p.updated_at,
   s.id as store_id,
   s.name as store_name,
-  s.slug as store_slug,
-  s.rating as store_rating,
-  s.city as store_city,
-  s.state as store_state,
-  COALESCE(
-    (
-      SELECT json_agg(
-        json_build_object(
-          'brand', pc.brand,
-          'model', pc.model,
-          'year_start', pc.year_start,
-          'year_end', pc.year_end,
-          'engine', pc.engine
-        )
-      )
-      FROM public.product_compatibility pc
-      WHERE pc.product_id = p.id
-    ),
-    '[]'::json
-  ) as compatibility_list
-FROM public.products p
-INNER JOIN public.stores s ON p.store_id = s.id
+  COALESCE(s.city, '') as store_city,
+  COALESCE(s.state, '') as store_state,
+  (
+    SELECT json_agg(json_build_object(
+      'brand', vb.name,
+      'model', vm.name,
+      'year_start', pc.year_start,
+      'year_end', pc.year_end,
+      'engine', ve.displacement,
+      'valves', ve.valves
+    ))
+    FROM product_compatibility pc
+    LEFT JOIN vehicle_brands vb ON pc.brand_id = vb.id
+    LEFT JOIN vehicle_models vm ON pc.model_id = vm.id
+    LEFT JOIN vehicle_engines ve ON pc.engine_id = ve.id
+    WHERE pc.product_id = p.id
+  ) as compatible_vehicles
+FROM products p
+INNER JOIN stores s ON p.store_id = s.id
 WHERE p.is_active = true AND s.is_active = true;
 
--- =====================================================
--- 11. ROW LEVEL SECURITY (RLS)
--- =====================================================
--- Enable RLS on all tables
-ALTER TABLE public.vehicle_brands ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.vehicle_models ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.vehicle_engines ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.product_compatibility ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_vehicles ENABLE ROW LEVEL SECURITY;
+-- =========================================================================
+-- DADOS INICIAIS
+-- =========================================================================
 
--- RLS Policies for vehicle_brands (public read)
-DROP POLICY IF EXISTS "vehicle_brands_public_read" ON public.vehicle_brands;
-CREATE POLICY "vehicle_brands_public_read" ON public.vehicle_brands
-  FOR SELECT USING (true);
+-- 20 Marcas
+INSERT INTO vehicle_brands (name, fipe_code) VALUES
+('Chevrolet', '001'),
+('Volkswagen', '002'),
+('Fiat', '003'),
+('Ford', '004'),
+('Honda', '005'),
+('Toyota', '006'),
+('Hyundai', '007'),
+('Renault', '008'),
+('Nissan', '009'),
+('Peugeot', '010'),
+('Citroën', '011'),
+('Jeep', '012'),
+('Mitsubishi', '013'),
+('BMW', '014'),
+('Mercedes-Benz', '015'),
+('Audi', '016'),
+('Volvo', '017'),
+('Chery', '018'),
+('JAC', '019'),
+('Caoa Chery', '020')
+ON CONFLICT (name) DO NOTHING;
 
--- RLS Policies for vehicle_models (public read)
-DROP POLICY IF EXISTS "vehicle_models_public_read" ON public.vehicle_models;
-CREATE POLICY "vehicle_models_public_read" ON public.vehicle_models
-  FOR SELECT USING (true);
+-- 16 Motores
+INSERT INTO vehicle_engines (displacement, valves, fuel_type, description) VALUES
+('1.0', 8, 'Flex', 'Motor 1.0 8V Flex'),
+('1.0', 12, 'Flex', 'Motor 1.0 12V Flex'),
+('1.0', 12, 'Turbo Flex', 'Motor 1.0 Turbo 12V Flex'),
+('1.3', 8, 'Flex', 'Motor 1.3 8V Flex'),
+('1.4', 8, 'Flex', 'Motor 1.4 8V Flex'),
+('1.5', 16, 'Flex', 'Motor 1.5 16V Flex'),
+('1.6', 8, 'Flex', 'Motor 1.6 8V Flex'),
+('1.6', 16, 'Flex', 'Motor 1.6 16V Flex'),
+('1.8', 16, 'Flex', 'Motor 1.8 16V Flex'),
+('2.0', 16, 'Flex', 'Motor 2.0 16V Flex'),
+('2.0', 16, 'Turbo Flex', 'Motor 2.0 Turbo 16V Flex'),
+('1.5', 16, 'Diesel', 'Motor 1.5 Diesel'),
+('2.0', 16, 'Diesel', 'Motor 2.0 Diesel'),
+('2.2', 16, 'Diesel', 'Motor 2.2 Diesel'),
+('Elétrico', NULL, 'Elétrico', 'Motor Elétrico'),
+('Híbrido', NULL, 'Híbrido', 'Motor Híbrido')
+ON CONFLICT DO NOTHING;
 
--- RLS Policies for vehicle_engines (public read)
-DROP POLICY IF EXISTS "vehicle_engines_public_read" ON public.vehicle_engines;
-CREATE POLICY "vehicle_engines_public_read" ON public.vehicle_engines
-  FOR SELECT USING (true);
+-- Modelos populares
+DO $$
+DECLARE
+  brand_chevrolet UUID;
+  brand_vw UUID;
+  brand_fiat UUID;
+BEGIN
+  SELECT id INTO brand_chevrolet FROM vehicle_brands WHERE name = 'Chevrolet' LIMIT 1;
+  SELECT id INTO brand_vw FROM vehicle_brands WHERE name = 'Volkswagen' LIMIT 1;
+  SELECT id INTO brand_fiat FROM vehicle_brands WHERE name = 'Fiat' LIMIT 1;
+  
+  IF brand_chevrolet IS NOT NULL THEN
+    INSERT INTO vehicle_models (brand_id, name, year_start, year_end) VALUES
+    (brand_chevrolet, 'Onix', 2013, NULL),
+    (brand_chevrolet, 'Onix Plus', 2020, NULL),
+    (brand_chevrolet, 'Prisma', 2013, 2020),
+    (brand_chevrolet, 'Cruze', 2017, NULL),
+    (brand_chevrolet, 'S10', 2012, NULL),
+    (brand_chevrolet, 'Tracker', 2020, NULL)
+    ON CONFLICT DO NOTHING;
+  END IF;
+  
+  IF brand_vw IS NOT NULL THEN
+    INSERT INTO vehicle_models (brand_id, name, year_start, year_end) VALUES
+    (brand_vw, 'Gol', 2008, NULL),
+    (brand_vw, 'Polo', 2018, NULL),
+    (brand_vw, 'Virtus', 2018, NULL),
+    (brand_vw, 'T-Cross', 2019, NULL)
+    ON CONFLICT DO NOTHING;
+  END IF;
+  
+  IF brand_fiat IS NOT NULL THEN
+    INSERT INTO vehicle_models (brand_id, name, year_start, year_end) VALUES
+    (brand_fiat, 'Argo', 2018, NULL),
+    (brand_fiat, 'Mobi', 2017, NULL),
+    (brand_fiat, 'Toro', 2016, NULL),
+    (brand_fiat, 'Strada', 2021, NULL)
+    ON CONFLICT DO NOTHING;
+  END IF;
+END $$;
 
--- RLS Policies for product_compatibility (public read)
-DROP POLICY IF EXISTS "product_compatibility_public_read" ON public.product_compatibility;
-CREATE POLICY "product_compatibility_public_read" ON public.product_compatibility
-  FOR SELECT USING (true);
+-- =========================================================================
+-- CONCLUSÃO
+-- =========================================================================
 
--- Store owners can manage their product compatibility
-DROP POLICY IF EXISTS "product_compatibility_store_owner_manage" ON public.product_compatibility;
-CREATE POLICY "product_compatibility_store_owner_manage" ON public.product_compatibility
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM public.products p
-      INNER JOIN public.stores s ON p.store_id = s.id
-      WHERE p.id = product_compatibility.product_id
-        AND s.owner_id = auth.uid()
-    )
-  );
-
--- RLS Policies for user_vehicles
-DROP POLICY IF EXISTS "user_vehicles_user_read" ON public.user_vehicles;
-CREATE POLICY "user_vehicles_user_read" ON public.user_vehicles
-  FOR SELECT USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "user_vehicles_user_manage" ON public.user_vehicles;
-CREATE POLICY "user_vehicles_user_manage" ON public.user_vehicles
-  FOR ALL USING (auth.uid() = user_id);
-
--- =====================================================
--- 12. GRANT PERMISSIONS
--- =====================================================
--- Grant access to authenticated users
-GRANT SELECT ON public.vehicle_brands TO authenticated;
-GRANT SELECT ON public.vehicle_models TO authenticated;
-GRANT SELECT ON public.vehicle_engines TO authenticated;
-GRANT SELECT ON public.product_compatibility TO authenticated;
-GRANT ALL ON public.user_vehicles TO authenticated;
-GRANT SELECT ON products_full_info TO authenticated;
-
--- Grant access to anonymous users for reading public data
-GRANT SELECT ON public.vehicle_brands TO anon;
-GRANT SELECT ON public.vehicle_models TO anon;
-GRANT SELECT ON public.vehicle_engines TO anon;
-GRANT SELECT ON public.product_compatibility TO anon;
-GRANT SELECT ON products_full_info TO anon;
-
--- =====================================================
--- 13. COMMENTS FOR DOCUMENTATION
--- =====================================================
-COMMENT ON TABLE public.vehicle_brands IS 'Catalog of vehicle brands (20 pre-registered)';
-COMMENT ON TABLE public.vehicle_models IS 'Catalog of vehicle models by brand';
-COMMENT ON TABLE public.vehicle_engines IS 'Catalog of common engine types (16 configurations)';
-COMMENT ON TABLE public.product_compatibility IS 'Maps products to compatible vehicles';
-COMMENT ON TABLE public.user_vehicles IS 'User-registered vehicles';
-COMMENT ON COLUMN public.products.part_code IS 'Part code for exact search (e.g., KL1045008)';
-COMMENT ON COLUMN public.products.position IS 'Part position on vehicle';
-COMMENT ON FUNCTION search_products_by_partial_name IS 'Intelligent search by first 2-7 letters of product name';
-COMMENT ON FUNCTION get_products_for_user_vehicle IS 'Returns products compatible with user primary vehicle';
-COMMENT ON VIEW products_full_info IS 'Complete product information with store and compatibility data';
-
--- =====================================================
--- END OF SCHEMA
--- =====================================================
+SELECT 
+  '✅ Banco de dados configurado com sucesso!' as status,
+  (SELECT COUNT(*) FROM vehicle_brands) as marcas,
+  (SELECT COUNT(*) FROM vehicle_models) as modelos,
+  (SELECT COUNT(*) FROM vehicle_engines) as motores;

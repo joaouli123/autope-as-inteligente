@@ -18,7 +18,7 @@ interface FormData {
   brand: string;
   model: string;
   part_code: string;
-  position: string;
+  part_position: string;
   price: string;
   stock_quantity: string;
   images: string[];
@@ -73,7 +73,7 @@ export default function NovoProdutoPage() {
     brand: '',
     model: '',
     part_code: '',
-    position: '',
+    part_position: '',
     price: '',
     stock_quantity: '0',
     images: [],
@@ -120,7 +120,7 @@ export default function NovoProdutoPage() {
         brand: data.brand || '',
         model: data.model || '',
         part_code: data.part_code || '',
-        position: data.position || '',
+        part_position: data.part_position || '',
         price: data.price.toString(),
         stock_quantity: data.stock_quantity.toString(),
         images: data.images || [],
@@ -285,7 +285,7 @@ export default function NovoProdutoPage() {
         brand: formData.brand.trim() || null,
         model: formData.model.trim() || null,
         part_code: formData.part_code.trim() || null,
-        position: formData.position || null,
+        part_position: formData.part_position || null,
         price: parseFloat(formData.price),
         stock_quantity: parseInt(formData.stock_quantity) || 0,
         images: formData.images,
@@ -621,15 +621,17 @@ export default function NovoProdutoPage() {
                 Posição da Peça
               </label>
               <select
-                value={formData.position}
-                onChange={(e) => handleChange('position', e.target.value)}
+                value={formData.part_position}
+                onChange={(e) => handleChange('part_position', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Selecione a posição (opcional)</option>
-                <option value="dianteiro_direito">Dianteiro Direito</option>
-                <option value="dianteiro_esquerdo">Dianteiro Esquerdo</option>
-                <option value="traseiro_direito">Traseiro Direito</option>
-                <option value="traseiro_esquerdo">Traseiro Esquerdo</option>
+                <option value="Dianteiro Direito">Dianteiro Direito</option>
+                <option value="Dianteiro Esquerdo">Dianteiro Esquerdo</option>
+                <option value="Traseiro Direito">Traseiro Direito</option>
+                <option value="Traseiro Esquerdo">Traseiro Esquerdo</option>
+                <option value="Central">Central</option>
+                <option value="Universal">Universal</option>
               </select>
             </div>
 

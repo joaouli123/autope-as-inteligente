@@ -27,7 +27,7 @@ interface FilterState {
   sortBy: 'price_asc' | 'price_desc';
   partCode: string;
   partName: string;
-  position: string;
+  part_position: string;
   make: string;
   model: string;
 }
@@ -186,7 +186,7 @@ export default function AdvancedFilterModal({
       sortBy: 'price_asc',
       partCode: '',
       partName: '',
-      position: '',
+      part_position: '',
       make: '',
       model: '',
     });
@@ -399,19 +399,19 @@ export default function AdvancedFilterModal({
                     key={pos.value}
                     style={[
                       styles.positionButton,
-                      localFilters.position === pos.value && styles.positionButtonActive,
+                      localFilters.part_position === pos.value && styles.positionButtonActive,
                     ]}
                     onPress={() =>
                       setLocalFilters({
                         ...localFilters,
-                        position: localFilters.position === pos.value ? '' : pos.value,
+                        part_position: localFilters.part_position === pos.value ? '' : pos.value,
                       })
                     }
                   >
                     <Text
                       style={[
                         styles.positionButtonText,
-                        localFilters.position === pos.value && styles.positionButtonTextActive,
+                        localFilters.part_position === pos.value && styles.positionButtonTextActive,
                       ]}
                     >
                       {pos.label}
