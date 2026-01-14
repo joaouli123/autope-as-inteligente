@@ -123,18 +123,33 @@ export default function SearchScreen() {
 
   const loadUserVehicle = async () => {
     try {
-      const { data: { user } } = await supabase. auth.getUser();
+      console.log('[SearchScreen] loadUserVehicle: Starting to load user vehicle...');
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('[SearchScreen] loadUserVehicle: User data:', user ? 'User found' : 'No user');
+      
       if (user) {
+        console.log('[SearchScreen] loadUserVehicle: Fetching vehicle for user_id:', user.id);
         const { data } = await supabase
           .from('user_vehicles')
           .select('*')
           .eq('user_id', user.id)
           .eq('is_primary', true)
           .single();
-        if (data) setUserVehicle(data);
+        
+        console.log('[SearchScreen] loadUserVehicle: Vehicle data:', data);
+        if (data) {
+          setUserVehicle(data);
+          console.log('[SearchScreen] loadUserVehicle: Vehicle set successfully:', {
+            brand: data.brand,
+            model: data.model,
+            year: data.year,
+          });
+        } else {
+          console.log('[SearchScreen] loadUserVehicle: No primary vehicle found for user');
+        }
       }
     } catch (error) {
-      console.error('Error loading user vehicle:', error);
+      console.error('[SearchScreen] loadUserVehicle: Error loading user vehicle:', error);
     }
   };
 
