@@ -132,7 +132,7 @@ export default function ProfileScreen() {
       .substring(0, 2);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Sair',
       'Deseja realmente sair do app?',
@@ -141,8 +141,8 @@ export default function ProfileScreen() {
         {
           text: 'Sair',
           style: 'destructive',
-          onPress:  () => {
-            logout();
+          onPress: async () => {
+            await logout();
             navigation.navigate('Splash');
           },
         },

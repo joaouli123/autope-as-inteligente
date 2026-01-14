@@ -207,7 +207,7 @@ export default function SignupScreen() {
       },
     };
 
-    const success = await signup(userData);
+    const success = await signup(userData, password);
     if (success) {
       // Enviar email de boas-vindas
       try {
