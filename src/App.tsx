@@ -8,6 +8,7 @@ import NavBar from './components/layout/NavBar';
 import ProductCard from './components/product/ProductCard';
 import StoreRating from './components/store/StoreRating';
 import SearchableDropdown from './components/common/SearchableDropdown';
+import FilterChips from './components/common/FilterChips';
 import { ENGINE_OPTIONS, VALVE_OPTIONS, FUEL_OPTIONS, TRANSMISSION_OPTIONS } from './constants/vehicles';
 import { EXTENDED_FILTERS, COMPONENT_DEPENDENT_FILTERS } from './constants/filters';
 import { formatCurrency, formatDate, getStatusLabel, getPaymentMethodInfo, normalizeText } from './utils/formatters';
@@ -754,8 +755,8 @@ const App: React.FC = () => {
   );
 
   const renderHeader = () => (
-    <header className="bg-blue-900 text-white p-4 pt-safe-plus pb-8 rounded-b-[2.5rem] shadow-xl z-40 relative">
-      <div className="flex items-center justify-between mb-3 mt-2">
+    <header className="bg-blue-900 text-white p-4 pt-safe-plus pb-6 rounded-b-[2.5rem] shadow-xl z-40 relative">
+      <div className="flex items-center justify-between mb-2.5 mt-1">
         <div>
           <h1 className="text-[17px] font-semibold tracking-tight">AutoPeças AI</h1>
           <div className="flex items-center text-blue-100 text-[11px] mt-0.5 font-medium">
@@ -773,9 +774,9 @@ const App: React.FC = () => {
           </div>
         </button>
       </div>
-      <form onSubmit={handleSearch} className="relative mb-1">
-        <input type="text" placeholder="Busque por peça ou sintoma..." className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white text-gray-900 placeholder-gray-500 text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-colors shadow-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-        <Search className="absolute left-3 top-3 text-gray-400" size={16} />
+      <form onSubmit={handleSearch} className="relative">
+        <input type="text" placeholder="Busque por peça ou sintoma..." className="w-full pl-9 pr-4 py-2 rounded-xl bg-white text-gray-900 placeholder-gray-500 text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-colors shadow-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
       </form>
     </header>
   );
@@ -1116,12 +1117,12 @@ const App: React.FC = () => {
     <div className="pb-24">
       {renderHeader()}
       <div className="px-4 mt-4">
-        <h2 className="font-bold text-lg mb-4">
+        <h2 className="font-bold text-lg mb-3">
           {searchQuery ? `Resultados para "${searchQuery}"` : 'Buscar Produtos'}
         </h2>
         
         {aiAnalysis && (
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4">
                 <div className="flex gap-3">
                     <div className="mt-1"><Sparkles size={18} className="text-blue-600" /></div>
                     <div>
@@ -1137,15 +1138,31 @@ const App: React.FC = () => {
             </div>
         )}
 
-        <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
-             <button onClick={() => setShowFilterModal(true)} className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 whitespace-nowrap">
-                 <Filter size={14} /> Filtros
-             </button>
-             {filters.category && (
-                 <button onClick={() => setFilters({...filters, category: ''})} className="flex items-center gap-2 px-3 py-2 bg-blue-900 text-white rounded-lg text-xs font-bold whitespace-nowrap">
-                     {filters.category} <X size={12} />
-                 </button>
-             )}
+        {/* Filter Chips */}
+        <div className="mb-4">
+          <FilterChips
+            activeFilters={{
+              category: filters.category,
+              useMyVehicle: filters.useMyVehicle && !!user?.vehicle,
+              sortOrder: filters.sortOrder,
+              attributes: filters.attributes,
+            }}
+            onRemoveCategory={() => {
+              setFilters({ ...filters, category: '' });
+              handleSearch();
+            }}
+            onRemoveAttribute={(key) => {
+              const newAttributes = { ...filters.attributes };
+              delete newAttributes[key];
+              setFilters({ ...filters, attributes: newAttributes });
+              handleSearch();
+            }}
+            onToggleVehicleFilter={() => {
+              setFilters({ ...filters, useMyVehicle: !filters.useMyVehicle });
+              handleSearch();
+            }}
+            onOpenFilterModal={() => setShowFilterModal(true)}
+          />
         </div>
 
         {isSearching ? (
