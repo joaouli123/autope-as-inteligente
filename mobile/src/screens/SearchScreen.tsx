@@ -71,7 +71,7 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
    
   const [filters, setFilters] = useState<FilterState>({
-    compatibilityGuaranteed: false,
+    compatibilityGuaranteed:  false,
     category: '',
     specifications: [],
     priceMin: 0,
@@ -79,7 +79,7 @@ export default function SearchScreen() {
     sortBy: 'relevance',
   });
 
-  // --- Função de Formatação (Recuperada) ---
+  // --- Função de Formatação ---
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -109,10 +109,10 @@ export default function SearchScreen() {
 
   const loadUserVehicle = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data:  { user } } = await supabase. auth.getUser();
       if (user) {
         const { data } = await supabase
-          .from('user_vehicles')
+          . from('user_vehicles')
           .select('*')
           .eq('user_id', user.id)
           .eq('is_primary', true)
@@ -129,7 +129,7 @@ export default function SearchScreen() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select(`*, stores!inner(name), product_compatibility(*)`)
+        .select(`*, stores! inner(name), product_compatibility(*)`)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -156,14 +156,14 @@ export default function SearchScreen() {
     }
 
     // 2. Compatibilidade Garantida
-    if (filters.compatibilityGuaranteed && userVehicle) {
-      filtered = filtered.filter((product: any) => {
+    if (filters. compatibilityGuaranteed && userVehicle) {
+      filtered = filtered.filter((product:  any) => {
         const compatibilities = product.product_compatibility || [];
         return compatibilities.some((comp: any) => {
-          if (!comp.brand || !comp.model) return false;
-          const brandMatch = comp.brand.toLowerCase() === userVehicle.brand.toLowerCase();
+          if (! comp.brand || !comp.model) return false;
+          const brandMatch = comp.brand.toLowerCase() === userVehicle.brand. toLowerCase();
           const modelMatch = comp.model.toLowerCase() === userVehicle.model.toLowerCase();
-          const yearMatch = userVehicle.year >= comp.year_start && (!comp.year_end || userVehicle.year <= comp.year_end);
+          const yearMatch = userVehicle.year >= comp.year_start && (! comp.year_end || userVehicle.year <= comp.year_end);
           return brandMatch && modelMatch && yearMatch;
         });
       });
@@ -175,9 +175,8 @@ export default function SearchScreen() {
     }
 
     // 4. Especificações
-    if (filters.specifications.length > 0) {
+    if (filters.specifications. length > 0) {
       filtered = filtered.filter((p: any) => {
-        // Check if product specifications match any of the selected specs
         const productSpecs = p.specifications?.[filters.category] || [];
         return filters.specifications.some(spec => 
           productSpecs.includes(spec)
@@ -187,24 +186,23 @@ export default function SearchScreen() {
 
     // 5. Faixa de Preço
     filtered = filtered.filter(p =>
-      p.price >= filters.priceMin && p.price <= filters.priceMax
+      p.price >= filters. priceMin && p.price <= filters.priceMax
     );
 
     // 6. Ordenação
     switch (filters.sortBy) {
       case 'price_asc':
-        filtered.sort((a, b) => a.price - b.price);
+        filtered. sort((a, b) => a.price - b.price);
         break;
       case 'price_desc':
-        filtered.sort((a, b) => b.price - a.price);
+        filtered. sort((a, b) => b.price - a.price);
         break;
       case 'newest':
-        filtered.sort((a: any, b: any) =>
+        filtered.sort((a:  any, b: any) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         break;
       default:
-        // relevance - keep current order
         break;
     }
 
@@ -223,122 +221,109 @@ export default function SearchScreen() {
     Keyboard.dismiss();
   };
 
-  const renderProductItem = ({ item }: { item: Product }) => (
-    <TouchableOpacity
-      style={styles.productCard}
-      onPress={() => navigation.navigate('Product', { productId: item.id })}
-      activeOpacity={0.8}
-    >
-      <Image source={{ uri: item.image }} style={styles.productImage} />
-      <View style={styles.productInfo}>
-        <Text style={styles.productCategory}>{item.category}</Text>
-        <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.productStore}>{item.store}</Text>
-        <Text style={styles.productPrice}>{formatCurrency(item.price)}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
   return (
     <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        {/* ===== HEADER AZUL COM BORDAS ARREDONDADAS ===== */}
-        <View style={styles.headerBlue}>
-          {/* Título */}
-          <Text style={styles.headerTitle}>Buscar Peças</Text>
-          <Text style={styles.headerSubtitle}>
-            Encontre a peça perfeita para seu veículo
-          </Text>
+      <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+        <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+          
+          {/* ===== HEADER AZUL COM BORDAS ARREDONDADAS ===== */}
+          <View style={styles.headerBlue}>
+            <Text style={styles.headerTitle}>Buscar Peças</Text>
+            <Text style={styles.headerSubtitle}>
+              Encontre a peça perfeita para seu veículo
+            </Text>
 
-          {/* Barra de Pesquisa + Botão Filtro (DENTRO DO AZUL) */}
-          <View style={styles.searchRow}>
-            <View style={styles.searchContainer}>
-              <Search color="#9ca3af" size={20} style={styles.searchIcon} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Busque por peça ou sintoma..."
-                placeholderTextColor="#9ca3af"
-                value={searchQuery}
-                onChangeText={handleSearch}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={clearSearch}>
-                  <X color="#6b7280" size={20} />
-                </TouchableOpacity>
-              )}
-            </View>
+            {/* Barra de Pesquisa + Botão Filtro */}
+            <View style={styles. searchRow}>
+              <View style={styles.searchContainer}>
+                <Search color="#9ca3af" size={20} style={styles.searchIcon} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Busque por peça ou sintoma..."
+                  placeholderTextColor="#9ca3af"
+                  value={searchQuery}
+                  onChangeText={handleSearch}
+                />
+                {searchQuery. length > 0 && (
+                  <TouchableOpacity onPress={clearSearch}>
+                    <X color="#6b7280" size={20} />
+                  </TouchableOpacity>
+                )}
+              </View>
 
-            <TouchableOpacity
-              style={[styles.filterButton, activeFiltersCount() > 0 && styles.filterButtonActive]}
-              onPress={() => setShowFilterModal(true)}
-            >
-              <Filter color={activeFiltersCount() > 0 ? "#ffffff" : "#1e3a8a"} size={20} />
-              {activeFiltersCount() > 0 && (
-                <View style={styles.filterBadge}>
-                  <Text style={styles.filterBadgeText}>{activeFiltersCount()}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* ===== CONTEÚDO BRANCO ===== */}
-        <View style={styles.contentWhite}>
-          <Text style={styles.sectionTitle}>
-            {filteredProducts.length} produtos encontrados
-          </Text>
-
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#1e3a8a" />
-            </View>
-          ) : (
-            <FlatList
-              data={filteredProducts}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.productCard}
-                  onPress={() => navigation.navigate('Product', { productId: item.id })}
-                  activeOpacity={0.8}
-                >
-                  <Image
-                    source={{ uri: item.image || 'https://via.placeholder.com/80' }}
-                    style={styles.productImage}
-                  />
-                  <View style={styles.productInfo}>
-                    <Text style={styles.productCategory}>{item.category}</Text>
-                    <Text style={styles.productName} numberOfLines={2}>
-                      {item.name}
-                    </Text>
-                    <Text style={styles.productStore}>{item.store}</Text>
-                    <Text style={styles.productPrice}>
-                      {formatCurrency(item.price)}
-                    </Text>
+              <TouchableOpacity
+                style={[styles.filterButton, activeFiltersCount() > 0 && styles.filterButtonActive]}
+                onPress={() => setShowFilterModal(true)}
+              >
+                <Filter color={activeFiltersCount() > 0 ? "#ffffff" : "#1e3a8a"} size={20} />
+                {activeFiltersCount() > 0 && (
+                  <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>{activeFiltersCount()}</Text>
                   </View>
-                </TouchableOpacity>
-              )}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                <View style={styles.emptyState}>
-                  <ShoppingBag color="#9ca3af" size={48} style={{ opacity: 0.5, marginBottom: 12 }} />
-                  <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
-                </View>
-              }
-            />
-          )}
-        </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        {/* Modal de Filtros */}
-        <AdvancedFilterModal
-          visible={showFilterModal}
-          onClose={() => setShowFilterModal(false)}
-          filters={filters}
-          onApply={handleApplyFilters}
-          userVehicle={userVehicle}
-        />
-      </SafeAreaView>
+          {/* ===== CONTEÚDO BRANCO ===== */}
+          <View style={styles.contentWhite}>
+            <Text style={styles.sectionTitle}>
+              {filteredProducts.length} produtos encontrados
+            </Text>
+
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#1e3a8a" />
+              </View>
+            ) : (
+              <FlatList
+                data={filteredProducts}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.productCard}
+                    onPress={() => navigation.navigate('Product', { productId: item. id })}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={{ uri: item. image || 'https://via.placeholder.com/80' }}
+                      style={styles.productImage}
+                    />
+                    <View style={styles.productInfo}>
+                      <Text style={styles.productCategory}>{item. category}</Text>
+                      <Text style={styles.productName} numberOfLines={2}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.productStore}>{item.store}</Text>
+                      <Text style={styles.productPrice}>
+                        {formatCurrency(item.price)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyState}>
+                    <ShoppingBag color="#9ca3af" size={48} style={{ opacity: 0.5, marginBottom: 12 }} />
+                    <Text style={styles.emptyText}>Nenhum produto encontrado</Text>
+                  </View>
+                }
+              />
+            )}
+          </View>
+
+          {/* Modal de Filtros */}
+          <AdvancedFilterModal
+            visible={showFilterModal}
+            onClose={() => setShowFilterModal(false)}
+            filters={filters}
+            onApply={handleApplyFilters}
+            userVehicle={userVehicle}
+          />
+
+        </SafeAreaView>
+      </View>
     </View>
   );
 }
@@ -348,10 +333,11 @@ const styles = StyleSheet.create({
   headerBlue: {
     backgroundColor: '#1e3a8a',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 100, // Espaço extra para searchRow "flutuar"
-    borderBottomLeftRadius: 24,  // ✅ ARREDONDAR
-    borderBottomRightRadius: 24, // ✅ ARREDONDAR
+    paddingTop: 60,
+    paddingBottom:  30,
+    marginTop: -60,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerTitle: {
     fontSize: 28,
@@ -360,9 +346,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize:  14,
     color: '#93c5fd',
-    marginBottom: 20,
+    marginBottom:  20,
   },
 
   // ===== BARRA DE PESQUISA + FILTRO =====
@@ -379,20 +365,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical:  10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
-  searchIcon: {
+  searchIcon:  {
     marginRight: 12,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1f2937',
+    color:  '#1f2937',
   },
   filterButton: {
     backgroundColor: '#ffffff',
@@ -402,14 +388,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width:  0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 3,
+    elevation:  3,
     position: 'relative',
   },
   filterButtonActive: {
-    backgroundColor: '#3b82f6', // Fica azul quando tem filtro
+    backgroundColor: '#3b82f6',
   },
   filterBadge: {
     position: 'absolute',
@@ -433,14 +419,14 @@ const styles = StyleSheet.create({
   contentWhite: {
     flex: 1,
     backgroundColor: '#f9fafb',
-    paddingTop: 60, // Espaço para searchRow "flutuar" sobre o branco
+    paddingTop: 30,
     paddingHorizontal: 20,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 16,
+    marginBottom:  16,
   },
 
   // ===== CARDS DE PRODUTOS =====
@@ -456,11 +442,11 @@ const styles = StyleSheet.create({
     gap: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity:  0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  productImage: {
+  productImage:  {
     width: 80,
     height: 80,
     borderRadius: 12,
@@ -492,7 +478,7 @@ const styles = StyleSheet.create({
     color: '#1e3a8a',
   },
   loadingContainer: {
-    flex: 1,
+    flex:  1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -502,6 +488,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: '#9ca3af',
-    fontSize: 16,
+    fontSize:  16,
   },
 });
