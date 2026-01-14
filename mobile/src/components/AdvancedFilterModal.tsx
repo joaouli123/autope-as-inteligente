@@ -66,6 +66,8 @@ const POSITIONS = [
   { value: 'Dianteiro Esquerdo', label: 'Dianteiro Esquerdo' },
   { value: 'Traseiro Direito', label: 'Traseiro Direito' },
   { value: 'Traseiro Esquerdo', label: 'Traseiro Esquerdo' },
+  { value: 'Central', label: 'Central' },
+  { value: 'Universal', label: 'Universal' },
 ];
 
 const SORT_OPTIONS = [
@@ -117,6 +119,13 @@ export default function AdvancedFilterModal({
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const isAnimating = useRef(false);
+
+  // Sync localFilters with parent filters when modal opens
+  useEffect(() => {
+    if (visible) {
+      setLocalFilters(filters);
+    }
+  }, [visible, filters]);
 
   useEffect(() => {
     if (visible) {
