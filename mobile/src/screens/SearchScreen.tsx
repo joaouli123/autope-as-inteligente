@@ -10,6 +10,8 @@ import {
   SafeAreaView,
   Keyboard,
   ActivityIndicator,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,7 +20,6 @@ import type { RootStackParamList } from '../types/navigation';
 import AdvancedFilterModal from '../components/AdvancedFilterModal';
 import { supabase } from '../../services/supabaseClient';
 
-// --- Interfaces ---
 interface Product {
   id: string;
   name: string;
@@ -28,7 +29,6 @@ interface Product {
   category: string;
 }
 
-// Mock de segurança (caso a internet falhe)
 const mockProducts: Product[] = [
   {
     id: '1',
@@ -56,13 +56,12 @@ interface FilterState {
   specifications: string[];
   priceMin: number;
   priceMax: number;
-  sortBy: 'relevance' | 'price_asc' | 'price_desc' | 'newest';
+  sortBy:  'relevance' | 'price_asc' | 'price_desc' | 'newest';
 }
 
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   
-  // --- Estados Consolidados ---
   const [searchQuery, setSearchQuery] = useState('');
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -71,7 +70,7 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
    
   const [filters, setFilters] = useState<FilterState>({
-    compatibilityGuaranteed:  false,
+    compatibilityGuaranteed: false,
     category: '',
     specifications: [],
     priceMin: 0,
@@ -79,7 +78,6 @@ export default function SearchScreen() {
     sortBy: 'relevance',
   });
 
-  // --- Função de Formatação ---
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -87,7 +85,6 @@ export default function SearchScreen() {
     }).format(value);
   };
 
-  // --- Contagem de Filtros Ativos ---
   const activeFiltersCount = () => {
     let count = 0;
     if (filters.compatibilityGuaranteed) count++;
@@ -97,7 +94,6 @@ export default function SearchScreen() {
     return count;
   };
 
-  // --- Efeitos (Carregamento de Dados) ---
   useEffect(() => {
     loadUserVehicle();
     loadAllProducts();
@@ -109,10 +105,10 @@ export default function SearchScreen() {
 
   const loadUserVehicle = async () => {
     try {
-      const { data:  { user } } = await supabase. auth.getUser();
+      const { data: { user } } = await supabase. auth.getUser();
       if (user) {
         const { data } = await supabase
-          . from('user_vehicles')
+          .from('user_vehicles')
           .select('*')
           .eq('user_id', user.id)
           .eq('is_primary', true)
@@ -128,8 +124,8 @@ export default function SearchScreen() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('products')
-        .select(`*, stores! inner(name), product_compatibility(*)`)
+        . from('products')
+        .select(`*, stores!inner(name), product_compatibility(*)`)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -146,7 +142,6 @@ export default function SearchScreen() {
   const applyFilters = () => {
     let filtered = [...allProducts];
 
-    // 1. Busca por texto
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(p =>
@@ -155,9 +150,8 @@ export default function SearchScreen() {
       );
     }
 
-    // 2. Compatibilidade Garantida
-    if (filters. compatibilityGuaranteed && userVehicle) {
-      filtered = filtered.filter((product:  any) => {
+    if (filters.compatibilityGuaranteed && userVehicle) {
+      filtered = filtered.filter((product: any) => {
         const compatibilities = product.product_compatibility || [];
         return compatibilities.some((comp: any) => {
           if (! comp.brand || !comp.model) return false;
@@ -169,27 +163,23 @@ export default function SearchScreen() {
       });
     }
 
-    // 3. Categoria
     if (filters.category) {
       filtered = filtered.filter(p => p.category === filters.category);
     }
 
-    // 4. Especificações
-    if (filters.specifications. length > 0) {
+    if (filters.specifications.length > 0) {
       filtered = filtered.filter((p: any) => {
         const productSpecs = p.specifications?.[filters.category] || [];
-        return filters.specifications.some(spec => 
+        return filters. specifications.some(spec => 
           productSpecs.includes(spec)
         );
       });
     }
 
-    // 5. Faixa de Preço
     filtered = filtered.filter(p =>
       p.price >= filters. priceMin && p.price <= filters.priceMax
     );
 
-    // 6. Ordenação
     switch (filters.sortBy) {
       case 'price_asc':
         filtered. sort((a, b) => a.price - b.price);
@@ -209,7 +199,6 @@ export default function SearchScreen() {
     setFilteredProducts(filtered);
   };
 
-  // --- Ações da UI ---
   const handleApplyFilters = (newFilters: FilterState) => {
     setFilters(newFilters);
   };
@@ -222,19 +211,19 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
-      <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
+      
+      <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
         <SafeAreaView style={{ flex: 1 }} edges={['top']}>
           
-          {/* ===== HEADER AZUL COM BORDAS ARREDONDADAS ===== */}
           <View style={styles.headerBlue}>
             <Text style={styles.headerTitle}>Buscar Peças</Text>
             <Text style={styles.headerSubtitle}>
               Encontre a peça perfeita para seu veículo
             </Text>
 
-            {/* Barra de Pesquisa + Botão Filtro */}
-            <View style={styles. searchRow}>
+            <View style={styles.searchRow}>
               <View style={styles.searchContainer}>
                 <Search color="#9ca3af" size={20} style={styles.searchIcon} />
                 <TextInput
@@ -265,13 +254,12 @@ export default function SearchScreen() {
             </View>
           </View>
 
-          {/* ===== CONTEÚDO BRANCO ===== */}
           <View style={styles.contentWhite}>
             <Text style={styles.sectionTitle}>
               {filteredProducts.length} produtos encontrados
             </Text>
 
-            {loading ? (
+            {loading ?  (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#1e3a8a" />
               </View>
@@ -282,7 +270,7 @@ export default function SearchScreen() {
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={styles.productCard}
-                    onPress={() => navigation.navigate('Product', { productId: item. id })}
+                    onPress={() => navigation.navigate('Product', { productId: item.id })}
                     activeOpacity={0.8}
                   >
                     <Image
@@ -290,11 +278,11 @@ export default function SearchScreen() {
                       style={styles.productImage}
                     />
                     <View style={styles.productInfo}>
-                      <Text style={styles.productCategory}>{item. category}</Text>
-                      <Text style={styles.productName} numberOfLines={2}>
+                      <Text style={styles.productCategory}>{item.category}</Text>
+                      <Text style={styles. productName} numberOfLines={2}>
                         {item.name}
                       </Text>
-                      <Text style={styles.productStore}>{item.store}</Text>
+                      <Text style={styles. productStore}>{item.store}</Text>
                       <Text style={styles.productPrice}>
                         {formatCurrency(item.price)}
                       </Text>
@@ -313,7 +301,6 @@ export default function SearchScreen() {
             )}
           </View>
 
-          {/* Modal de Filtros */}
           <AdvancedFilterModal
             visible={showFilterModal}
             onClose={() => setShowFilterModal(false)}
@@ -324,22 +311,21 @@ export default function SearchScreen() {
 
         </SafeAreaView>
       </View>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  // ===== HEADER AZUL =====
   headerBlue: {
     backgroundColor: '#1e3a8a',
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom:  30,
-    marginTop: -60,
+    paddingTop: Platform.OS === 'ios' ?  20 : 50,
+    paddingBottom: 30,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
+    zIndex: 1,
   },
-  headerTitle: {
+  headerTitle:  {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
@@ -348,13 +334,11 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize:  14,
     color: '#93c5fd',
-    marginBottom:  20,
+    marginBottom: 20,
   },
-
-  // ===== BARRA DE PESQUISA + FILTRO =====
   searchRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems:  'center',
     gap: 12,
     marginTop: 10,
   },
@@ -365,34 +349,46 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical:  10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    paddingVertical:  14,
+    ... Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity:  0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
-  searchIcon:  {
+  searchIcon: {
     marginRight: 12,
   },
-  searchInput: {
+  searchInput:  {
     flex: 1,
     fontSize: 16,
-    color:  '#1f2937',
+    color: '#1f2937',
   },
   filterButton: {
     backgroundColor: '#ffffff',
     width: 52,
-    height: 52,
-    borderRadius: 12,
+    height:  52,
+    borderRadius:  12,
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width:  0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation:  3,
+    justifyContent:  'center',
     position: 'relative',
+    ... Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity:  0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   filterButtonActive: {
     backgroundColor: '#3b82f6',
@@ -414,12 +410,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-
-  // ===== CONTEÚDO BRANCO =====
   contentWhite: {
     flex: 1,
     backgroundColor: '#f9fafb',
-    paddingTop: 30,
+    marginTop: -40,
+    paddingTop: 100,
     paddingHorizontal: 20,
   },
   sectionTitle: {
@@ -428,25 +423,29 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     marginBottom:  16,
   },
-
-  // ===== CARDS DE PRODUTOS =====
   listContent: {
-    paddingBottom: 100,
+    paddingBottom:  100,
   },
   productCard: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: 12,
+    padding:  12,
     marginBottom: 12,
     flexDirection: 'row',
     gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity:  0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    ... Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity:  0.05,
+        shadowRadius: 4,
+      },
+      android:  {
+        elevation: 2,
+      },
+    }),
   },
-  productImage:  {
+  productImage: {
     width: 80,
     height: 80,
     borderRadius: 12,
