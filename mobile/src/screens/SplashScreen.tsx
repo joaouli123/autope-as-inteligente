@@ -1,14 +1,36 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Car } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
+import { useAuth } from '../contexts/AuthContext';
 
 type SplashScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 
 export default function SplashScreen() {
   const navigation = useNavigation<SplashScreenNavigationProp>();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    // Se já estiver autenticado, ir direto para Main
+    if (!loading && user) {
+      navigation.replace('Main', { screen: 'Home' });
+    }
+  }, [user, loading, navigation]);
+
+  // Mostrar loading enquanto verifica sessão
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.iconContainer}>
+          <Car color="#1e3a8a" size={64} strokeWidth={2} />
+        </View>
+        <Text style={styles.title}>AutoPeças AI</Text>
+        <ActivityIndicator size="large" color="#ffffff" style={{ marginTop: 32 }} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

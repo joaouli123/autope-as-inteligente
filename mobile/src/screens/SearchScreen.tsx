@@ -361,7 +361,14 @@ export default function SearchScreen() {
             onClose={() => setShowFilterModal(false)}
             filters={filters}
             onApply={handleApplyFilters}
-            userVehicle={userVehicle}
+            userVehicle={userVehicle ? {
+              brand: userVehicle.brand,
+              model: userVehicle.model,
+              year: userVehicle.year,
+              engine: userVehicle.engine || undefined,
+              valves: userVehicle.valves || undefined,
+              fuel: userVehicle.fuel_type || undefined,
+            } : undefined}
           />
 
         </SafeAreaView>
