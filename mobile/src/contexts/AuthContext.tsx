@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           engine: vehicleData.engine || '',
           valves: vehicleData.valves?.toString() || '',
           fuel: vehicleData.fuel_type || '',
-          transmission: 'Manual',
+          transmission: vehicleData.transmission || 'Manual',
         };
       }
 
@@ -192,10 +192,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             user_id: data.user.id,
             brand: userData.vehicle.brand,
             model: userData.vehicle.model,
-            year: parseInt(userData.vehicle.year),
+            year: parseInt(userData.vehicle.year, 10),
             engine: userData.vehicle.engine,
-            valves: parseInt(userData.vehicle.valves) || null,
+            valves: parseInt(userData.vehicle.valves, 10) || null,
             fuel_type: userData.vehicle.fuel,
+            transmission: userData.vehicle.transmission,
             is_primary: true,
           });
 
