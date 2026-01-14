@@ -62,7 +62,7 @@ export default function Table<T>({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -72,34 +72,34 @@ export default function Table<T>({
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8">
-        <p className="text-center text-gray-500">{emptyMessage}</p>
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+        <p className="text-center text-gray-500 font-medium">{emptyMessage}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-widest"
                 >
                   {column.sortable ? (
                     <button
                       onClick={() => handleSort(column.key)}
-                      className="flex items-center gap-1 hover:text-gray-700"
+                      className="flex items-center gap-1.5 hover:text-gray-900 transition-colors"
                     >
                       {column.label}
                       {sortConfig?.key === column.key &&
                         (sortConfig.direction === 'asc' ? (
-                          <ArrowUp size={14} />
+                          <ArrowUp size={14} className="text-blue-600" />
                         ) : (
-                          <ArrowDown size={14} />
+                          <ArrowDown size={14} className="text-blue-600" />
                         ))}
                     </button>
                   ) : (
@@ -109,21 +109,21 @@ export default function Table<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-100">
             {sortedData.map((row) => (
               <tr
                 key={keyExtractor(row)}
                 onClick={() => onRowClick?.(row)}
                 className={`${
                   onRowClick
-                    ? 'cursor-pointer hover:bg-gray-50'
-                    : ''
-                } transition-colors`}
+                    ? 'cursor-pointer hover:bg-blue-50/50'
+                    : 'hover:bg-gray-50/50'
+                } transition-all duration-150`}
               >
                 {columns.map((column) => (
                   <td
                     key={column.key}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium"
                   >
                     {column.render
                       ? column.render(row)
@@ -138,8 +138,8 @@ export default function Table<T>({
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-700">
+        <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-sm font-semibold text-gray-700">
             Página {pagination.currentPage} de {pagination.totalPages}
           </div>
           <div className="flex gap-2">
@@ -148,18 +148,18 @@ export default function Table<T>({
                 pagination.onPageChange(pagination.currentPage - 1)
               }
               disabled={pagination.currentPage === 1}
-              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border-2 border-gray-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:border-blue-500 hover:text-blue-600 transition-all duration-200 font-medium disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-current"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={18} />
             </button>
             <button
               onClick={() =>
                 pagination.onPageChange(pagination.currentPage + 1)
               }
               disabled={pagination.currentPage === pagination.totalPages}
-              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border-2 border-gray-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:border-blue-500 hover:text-blue-600 transition-all duration-200 font-medium disabled:hover:bg-transparent disabled:hover:border-gray-300 disabled:hover:text-current"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>
