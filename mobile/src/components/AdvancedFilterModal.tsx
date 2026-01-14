@@ -272,7 +272,7 @@ export default function AdvancedFilterModal({
               </View>
             )}
 
-            {/* 2. Part Name Search - NO OPCIONAL */}
+            {/* 2. Part Name Search */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>NOME DA PEÇA</Text>
               <TextInput
@@ -287,7 +287,7 @@ export default function AdvancedFilterModal({
               </Text>
             </View>
 
-            {/* 3. Part Code Search - OPCIONAL */}
+            {/* 3. Part Code Search */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
                 CÓDIGO DA PEÇA <Text style={styles.optionalLabel}>(Opcional)</Text>
@@ -301,7 +301,7 @@ export default function AdvancedFilterModal({
               />
             </View>
 
-            {/* 4. Categories - OPCIONAL */}
+            {/* 4. Categories */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
                 CATEGORIA <Text style={styles.optionalLabel}>(Opcional)</Text>
@@ -379,7 +379,7 @@ export default function AdvancedFilterModal({
               )}
             </View>
 
-            {/* 6. Position Filter - OPCIONAL */}
+            {/* 6. Position Filter */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
                 POSIÇÃO <Text style={styles.optionalLabel}>(Opcional)</Text>
