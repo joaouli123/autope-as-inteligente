@@ -28,6 +28,16 @@ export interface UserProfile {
   vehicle: Vehicle;
 }
 
+// Database vehicle data structure
+interface DbVehicleData {
+  brand: string;
+  model: string;
+  year: number;
+  engine: string | null;
+  valves: number | null;
+  fuel_type: string | null;
+}
+
 interface AuthContextData {
   user: UserProfile | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -40,7 +50,7 @@ interface AuthContextData {
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 // Helper function to map vehicle data from database to UserProfile vehicle
-const mapVehicleData = (vehicleData: any): Vehicle => {
+const mapVehicleData = (vehicleData: DbVehicleData): Vehicle => {
   return {
     type: 'carros', // Default to carros for now, can be extended later
     brand: vehicleData.brand,
@@ -50,6 +60,34 @@ const mapVehicleData = (vehicleData: any): Vehicle => {
     valves: vehicleData.valves ? vehicleData.valves.toString() : '',
     fuel: vehicleData.fuel_type || '',
     transmission: '',
+  };
+};
+
+// Helper function to create empty user profile
+const createEmptyUserProfile = (email: string, name?: string): UserProfile => {
+  return {
+    name: name || email.split('@')[0] || 'Usuário',
+    email: email,
+    cpfCnpj: '',
+    phone: '',
+    address: {
+      cep: '',
+      street: '',
+      number: '',
+      complement: '',
+      city: '',
+      state: '',
+    },
+    vehicle: {
+      type: 'carros',
+      brand: '',
+      model: '',
+      year: '',
+      engine: '',
+      valves: '',
+      fuel: '',
+      transmission: '',
+    },
   };
 };
 
@@ -80,30 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // 2. Carregar perfil do usuário (se existir na tabela users ou outra)
       // Por enquanto, criar perfil básico
-      const userProfile: UserProfile = {
-        name: data.user.email?.split('@')[0] || 'Usuário',
-        email: data.user.email || '',
-        cpfCnpj: '',
-        phone: '',
-        address: {
-          cep: '',
-          street: '',
-          number: '',
-          complement: '',
-          city: '',
-          state: '',
-        },
-        vehicle: {
-          type: 'carros',
-          brand: '',
-          model: '',
-          year: '',
-          engine: '',
-          valves: '',
-          fuel: '',
-          transmission: '',
-        },
-      };
+      const userProfile = createEmptyUserProfile(data.user.email || '');
 
       // 3. Carregar veículo do usuário
       const { data: vehicleData, error: vehicleError } = await supabase
@@ -158,9 +173,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             user_id: data.user.id,
             brand: userData.vehicle.brand,
             model: userData.vehicle.model,
-            year: parseInt(userData.vehicle.year),
+            year: parseInt(userData.vehicle.year, 10),
             engine: userData.vehicle.engine || null,
-            valves: userData.vehicle.valves ? parseInt(userData.vehicle.valves) : null,
+            valves: userData.vehicle.valves ? parseInt(userData.vehicle.valves, 10) : null,
             fuel_type: userData.vehicle.fuel || null,
             is_primary: true,
           });
@@ -216,50 +231,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Carregar sessão existente ao iniciar
   useEffect(() => {
     const loadSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        console.log('[AuthContext] Sessão encontrada:', session.user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         
-        // Carregar dados do usuário
-        const userProfile: UserProfile = {
-          name: session.user.email?.split('@')[0] || 'Usuário',
-          email: session.user.email || '',
-          cpfCnpj: '',
-          phone: '',
-          address: {
-            cep: '',
-            street: '',
-            number: '',
-            complement: '',
-            city: '',
-            state: '',
-          },
-          vehicle: {
-            type: 'carros',
-            brand: '',
-            model: '',
-            year: '',
-            engine: '',
-            valves: '',
-            fuel: '',
-            transmission: '',
-          },
-        };
+        if (session?.user) {
+          console.log('[AuthContext] Sessão encontrada:', session.user.id);
+          
+          // Carregar dados do usuário
+          const userProfile = createEmptyUserProfile(session.user.email || '');
 
-        // Carregar veículo
-        const { data: vehicleData } = await supabase
-          .from('user_vehicles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .eq('is_primary', true)
-          .single();
+          // Carregar veículo
+          const { data: vehicleData } = await supabase
+            .from('user_vehicles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .eq('is_primary', true)
+            .single();
 
-        if (vehicleData) {
-          userProfile.vehicle = mapVehicleData(vehicleData);
+          if (vehicleData) {
+            userProfile.vehicle = mapVehicleData(vehicleData);
+          }
+
+          setUser(userProfile);
         }
-
-        setUser(userProfile);
+      } catch (error) {
+        console.error('[AuthContext] Erro ao carregar sessão:', error);
       }
     };
 
