@@ -112,6 +112,12 @@ export default function SearchScreen() {
   }, []);
 
   useEffect(() => {
+    if (userVehicle) {
+      setFilters(f => ({ ...f, compatibilityGuaranteed: true }));
+    }
+  }, [userVehicle]);
+
+  useEffect(() => {
     applyFilters();
   }, [filters, searchQuery, allProducts]);
 
