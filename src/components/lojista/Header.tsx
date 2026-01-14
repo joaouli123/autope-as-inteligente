@@ -9,7 +9,7 @@ export default function Header() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-1">
-            Olá, {store?.name || 'Loja'} 👋
+            Olá, {store?.name || 'Loja'} <span role="img" aria-label="waving hand">👋</span>
           </h2>
           <p className="text-sm text-gray-600 font-medium">
             Aqui está o resumo da sua loja hoje

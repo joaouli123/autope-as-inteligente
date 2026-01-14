@@ -135,7 +135,7 @@ export default function DashboardPage() {
           title="Produtos Ativos"
           value={`${metrics.active_products}`}
           icon={Package}
-          trend={{ value: `${metrics.low_stock_products} em baixa`, isPositive: true }}
+          trend={{ value: `${metrics.low_stock_products} em baixa`, isPositive: false }}
           iconBgColor="bg-purple-100"
           iconColor="text-purple-600"
         />
@@ -173,12 +173,10 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {recentOrders.map((order, index) => (
+              {recentOrders.map((order) => (
                 <tr 
                   key={order.id} 
-                  className={`hover:bg-blue-50/50 transition-colors duration-150 ${
-                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                  }`}
+                  className="odd:bg-white even:bg-gray-50/50 hover:bg-blue-50/50 transition-colors duration-150"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm font-bold text-gray-900">{order.code}</span>
