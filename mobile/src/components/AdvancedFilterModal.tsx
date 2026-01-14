@@ -99,8 +99,8 @@ export default function AdvancedFilterModal({
           useNativeDriver: true,
         }),
       ]).start();
-    } else {
-      // Slide down animation
+    } else if (slideAnim._value !== SCREEN_HEIGHT) {
+      // Slide down animation before unmounting
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: SCREEN_HEIGHT,
@@ -115,6 +115,24 @@ export default function AdvancedFilterModal({
       ]).start();
     }
   }, [visible]);
+
+  const handleClose = () => {
+    // Trigger animation, then close
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
 
   const handleClear = () => {
     setLocalFilters({
@@ -134,7 +152,7 @@ export default function AdvancedFilterModal({
 
   const handleApply = () => {
     onApply(localFilters);
-    onClose();
+    handleClose();
   };
 
   const toggleCategory = (categoryId: string) => {
@@ -162,11 +180,11 @@ export default function AdvancedFilterModal({
       visible={visible}
       animationType="none"
       transparent={true}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.modalOverlay}>
         {/* Dark backdrop */}
-        <TouchableWithoutFeedback onPress={onClose}>
+        <TouchableWithoutFeedback onPress={handleClose}>
           <Animated.View 
             style={[
               styles.backdrop,
@@ -193,7 +211,7 @@ export default function AdvancedFilterModal({
               <Filter color="#1f2937" size={24} />
               <Text style={styles.headerTitle}>Filtros Avançados</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <X color="#1f2937" size={24} />
             </TouchableOpacity>
           </View>
@@ -206,7 +224,7 @@ export default function AdvancedFilterModal({
                   <View style={styles.toggleInfo}>
                     <Text style={styles.greenBoxTitle}>Apenas peças para o carro cadastrado</Text>
                     <Text style={styles.greenBoxVehicle}>
-                      {userVehicle.brand.toUpperCase()} {userVehicle.model.toUpperCase()} / {userVehicle.year} • {userVehicle.engine || ''} {userVehicle.valves ? `${userVehicle.valves}V` : ''} • {userVehicle.fuel || ''}
+                      {userVehicle.brand.toUpperCase()} {userVehicle.model.toUpperCase()} / {userVehicle.year} • {userVehicle.engine || ''}{userVehicle.valves ? ` ${userVehicle.valves}V` : ''}{userVehicle.fuel ? ` • ${userVehicle.fuel}` : ''}
                     </Text>
                   </View>
                   <Switch
@@ -495,7 +513,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   optionalLabel: {
-    fontSize: 9,
+    fontSize: 11,
     color: '#9ca3af',
     fontWeight: '400',
   },
