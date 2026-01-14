@@ -46,8 +46,8 @@ export default function LojistaLoginPage() {
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 -left-4 w-72 h-72 bg-white rounded-full mix-blend-overlay filter blur-xl animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-white rounded-full mix-blend-overlay filter blur-xl animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-white rounded-full mix-blend-overlay filter blur-xl animate-blob animation-delay-4000"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-white rounded-full mix-blend-overlay filter blur-xl animate-blob" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-white rounded-full mix-blend-overlay filter blur-xl animate-blob" style={{ animationDelay: '4s' }}></div>
       </div>
       
       <div className="w-full max-w-md relative z-10">
@@ -69,14 +69,14 @@ export default function LojistaLoginPage() {
 
           {/* Success Message */}
           {successMessage && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl animate-fade-in">
               <p className="text-sm text-green-700 font-medium">{successMessage}</p>
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl animate-fade-in">
               <p className="text-sm text-red-700 font-medium">{error}</p>
             </div>
           )}
