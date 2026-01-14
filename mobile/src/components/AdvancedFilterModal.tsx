@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,15 @@ import {
   Modal,
   Switch,
   TextInput,
+  Animated,
+  Dimensions,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { X, Car, ArrowUp, ArrowDown, Wrench, Gauge, BatteryCharging, Wind, Armchair, Droplet, Zap, Hammer, Settings, CircleDot, MoreHorizontal, Filter } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.85;
 
 interface FilterState {
   compatibilityGuaranteed: boolean;
@@ -18,7 +24,7 @@ interface FilterState {
   specifications: string[];
   priceMin: number;
   priceMax: number;
-  sortBy: 'relevance' | 'price_asc' | 'price_desc' | 'newest';
+  sortBy: 'price_asc' | 'price_desc';
   partCode: string;
   partName: string;
   position: string;
@@ -35,6 +41,9 @@ interface AdvancedFilterModalProps {
     brand: string;
     model: string;
     year: number;
+    engine?: string;
+    valves?: number;
+    fuel?: string;
   };
 }
 
@@ -60,10 +69,8 @@ const POSITIONS = [
 ];
 
 const SORT_OPTIONS = [
-  { value: 'relevance', label: 'Mais Relevantes' },
   { value: 'price_asc', label: 'Menor Preço' },
   { value: 'price_desc', label: 'Maior Preço' },
-  { value: 'newest', label: 'Mais Recentes' },
 ];
 
 export default function AdvancedFilterModal({
@@ -74,6 +81,40 @@ export default function AdvancedFilterModal({
   userVehicle,
 }: AdvancedFilterModalProps) {
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      // Slide up animation
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Slide down animation
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: SCREEN_HEIGHT,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible]);
 
   const handleClear = () => {
     setLocalFilters({
@@ -82,7 +123,7 @@ export default function AdvancedFilterModal({
       specifications: [],
       priceMin: 0,
       priceMax: 5000,
-      sortBy: 'relevance',
+      sortBy: 'price_asc',
       partCode: '',
       partName: '',
       position: '',
@@ -114,273 +155,308 @@ export default function AdvancedFilterModal({
     }));
   };
 
+  if (!visible) return null;
+
   return (
     <Modal
       visible={visible}
-      animationType="slide"
-      transparent={false}
+      animationType="none"
+      transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Filter color="#1f2937" size={24} />
-            <Text style={styles.headerTitle}>Filtros Avançados</Text>
-          </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X color="#1f2937" size={24} />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.modalOverlay}>
+        {/* Dark backdrop */}
+        <TouchableWithoutFeedback onPress={onClose}>
+          <Animated.View 
+            style={[
+              styles.backdrop,
+              { opacity: opacityAnim }
+            ]} 
+          />
+        </TouchableWithoutFeedback>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Compatibility Guarantee Toggle */}
-          <View style={styles.section}>
-            <View style={styles.toggleContainer}>
-              <View style={styles.toggleInfo}>
-                <Text style={styles.toggleTitle}>Compatibilidade Garantida</Text>
-                {userVehicle && (
-                  <Text style={styles.toggleSubtitle}>
-                    {userVehicle.brand} {userVehicle.model} {userVehicle.year}
-                  </Text>
-                )}
-                {!userVehicle && (
-                  <Text style={styles.toggleWarning}>
-                    Cadastre seu veículo para usar este filtro
-                  </Text>
-                )}
+        {/* Bottom sheet */}
+        <Animated.View
+          style={[
+            styles.bottomSheet,
+            {
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          {/* Handle bar */}
+          <View style={styles.handleBar} />
+
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <Filter color="#1f2937" size={24} />
+              <Text style={styles.headerTitle}>Filtros Avançados</Text>
+            </View>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <X color="#1f2937" size={24} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Compatibility Guarantee Toggle - Green Box */}
+            {userVehicle && (
+              <View style={styles.section}>
+                <View style={styles.greenBox}>
+                  <View style={styles.toggleInfo}>
+                    <Text style={styles.greenBoxTitle}>Apenas peças para o carro cadastrado</Text>
+                    <Text style={styles.greenBoxVehicle}>
+                      {userVehicle.brand.toUpperCase()} {userVehicle.model.toUpperCase()} / {userVehicle.year} • {userVehicle.engine || ''} {userVehicle.valves ? `${userVehicle.valves}V` : ''} • {userVehicle.fuel || ''}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={localFilters.compatibilityGuaranteed}
+                    onValueChange={(value) =>
+                      setLocalFilters({ ...localFilters, compatibilityGuaranteed: value })
+                    }
+                    trackColor={{ false: '#d1d5db', true: '#10b981' }}
+                    thumbColor={localFilters.compatibilityGuaranteed ? '#ffffff' : '#f3f4f6'}
+                  />
+                </View>
               </View>
-              <Switch
-                value={localFilters.compatibilityGuaranteed}
-                onValueChange={(value) =>
-                  setLocalFilters({ ...localFilters, compatibilityGuaranteed: value })
-                }
-                trackColor={{ false: '#d1d5db', true: '#10b981' }}
-                thumbColor={localFilters.compatibilityGuaranteed ? '#ffffff' : '#f3f4f6'}
-                disabled={!userVehicle}
+            )}
+
+            {/* Categories */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                CATEGORIA <Text style={styles.optionalLabel}>(Opcional)</Text>
+              </Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoriesScroll}
+              >
+                {CATEGORIES.map((category) => {
+                  const Icon = category.icon;
+                  return (
+                    <TouchableOpacity
+                      key={category.id}
+                      style={[
+                        styles.categoryCard,
+                        localFilters.category === category.id && styles.categoryCardActive,
+                      ]}
+                      onPress={() => toggleCategory(category.id)}
+                    >
+                      <Icon 
+                        color={localFilters.category === category.id ? "#ffffff" : "#1e3a8a"} 
+                        size={28} 
+                      />
+                      <Text
+                        style={[
+                          styles.categoryCardText,
+                          localFilters.category === category.id && styles.categoryCardTextActive,
+                        ]}
+                      >
+                        {category.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Specifications for selected category */}
+              {localFilters.category && (
+                <>
+                  {(() => {
+                    const selectedCategory = CATEGORIES.find(c => c.id === localFilters.category);
+                    if (!selectedCategory || !selectedCategory.specs.length) return null;
+                    
+                    return (
+                      <View style={styles.specsContainer}>
+                        <Text style={styles.specsTitle}>Especificações</Text>
+                        <View style={styles.specsChipsWrapper}>
+                          {selectedCategory.specs.map((spec) => (
+                            <TouchableOpacity
+                              key={spec}
+                              style={[
+                                styles.specChip,
+                                localFilters.specifications.includes(spec) &&
+                                  styles.specChipActive,
+                              ]}
+                              onPress={() => toggleSpecification(spec)}
+                            >
+                              <Text
+                                style={[
+                                  styles.specChipText,
+                                  localFilters.specifications.includes(spec) &&
+                                    styles.specChipTextActive,
+                                ]}
+                              >
+                                {spec}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    );
+                  })()}
+                </>
+              )}
+            </View>
+
+            {/* Part Code Search */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Código da Peça <Text style={styles.optionalLabel}>(Opcional)</Text>
+              </Text>
+              <TextInput
+                style={styles.textInput}
+                value={localFilters.partCode}
+                onChangeText={(text) => setLocalFilters({ ...localFilters, partCode: text })}
+                placeholder="Ex: KL1045008"
+                placeholderTextColor="#9ca3af"
               />
             </View>
-            {localFilters.compatibilityGuaranteed && (
-              <View style={styles.compatibilityBadge}>
-                <Text style={styles.compatibilityBadgeText}>
-                  ✓ Mostrando apenas peças compatíveis com seu veículo
-                </Text>
-              </View>
-            )}
-          </View>
 
-          {/* Part Code Search */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Busca por Código da Peça</Text>
-            <TextInput
-              style={styles.textInput}
-              value={localFilters.partCode}
-              onChangeText={(text) => setLocalFilters({ ...localFilters, partCode: text })}
-              placeholder="Ex: KL1045008"
-              placeholderTextColor="#9ca3af"
-            />
-          </View>
-
-          {/* Part Name Search */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Busca por Nome da Peça</Text>
-            <TextInput
-              style={styles.textInput}
-              value={localFilters.partName}
-              onChangeText={(text) => setLocalFilters({ ...localFilters, partName: text })}
-              placeholder="Ex: Amortecedor"
-              placeholderTextColor="#9ca3af"
-            />
-            <Text style={styles.helperText}>
-              Busca inteligente por primeiras letras
-            </Text>
-          </View>
-
-          {/* Position Filter */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Posição da Peça</Text>
-            <View style={styles.positionContainer}>
-              {POSITIONS.map((pos) => (
-                <TouchableOpacity
-                  key={pos.value}
-                  style={[
-                    styles.positionButton,
-                    localFilters.position === pos.value && styles.positionButtonActive,
-                  ]}
-                  onPress={() =>
-                    setLocalFilters({
-                      ...localFilters,
-                      position: localFilters.position === pos.value ? '' : pos.value,
-                    })
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.positionButtonText,
-                      localFilters.position === pos.value && styles.positionButtonTextActive,
-                    ]}
-                  >
-                    {pos.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Categories */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Categorias</Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoriesScroll}
-            >
-              {CATEGORIES.map((category) => {
-                const Icon = category.icon;
-                return (
-                  <TouchableOpacity
-                    key={category.id}
-                    style={[
-                      styles.categoryCard,
-                      localFilters.category === category.id && styles.categoryCardActive,
-                    ]}
-                    onPress={() => toggleCategory(category.id)}
-                  >
-                    <Icon 
-                      color={localFilters.category === category.id ? "#ffffff" : "#1e3a8a"} 
-                      size={28} 
-                    />
-                    <Text
-                      style={[
-                        styles.categoryCardText,
-                        localFilters.category === category.id && styles.categoryCardTextActive,
-                      ]}
-                    >
-                      {category.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            {/* Specifications for selected category */}
-            {localFilters.category && (
-              <>
-                {(() => {
-                  const selectedCategory = CATEGORIES.find(c => c.id === localFilters.category);
-                  if (!selectedCategory || !selectedCategory.specs.length) return null;
-                  
-                  return (
-                    <View style={styles.specsContainer}>
-                      <Text style={styles.specsTitle}>Especificações</Text>
-                      <View style={styles.specsChipsWrapper}>
-                        {selectedCategory.specs.map((spec) => (
-                          <TouchableOpacity
-                            key={spec}
-                            style={[
-                              styles.specChip,
-                              localFilters.specifications.includes(spec) &&
-                                styles.specChipActive,
-                            ]}
-                            onPress={() => toggleSpecification(spec)}
-                          >
-                            <Text
-                              style={[
-                                styles.specChipText,
-                                localFilters.specifications.includes(spec) &&
-                                  styles.specChipTextActive,
-                              ]}
-                            >
-                              {spec}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
-                  );
-                })()}
-              </>
-            )}
-          </View>
-
-          {/* Price Range */}
-          <View style={styles.section}>
-            <View style={styles.priceHeader}>
-              <Text style={styles.sectionTitle}>Preço Máximo</Text>
-              <Text style={styles.priceRange}>
-                R$ {localFilters.priceMax}
+            {/* Part Name Search */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Nome da Peça</Text>
+              <TextInput
+                style={styles.textInput}
+                value={localFilters.partName}
+                onChangeText={(text) => setLocalFilters({ ...localFilters, partName: text })}
+                placeholder="Ex: Amortecedor"
+                placeholderTextColor="#9ca3af"
+              />
+              <Text style={styles.helperText}>
+                Busca inteligente por primeiras letras
               </Text>
             </View>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={5000}
-              step={50}
-              value={localFilters.priceMax}
-              onValueChange={(value) =>
-                setLocalFilters({ ...localFilters, priceMax: value })
-              }
-              minimumTrackTintColor="#3b82f6"
-              maximumTrackTintColor="#d1d5db"
-              thumbTintColor="#3b82f6"
-            />
-            <View style={styles.priceLabels}>
-              <Text style={styles.priceLabelText}>R$ 0</Text>
-              <Text style={styles.priceLabelText}>R$ 5.000+</Text>
+
+            {/* Position Filter */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Posição <Text style={styles.optionalLabel}>(Opcional)</Text>
+              </Text>
+              <View style={styles.positionContainer}>
+                {POSITIONS.map((pos) => (
+                  <TouchableOpacity
+                    key={pos.value}
+                    style={[
+                      styles.positionButton,
+                      localFilters.position === pos.value && styles.positionButtonActive,
+                    ]}
+                    onPress={() =>
+                      setLocalFilters({
+                        ...localFilters,
+                        position: localFilters.position === pos.value ? '' : pos.value,
+                      })
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.positionButtonText,
+                        localFilters.position === pos.value && styles.positionButtonTextActive,
+                      ]}
+                    >
+                      {pos.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-          </View>
 
-          {/* Sort By */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ordenar Por</Text>
-            {SORT_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.value}
-                style={[
-                  styles.sortOption,
-                  localFilters.sortBy === option.value && styles.sortOptionActive,
-                ]}
-                onPress={() => setLocalFilters({ ...localFilters, sortBy: option.value as FilterState['sortBy'] })}
-              >
-                <View
-                  style={[
-                    styles.radio,
-                    localFilters.sortBy === option.value && styles.radioActive,
-                  ]}
-                >
-                  {localFilters.sortBy === option.value && <View style={styles.radioDot} />}
-                </View>
-                <Text
-                  style={[
-                    styles.sortOptionText,
-                    localFilters.sortBy === option.value && styles.sortOptionTextActive,
-                  ]}
-                >
-                  {option.label}
+            {/* Price Range */}
+            <View style={styles.section}>
+              <View style={styles.priceHeader}>
+                <Text style={styles.sectionTitle}>Preço Máximo</Text>
+                <Text style={styles.priceRange}>
+                  R$ {localFilters.priceMax}
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+              </View>
+              <Slider
+                style={styles.slider}
+                minimumValue={0}
+                maximumValue={5000}
+                step={50}
+                value={localFilters.priceMax}
+                onValueChange={(value) =>
+                  setLocalFilters({ ...localFilters, priceMax: value })
+                }
+                minimumTrackTintColor="#3b82f6"
+                maximumTrackTintColor="#d1d5db"
+                thumbTintColor="#3b82f6"
+              />
+              <View style={styles.priceLabels}>
+                <Text style={styles.priceLabelText}>R$ 0</Text>
+                <Text style={styles.priceLabelText}>R$ 5.000+</Text>
+              </View>
+            </View>
 
-        {/* Footer Actions */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.clearButton} onPress={handleClear}>
-            <Text style={styles.clearButtonText}>Limpar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
-            <Text style={styles.applyButtonText}>Aplicar Filtros</Text>
-          </TouchableOpacity>
-        </View>
+            {/* Sort By */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Ordenar Por</Text>
+              <View style={styles.sortContainer}>
+                {SORT_OPTIONS.map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.sortButton,
+                      localFilters.sortBy === option.value && styles.sortButtonActive,
+                    ]}
+                    onPress={() => setLocalFilters({ ...localFilters, sortBy: option.value as FilterState['sortBy'] })}
+                  >
+                    <Text
+                      style={[
+                        styles.sortButtonText,
+                        localFilters.sortBy === option.value && styles.sortButtonTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Bottom padding for scrolling */}
+            <View style={{ height: 20 }} />
+          </ScrollView>
+
+          {/* Footer Actions */}
+          <View style={styles.footer}>
+            <TouchableOpacity style={styles.clearButton} onPress={handleClear}>
+              <Text style={styles.clearButtonText}>Limpar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
+              <Text style={styles.applyButtonText}>Aplicar Filtros</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  modalOverlay: {
     flex: 1,
+    justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  bottomSheet: {
+    height: BOTTOM_SHEET_HEIGHT,
     backgroundColor: '#f9fafb',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    overflow: 'hidden',
+  },
+  handleBar: {
+    width: 48,
+    height: 6,
+    backgroundColor: '#9ca3af',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 8,
   },
   header: {
     flexDirection: 'row',
@@ -418,40 +494,34 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     marginBottom: 12,
   },
-  toggleContainer: {
+  optionalLabel: {
+    fontSize: 9,
+    color: '#9ca3af',
+    fontWeight: '400',
+  },
+  greenBox: {
+    backgroundColor: '#d1fae5',
+    borderRadius: 12,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
+    borderWidth: 1,
+    borderColor: '#10b981',
   },
   toggleInfo: {
     flex: 1,
+    paddingRight: 12,
   },
-  toggleTitle: {
+  greenBoxTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  toggleSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  toggleWarning: {
-    fontSize: 12,
-    color: '#ef4444',
-  },
-  compatibilityBadge: {
-    backgroundColor: '#d1fae5',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 12,
-  },
-  compatibilityBadgeText: {
-    fontSize: 14,
     color: '#065f46',
+    marginBottom: 6,
+  },
+  greenBoxVehicle: {
+    fontSize: 13,
+    color: '#047857',
     fontWeight: '500',
   },
   textInput: {
@@ -496,11 +566,6 @@ const styles = StyleSheet.create({
   positionButtonTextActive: {
     color: '#ffffff',
   },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
   categoriesScroll: {
     paddingVertical: 8,
     gap: 12,
@@ -529,26 +594,6 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
   categoryCardTextActive: {
-    color: '#ffffff',
-  },
-  chip: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-  },
-  chipActive: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6',
-  },
-  chipText: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '500',
-  },
-  chipTextActive: {
     color: '#ffffff',
   },
   specsContainer: {
@@ -612,73 +657,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6b7280',
   },
-  priceInputContainer: {
+  sortContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 12,
   },
-  priceInputWrapper: {
+  sortButton: {
     flex: 1,
-  },
-  priceInputLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
-  },
-  priceInput: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#1f2937',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-  },
-  priceSeparator: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 20,
-  },
-  sortOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 8,
-  },
-  sortOptionActive: {
-    backgroundColor: '#eff6ff',
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#3b82f6',
+    borderColor: '#d1d5db',
   },
-  sortOptionText: {
-    fontSize: 16,
+  sortButtonActive: {
+    backgroundColor: '#1e3a8a',
+    borderColor: '#1e3a8a',
+  },
+  sortButtonText: {
+    fontSize: 14,
     color: '#374151',
-    marginLeft: 12,
-  },
-  sortOptionTextActive: {
-    color: '#1e40af',
     fontWeight: '500',
   },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioActive: {
-    borderColor: '#3b82f6',
-  },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#3b82f6',
+  sortButtonTextActive: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
