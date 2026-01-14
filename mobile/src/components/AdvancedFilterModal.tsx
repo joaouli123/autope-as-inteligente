@@ -73,6 +73,39 @@ const SORT_OPTIONS = [
   { value: 'price_desc', label: 'Maior Preço' },
 ];
 
+// Helper function to format vehicle information display
+const formatVehicleInfo = (vehicle: {
+  brand: string;
+  model: string;
+  year: number;
+  engine?: string;
+  valves?: number;
+  fuel?: string;
+}): string => {
+  const brandModel = `${vehicle.brand.toUpperCase()} ${vehicle.model.toUpperCase()} / ${vehicle.year}`;
+  
+  // Build engine info string
+  const engineParts: string[] = [];
+  if (vehicle.engine) {
+    engineParts.push(vehicle.engine);
+  }
+  if (vehicle.valves) {
+    engineParts.push(`${vehicle.valves}V`);
+  }
+  const engineInfo = engineParts.length > 0 ? engineParts.join(' ') : '';
+  
+  // Build full info string
+  const parts = [brandModel];
+  if (engineInfo) {
+    parts.push(engineInfo);
+  }
+  if (vehicle.fuel) {
+    parts.push(vehicle.fuel);
+  }
+  
+  return parts.join(' • ');
+};
+
 export default function AdvancedFilterModal({
   visible,
   onClose,
@@ -83,10 +116,12 @@ export default function AdvancedFilterModal({
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const isAnimating = useRef(false);
 
   useEffect(() => {
     if (visible) {
       // Slide up animation
+      isAnimating.current = true;
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: 0,
@@ -98,21 +133,9 @@ export default function AdvancedFilterModal({
           duration: 300,
           useNativeDriver: true,
         }),
-      ]).start();
-    } else if (slideAnim._value !== SCREEN_HEIGHT) {
-      // Slide down animation before unmounting
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: SCREEN_HEIGHT,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      ]).start(() => {
+        isAnimating.current = false;
+      });
     }
   }, [visible]);
 
@@ -224,7 +247,7 @@ export default function AdvancedFilterModal({
                   <View style={styles.toggleInfo}>
                     <Text style={styles.greenBoxTitle}>Apenas peças para o carro cadastrado</Text>
                     <Text style={styles.greenBoxVehicle}>
-                      {userVehicle.brand.toUpperCase()} {userVehicle.model.toUpperCase()} / {userVehicle.year} • {userVehicle.engine || ''}{userVehicle.valves ? ` ${userVehicle.valves}V` : ''}{userVehicle.fuel ? ` • ${userVehicle.fuel}` : ''}
+                      {formatVehicleInfo(userVehicle)}
                     </Text>
                   </View>
                   <Switch
