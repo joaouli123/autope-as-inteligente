@@ -41,6 +41,46 @@ interface DbVehicleData {
   transmission: string | null;
 }
 
+// Transmission mapping helpers
+const mapTransmissionToDbEnum = (uiLabel: string): string => {
+  const mapping: { [key: string]: string } = {
+    'Manual': 'manual',
+    'Automático': 'automatic',
+    'CVT': 'cvt',
+    'Automatizado': 'automated_manual',
+  };
+  const result = mapping[uiLabel];
+  if (!result) {
+    console.warn('[AuthContext] Unknown transmission UI label:', uiLabel, '- defaulting to unknown');
+  }
+  return result || 'unknown';
+};
+
+const mapTransmissionFromDbEnum = (dbValue: string | null): string => {
+  if (!dbValue) return '';
+  
+  const mapping: { [key: string]: string } = {
+    'manual': 'Manual',
+    'automatic': 'Automático',
+    'cvt': 'CVT',
+    'automated_manual': 'Automatizado',
+    'unknown': '',
+  };
+  const result = mapping[dbValue];
+  if (result === undefined) {
+    console.warn('[AuthContext] Unexpected transmission DB value:', dbValue);
+    return dbValue; // Return as-is if not recognized
+  }
+  return result;
+};
+
+// Helper to parse valves from string like "12v" to number 12
+const parseValvesString = (valvesStr: string): number | null => {
+  if (!valvesStr) return null;
+  const parsed = parseInt(valvesStr.replace(/[^0-9]/g, ''), 10);
+  return isNaN(parsed) ? null : parsed;
+};
+
 interface AuthContextData {
   user: UserProfile | null;
   loading: boolean;
@@ -61,9 +101,9 @@ const mapVehicleData = (vehicleData: DbVehicleData): Vehicle => {
     model: vehicleData.model,
     year: vehicleData.year.toString(),
     engine: vehicleData.engine || '',
-    valves: vehicleData.valves ? vehicleData.valves.toString() : '',
+    valves: vehicleData.valves ? `${vehicleData.valves}v` : '',
     fuel: vehicleData.fuel_type || '',
-    transmission: vehicleData.transmission || '',
+    transmission: mapTransmissionFromDbEnum(vehicleData.transmission),
   };
 };
 
@@ -184,16 +224,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // Validate numeric fields before inserting
         const year = parseInt(userData.vehicle.year, 10);
-        let valves: number | null = null;
-        
-        if (userData.vehicle.valves) {
-          const parsedValves = parseInt(userData.vehicle.valves, 10);
-          if (!isNaN(parsedValves)) {
-            valves = parsedValves;
-          } else {
-            console.warn('[AuthContext] Invalid valves, saving as null:', userData.vehicle.valves);
-          }
-        }
+        const valves = parseValvesString(userData.vehicle.valves);
         
         if (isNaN(year)) {
           console.error('[AuthContext] Invalid year:', userData.vehicle.year);
@@ -203,6 +234,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           console.log('[AuthContext] Signup complete (without vehicle)!');
           return true;
         }
+        
+        // Map transmission from UI label to DB enum
+        const transmissionEnum = mapTransmissionToDbEnum(userData.vehicle.transmission);
         
         const { error: vehicleError } = await supabase
           .from('user_vehicles')
@@ -214,7 +248,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             engine: userData.vehicle.engine || null,
             valves: valves,
             fuel_type: userData.vehicle.fuel || null,
-            transmission: userData.vehicle.transmission || null,
+            transmission: transmissionEnum,
             is_primary: true,
           });
 
@@ -258,9 +292,88 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateUser = async (userData: Partial<UserProfile>): Promise<boolean> => {
     if (!user) return false;
     
-    const updatedUser = { ...user, ...userData };
-    setUser(updatedUser);
-    return true;
+    try {
+      // If vehicle is being updated, persist to database
+      if (userData.vehicle) {
+        console.log('[AuthContext] Updating vehicle in database...');
+        
+        const year = parseInt(userData.vehicle.year, 10);
+        const valves = parseValvesString(userData.vehicle.valves);
+        
+        if (isNaN(year)) {
+          console.error('[AuthContext] Invalid year:', userData.vehicle.year);
+          return false;
+        }
+        
+        // Map transmission from UI label to DB enum
+        const transmissionEnum = mapTransmissionToDbEnum(userData.vehicle.transmission);
+        
+        // First, check if user already has a primary vehicle
+        const { data: existingVehicle, error: fetchError } = await supabase
+          .from('user_vehicles')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('is_primary', true)
+          .single();
+        
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          console.error('[AuthContext] Error fetching existing vehicle:', fetchError.message);
+          return false;
+        }
+        
+        const vehicleData = {
+          user_id: user.id,
+          brand: userData.vehicle.brand,
+          model: userData.vehicle.model,
+          year: year,
+          engine: userData.vehicle.engine || null,
+          valves: valves,
+          fuel_type: userData.vehicle.fuel || null,
+          transmission: transmissionEnum,
+          is_primary: true,
+        };
+        
+        if (existingVehicle) {
+          // Update existing vehicle
+          const { error: updateError } = await supabase
+            .from('user_vehicles')
+            .update(vehicleData)
+            .eq('id', existingVehicle.id);
+          
+          if (updateError) {
+            console.error('[AuthContext] Error updating vehicle:', updateError.message);
+            return false;
+          }
+          console.log('[AuthContext] Vehicle updated successfully');
+        } else {
+          // Insert new vehicle
+          const { error: insertError } = await supabase
+            .from('user_vehicles')
+            .insert(vehicleData);
+          
+          if (insertError) {
+            console.error('[AuthContext] Error inserting vehicle:', insertError.message);
+            return false;
+          }
+          console.log('[AuthContext] Vehicle inserted successfully');
+        }
+        
+        // Reload vehicle from database to ensure state is in sync
+        const vehicle = await loadUserVehicle(user.id);
+        const updatedUser = { ...user, vehicle };
+        setUser(updatedUser);
+        
+        return true;
+      }
+      
+      // For non-vehicle updates, just update local state
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      return true;
+    } catch (error) {
+      console.error('[AuthContext] Unexpected error in updateUser:', error);
+      return false;
+    }
   };
 
   // Load existing session on startup and subscribe to auth state changes
