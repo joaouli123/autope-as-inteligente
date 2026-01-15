@@ -49,7 +49,11 @@ const mapTransmissionToDbEnum = (uiLabel: string): string => {
     'CVT': 'cvt',
     'Automatizado': 'automated_manual',
   };
-  return mapping[uiLabel] || 'unknown';
+  const result = mapping[uiLabel];
+  if (!result) {
+    console.warn('[AuthContext] Unknown transmission UI label:', uiLabel, '- defaulting to unknown');
+  }
+  return result || 'unknown';
 };
 
 const mapTransmissionFromDbEnum = (dbValue: string | null): string => {
@@ -62,7 +66,12 @@ const mapTransmissionFromDbEnum = (dbValue: string | null): string => {
     'automated_manual': 'Automatizado',
     'unknown': '',
   };
-  return mapping[dbValue] || dbValue;
+  const result = mapping[dbValue];
+  if (result === undefined) {
+    console.warn('[AuthContext] Unexpected transmission DB value:', dbValue);
+    return dbValue; // Return as-is if not recognized
+  }
+  return result;
 };
 
 // Helper to parse valves from string like "12v" to number 12
