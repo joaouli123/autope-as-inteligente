@@ -19,6 +19,7 @@ import { Search, Filter, X, ShoppingBag } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import AdvancedFilterModal from '../components/AdvancedFilterModal';
 import { supabase } from '../../services/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Product {
   id: string;
@@ -83,12 +84,12 @@ interface FilterState {
 
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
+  const { user } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [userVehicle, setUserVehicle] = useState<any>(null);
   const [loading, setLoading] = useState(false);
    
   const [filters, setFilters] = useState<FilterState>({
@@ -122,59 +123,29 @@ export default function SearchScreen() {
   };
 
   useEffect(() => {
-    loadUserVehicle();
     loadAllProducts();
   }, []);
 
+  // Reload products when user vehicle changes
   useEffect(() => {
-    if (userVehicle) {
+    if (user?.vehicle) {
+      console.log('[SearchScreen] Vehicle changed, reloading products...');
+      loadAllProducts();
       setFilters(f => ({ ...f, compatibilityGuaranteed: true }));
     }
-  }, [userVehicle]);
+  }, [user?.vehicle]);
 
   useEffect(() => {
     applyFilters();
   }, [filters, searchQuery, allProducts]);
 
-  const loadUserVehicle = async () => {
-    try {
-      console.log('[SearchScreen] loadUserVehicle: Starting to load user vehicle...');
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('[SearchScreen] loadUserVehicle: User data:', user ? 'User found' : 'No user');
-      
-      if (user) {
-        console.log('[SearchScreen] loadUserVehicle: Fetching vehicle for user_id:', user.id);
-        const { data } = await supabase
-          .from('user_vehicles')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_primary', true)
-          .single();
-        
-        console.log('[SearchScreen] loadUserVehicle: Vehicle data:', data);
-        if (data) {
-          setUserVehicle(data);
-          console.log('[SearchScreen] loadUserVehicle: Vehicle set successfully:', {
-            brand: data.brand,
-            model: data.model,
-            year: data.year,
-          });
-        } else {
-          console.log('[SearchScreen] loadUserVehicle: No primary vehicle found for user');
-        }
-      }
-    } catch (error) {
-      console.error('[SearchScreen] loadUserVehicle: Error loading user vehicle:', error);
-    }
-  };
-
   const loadAllProducts = async () => {
     setLoading(true);
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      // Get current user from auth context
+      const { data: { user: authUser } } = await supabase.auth.getUser();
       
-      if (!user) {
+      if (!authUser) {
         console.log('[SearchScreen] No user found, using mock products');
         setAllProducts(mockProducts);
         return;
@@ -184,7 +155,7 @@ export default function SearchScreen() {
       // Note: We pass null for category and price here because client-side filtering
       // is applied in applyFilters() which respects the filters state
       const { data, error } = await supabase.rpc('get_products_for_user_vehicle', {
-        p_user_id: user.id,
+        p_user_id: authUser.id,
         p_category: null, // Get all categories, filter client-side
         p_max_price: null, // Get all prices, filter client-side
       });
@@ -257,7 +228,7 @@ export default function SearchScreen() {
     }
 
     // 4. Filter by compatibility (using DB-provided is_compatible flag)
-    if (filters.compatibilityGuaranteed && userVehicle) {
+    if (filters.compatibilityGuaranteed && user?.vehicle) {
       filtered = filtered.filter(p => p.is_compatible === true);
     }
 
@@ -403,13 +374,13 @@ export default function SearchScreen() {
             onClose={() => setShowFilterModal(false)}
             filters={filters}
             onApply={handleApplyFilters}
-            userVehicle={userVehicle ? {
-              brand: userVehicle.brand,
-              model: userVehicle.model,
-              year: userVehicle.year,
-              engine: userVehicle.engine || undefined,
-              valves: userVehicle.valves || undefined,
-              fuel: userVehicle.fuel_type || undefined,
+            userVehicle={user?.vehicle ? {
+              brand: user.vehicle.brand,
+              model: user.vehicle.model,
+              year: user.vehicle.year,
+              engine: user.vehicle.engine || undefined,
+              valves: user.vehicle.valves || undefined,
+              fuel: user.vehicle.fuel || undefined,
             } : undefined}
           />
 
