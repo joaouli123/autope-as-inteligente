@@ -260,8 +260,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (isNaN(year)) {
           console.error('[AuthContext] Invalid year:', userData.vehicle.year);
           // Continue without saving vehicle - don't fail the entire signup
-          const userProfile = { ...userData, id: data.user.id };
-          userProfile.vehicle = null;
+          const userProfile = { ...userData, id: data.user.id, vehicle: null };
           setUser(userProfile);
           console.log('[AuthContext] Signup complete (without vehicle)!');
           return true;

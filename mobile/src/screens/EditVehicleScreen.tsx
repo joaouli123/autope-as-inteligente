@@ -68,13 +68,13 @@ export default function EditVehicleScreen() {
 
   // Auto-load models when brand is already set (e.g., on edit screen)
   React.useEffect(() => {
-    if (selectedBrand && brands.length > 0) {
+    if (selectedBrand && brands.length > 0 && models.length === 0) {
       const brandCode = brands.find(b => b.nome === selectedBrand)?.codigo;
-      if (brandCode && models.length === 0) {
+      if (brandCode) {
         loadModels(brandCode);
       }
     }
-  }, [selectedBrand, brands]);
+  }, [selectedBrand, brands, models.length]);
 
   const handleSave = async () => {
     if (!selectedBrand || !selectedModel) {
