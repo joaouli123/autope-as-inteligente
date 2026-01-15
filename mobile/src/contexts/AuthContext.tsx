@@ -181,8 +181,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       console.log('[AuthContext] Login successful:', data.user.id);
 
-      // 2. Create user profile
-      const userProfile = createEmptyUserProfile(data.user.id, data.user.email || '');
+      // 2. Load user profile from user_metadata
+      const metadata = data.user.user_metadata || {};
+      const userProfile: UserProfile = {
+        id: data.user.id,
+        name: metadata.name || data.user.email?.split('@')[0] || 'Usuário',
+        email: data.user.email || '',
+        cpfCnpj: metadata.cpfCnpj || '',
+        phone: metadata.phone || '',
+        address: {
+          cep: metadata.address?.cep || '',
+          street: metadata.address?.street || '',
+          number: metadata.address?.number || '',
+          complement: metadata.address?.complement || '',
+          city: metadata.address?.city || '',
+          state: metadata.address?.state || '',
+        },
+        vehicle: null,
+      };
 
       // 3. Load user's vehicle
       const vehicle = await loadUserVehicle(data.user.id);
@@ -200,10 +216,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       console.log('[AuthContext] Starting signup...');
 
-      // 1. Create user in Supabase Auth
+      // 1. Create user in Supabase Auth with user_metadata
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: password,
+        options: {
+          data: {
+            name: userData.name,
+            cpfCnpj: userData.cpfCnpj,
+            phone: userData.phone,
+            address: {
+              cep: userData.address.cep,
+              street: userData.address.street,
+              number: userData.address.number,
+              complement: userData.address.complement,
+              city: userData.address.city,
+              state: userData.address.state,
+            },
+          },
+        },
       });
 
       if (error) {
@@ -229,7 +260,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (isNaN(year)) {
           console.error('[AuthContext] Invalid year:', userData.vehicle.year);
           // Continue without saving vehicle - don't fail the entire signup
-          const userProfile = createEmptyUserProfile(data.user.id, userData.email);
+          const userProfile = { ...userData, id: data.user.id };
+          userProfile.vehicle = null;
           setUser(userProfile);
           console.log('[AuthContext] Signup complete (without vehicle)!');
           return true;
@@ -260,8 +292,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
 
-      // 3. Auto-login after signup
-      const userProfile = createEmptyUserProfile(data.user.id, userData.email);
+      // 3. Auto-login after signup - create full user profile from signup data
+      const userProfile = { ...userData, id: data.user.id };
       const vehicle = await loadUserVehicle(data.user.id);
       userProfile.vehicle = vehicle;
       
@@ -386,8 +418,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (session?.user) {
           console.log('[AuthContext] Session found:', session.user.id);
           
-          // Load user data
-          const userProfile = createEmptyUserProfile(session.user.id, session.user.email || '');
+          // Load user data from user_metadata
+          const metadata = session.user.user_metadata || {};
+          const userProfile: UserProfile = {
+            id: session.user.id,
+            name: metadata.name || session.user.email?.split('@')[0] || 'Usuário',
+            email: session.user.email || '',
+            cpfCnpj: metadata.cpfCnpj || '',
+            phone: metadata.phone || '',
+            address: {
+              cep: metadata.address?.cep || '',
+              street: metadata.address?.street || '',
+              number: metadata.address?.number || '',
+              complement: metadata.address?.complement || '',
+              city: metadata.address?.city || '',
+              state: metadata.address?.state || '',
+            },
+            vehicle: null,
+          };
 
           // Load vehicle
           const vehicle = await loadUserVehicle(session.user.id);
@@ -411,7 +459,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('[AuthContext] Auth state changed:', event);
       
       if (event === 'SIGNED_IN' && session?.user) {
-        const userProfile = createEmptyUserProfile(session.user.id, session.user.email || '');
+        const metadata = session.user.user_metadata || {};
+        const userProfile: UserProfile = {
+          id: session.user.id,
+          name: metadata.name || session.user.email?.split('@')[0] || 'Usuário',
+          email: session.user.email || '',
+          cpfCnpj: metadata.cpfCnpj || '',
+          phone: metadata.phone || '',
+          address: {
+            cep: metadata.address?.cep || '',
+            street: metadata.address?.street || '',
+            number: metadata.address?.number || '',
+            complement: metadata.address?.complement || '',
+            city: metadata.address?.city || '',
+            state: metadata.address?.state || '',
+          },
+          vehicle: null,
+        };
         const vehicle = await loadUserVehicle(session.user.id);
         userProfile.vehicle = vehicle;
         setUser(userProfile);
@@ -420,7 +484,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         // Keep existing user data, just update if needed
         if (!user) {
-          const userProfile = createEmptyUserProfile(session.user.id, session.user.email || '');
+          const metadata = session.user.user_metadata || {};
+          const userProfile: UserProfile = {
+            id: session.user.id,
+            name: metadata.name || session.user.email?.split('@')[0] || 'Usuário',
+            email: session.user.email || '',
+            cpfCnpj: metadata.cpfCnpj || '',
+            phone: metadata.phone || '',
+            address: {
+              cep: metadata.address?.cep || '',
+              street: metadata.address?.street || '',
+              number: metadata.address?.number || '',
+              complement: metadata.address?.complement || '',
+              city: metadata.address?.city || '',
+              state: metadata.address?.state || '',
+            },
+            vehicle: null,
+          };
           const vehicle = await loadUserVehicle(session.user.id);
           userProfile.vehicle = vehicle;
           setUser(userProfile);

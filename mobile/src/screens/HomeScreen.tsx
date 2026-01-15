@@ -32,11 +32,28 @@ import {
   MoreHorizontal,
 } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
+import { useAuth } from '../contexts/AuthContext';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { user } = useAuth();
+
+  const getInitials = () => {
+    const name = user?.name || 'User';
+    return name
+      .split(' ')
+      .filter((n) => n.length > 0)
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const locationText = user?.address?.city && user?.address?.state
+    ? `${user.address.city}, ${user.address.state}`
+    : 'Localização';
 
   return (
     <>
@@ -50,14 +67,14 @@ export default function HomeScreen() {
                 <Text style={styles. headerTitle}>AutoPeças AI</Text>
                 <View style={styles.locationRow}>
                   <MapPin color="#ffffff" size={16} />
-                  <Text style={styles.locationText}>São Paulo, SP</Text>
+                  <Text style={styles.locationText}>{locationText}</Text>
                 </View>
               </View>
               <TouchableOpacity 
                 style={styles.avatar}
                 onPress={() => navigation.navigate('Profile')}
               >
-                <Text style={styles.avatarText}>JL</Text>
+                <Text style={styles.avatarText}>{getInitials()}</Text>
               </TouchableOpacity>
             </View>
 
@@ -76,10 +93,17 @@ export default function HomeScreen() {
               </View>
               <View style={styles.vehicleInfo}>
                 <Text style={styles. vehicleLabel}>SEU VEÍCULO</Text>
-                <Text style={styles.vehicleName}>Chevrolet Onix</Text>
-                <Text style={styles.vehicleDetails}>• 2020 1.0 12v</Text>
+                <Text style={styles.vehicleName}>
+                  {user?.vehicle ? `${user.vehicle.brand} ${user.vehicle.model}` : 'Cadastrar veículo'}
+                </Text>
+                <Text style={styles.vehicleDetails}>
+                  {user?.vehicle ? `• ${user.vehicle.year} ${user.vehicle.engine} ${user.vehicle.valves}` : ''}
+                </Text>
               </View>
-              <TouchableOpacity style={styles.editButton}>
+              <TouchableOpacity 
+                style={styles.editButton}
+                onPress={() => navigation.navigate('EditVehicle' as any)}
+              >
                 <Edit2 color="#ffffff" size={18} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.searchButton}>

@@ -67,6 +67,34 @@ const SORT_OPTIONS = [
   { value: 'price_desc', label: 'Maior Preço' },
 ];
 
+// Helper function to clean model name by removing engine/valves/fuel/doors patterns
+const cleanModelName = (modelName: string): string => {
+  let cleaned = modelName;
+  
+  // Remove engine patterns (e.g., "1.0", "1.6", "2.0")
+  cleaned = cleaned.replace(/\b\d+\.\d+\b/g, '');
+  
+  // Remove valves patterns (e.g., "8V", "12V", "16V", "24V")
+  cleaned = cleaned.replace(/\b(8|12|16|20|24)\s*V\b/gi, '');
+  
+  // Remove fuel type patterns
+  cleaned = cleaned.replace(/\b(Flex|Gasolina|Diesel|Álcool|Etanol|Elétrico|Híbrido|Gas\.|Alc\.)\b/gi, '');
+  
+  // Remove doors patterns (e.g., "2p", "4p")
+  cleaned = cleaned.replace(/\b\d+p\b/gi, '');
+  
+  // Remove common engine tech terms
+  cleaned = cleaned.replace(/\b(Mi|Turbo|TSI|TDI|TFSI|GTI|Ti)\b/gi, '');
+  
+  // Remove "Total" when followed by "Flex"
+  cleaned = cleaned.replace(/\bTotal\s+/gi, '');
+  
+  // Clean up extra spaces and trim
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  return cleaned;
+};
+
 // Helper function to format vehicle information display
 const formatVehicleInfo = (vehicle: {
   brand: string;
@@ -76,7 +104,9 @@ const formatVehicleInfo = (vehicle: {
   valves?: number;
   fuel?: string;
 }): string => {
-  const brandModel = `${vehicle.brand.toUpperCase()} ${vehicle.model.toUpperCase()} / ${vehicle.year}`;
+  // Clean the model name for display
+  const cleanedModel = cleanModelName(vehicle.model);
+  const brandModel = `${vehicle.brand.toUpperCase()} ${cleanedModel.toUpperCase()} / ${vehicle.year}`;
   
   // Build engine info string
   const engineParts: string[] = [];
@@ -251,31 +281,23 @@ export default function AdvancedFilterModal({
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {/* 1. Compatibility Guarantee Toggle - Green Box */}
+            {/* 1. Compatibility Box - Blue informative (no toggle) */}
             {userVehicle && (
               <View style={styles.section}>
-                <View style={styles.greenBox}>
-                  <View style={styles.toggleInfo}>
-                    <Text style={styles.greenBoxTitle}>Apenas peças para o carro cadastrado</Text>
-                    <Text style={styles.greenBoxVehicle}>
+                <View style={styles.blueBox}>
+                  <View style={styles.boxInfo}>
+                    <Text style={styles.blueBoxTitle}>✓ Compatibilidade garantida</Text>
+                    <Text style={styles.blueBoxVehicle}>
                       {formatVehicleInfo(userVehicle)}
                     </Text>
                   </View>
-                  <Switch
-                    value={localFilters.compatibilityGuaranteed}
-                    onValueChange={(value) =>
-                      setLocalFilters({ ...localFilters, compatibilityGuaranteed: value })
-                    }
-                    trackColor={{ false: '#d1d5db', true: '#10b981' }}
-                    thumbColor={localFilters.compatibilityGuaranteed ? '#ffffff' : '#f3f4f6'}
-                  />
                 </View>
               </View>
             )}
 
             {/* 2. Part Name Search */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>NOME DA PEÇA</Text>
+              <Text style={styles.sectionTitle}>Nome da peça</Text>
               <TextInput
                 style={styles.textInput}
                 value={localFilters.partName}
@@ -291,7 +313,7 @@ export default function AdvancedFilterModal({
             {/* 3. Part Code Search */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
-                CÓDIGO DA PEÇA <Text style={styles.optionalLabel}>(Opcional)</Text>
+                Código da peça <Text style={styles.optionalLabel}>(Opcional)</Text>
               </Text>
               <TextInput
                 style={styles.textInput}
@@ -305,7 +327,7 @@ export default function AdvancedFilterModal({
             {/* 4. Categories */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
-                CATEGORIA <Text style={styles.optionalLabel}>(Opcional)</Text>
+                Categoria <Text style={styles.optionalLabel}>(Opcional)</Text>
               </Text>
               <ScrollView 
                 horizontal 
@@ -383,7 +405,7 @@ export default function AdvancedFilterModal({
             {/* 6. Position Filter */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
-                POSIÇÃO <Text style={styles.optionalLabel}>(Opcional)</Text>
+                Posição <Text style={styles.optionalLabel}>(Opcional)</Text>
               </Text>
               <View style={styles.positionContainer}>
                 {PART_POSITION_OPTIONS.map((pos) => (
@@ -416,7 +438,7 @@ export default function AdvancedFilterModal({
             {/* 7. Price Range */}
             <View style={styles.section}>
               <View style={styles.priceHeader}>
-                <Text style={styles.sectionTitle}>PREÇO MÁXIMO</Text>
+                <Text style={styles.sectionTitle}>Preço máximo</Text>
                 <Text style={styles.priceRange}>
                   R$ {localFilters.priceMax}
                 </Text>
@@ -442,7 +464,7 @@ export default function AdvancedFilterModal({
 
             {/* 8. Sort By */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>ORDENAR POR</Text>
+              <Text style={styles.sectionTitle}>Ordenar por</Text>
               <View style={styles.sortContainer}>
                 {SORT_OPTIONS.map((option) => (
                   <TouchableOpacity
@@ -574,6 +596,30 @@ const styles = StyleSheet.create({
   greenBoxVehicle: {
     fontSize: 13,
     color: '#047857',
+    fontWeight: '500',
+  },
+  blueBox: {
+    backgroundColor: '#dbeafe',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#3b82f6',
+  },
+  boxInfo: {
+    flex: 1,
+  },
+  blueBoxTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e40af',
+    marginBottom: 6,
+  },
+  blueBoxVehicle: {
+    fontSize: 13,
+    color: '#1e3a8a',
     fontWeight: '500',
   },
   textInput: {
