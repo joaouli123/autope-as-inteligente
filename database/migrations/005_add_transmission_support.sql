@@ -26,10 +26,8 @@ CREATE INDEX IF NOT EXISTS idx_product_compatibility_transmission ON product_com
 COMMENT ON COLUMN product_compatibility.transmission IS 'Compatible transmission type. NULL means compatible with all transmissions';
 
 -- =========================================================================
--- 3. Drop and recreate the get_products_for_user_vehicle function with transmission support
+-- 3. Update the get_products_for_user_vehicle function with transmission support
 -- =========================================================================
-
-DROP FUNCTION IF EXISTS get_products_for_user_vehicle(UUID, VARCHAR, DECIMAL);
 
 CREATE OR REPLACE FUNCTION get_products_for_user_vehicle(
   p_user_id UUID,

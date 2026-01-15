@@ -181,10 +181,12 @@ export default function SearchScreen() {
       }
 
       // Use RPC function to get products with compatibility check
+      // Note: We pass null for category and price here because client-side filtering
+      // is applied in applyFilters() which respects the filters state
       const { data, error } = await supabase.rpc('get_products_for_user_vehicle', {
         p_user_id: user.id,
-        p_category: null,
-        p_max_price: null,
+        p_category: null, // Get all categories, filter client-side
+        p_max_price: null, // Get all prices, filter client-side
       });
 
       if (error) {
