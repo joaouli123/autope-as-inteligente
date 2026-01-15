@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#3b82f6',
+    borderColor: '#1e3a8a',
   },
   boxInfo: {
     flex: 1,
