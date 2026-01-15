@@ -29,6 +29,21 @@ interface Product {
   category: string;
   part_code?: string;
   part_position?: string;
+  is_compatible?: boolean;
+}
+
+// Type for RPC response from get_products_for_user_vehicle
+interface ProductRPCResponse {
+  product_id: string;
+  product_name: string;
+  part_code: string | null;
+  category: string;
+  part_position: string | null;
+  price: number;
+  image_url: string | null;
+  store_id: string;
+  store_name: string;
+  is_compatible: boolean;
 }
 
 const mockProducts: Product[] = [
@@ -156,16 +171,47 @@ export default function SearchScreen() {
   const loadAllProducts = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        . from('products')
-        .select(`*, stores!inner(name), product_compatibility(*)`)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('[SearchScreen] No user found, using mock products');
+        setAllProducts(mockProducts);
+        return;
+      }
 
-      if (error) throw error;
-      setAllProducts(data || []);
+      // Use RPC function to get products with compatibility check
+      // Note: We pass null for category and price here because client-side filtering
+      // is applied in applyFilters() which respects the filters state
+      const { data, error } = await supabase.rpc('get_products_for_user_vehicle', {
+        p_user_id: user.id,
+        p_category: null, // Get all categories, filter client-side
+        p_max_price: null, // Get all prices, filter client-side
+      });
+
+      if (error) {
+        console.error('[SearchScreen] Error loading products from RPC:', error);
+        setAllProducts(mockProducts);
+        return;
+      }
+
+      // Transform RPC response to Product interface
+      const products: Product[] = (data || []).map((item: ProductRPCResponse) => ({
+        id: item.product_id,
+        name: item.product_name,
+        price: item.price,
+        store: item.store_name,
+        image: item.image_url || 'https://via.placeholder.com/80',
+        category: item.category,
+        part_code: item.part_code || undefined,
+        part_position: item.part_position || undefined,
+        is_compatible: item.is_compatible,
+      }));
+
+      console.log('[SearchScreen] Loaded', products.length, 'products from RPC');
+      setAllProducts(products);
     } catch (error) {
-      console.error('Error loading products:', error);
+      console.error('[SearchScreen] Unexpected error loading products:', error);
       setAllProducts(mockProducts);
     } finally {
       setLoading(false);
@@ -183,19 +229,19 @@ export default function SearchScreen() {
       );
     }
 
-    // 1. Busca por código da peça (NOVO)
+    // 1. Search by part code (EXACT match)
     if (filters.partCode.trim()) {
       filtered = filtered.filter(p => 
         p.part_code?.toLowerCase() === filters.partCode.toLowerCase()
       );
     }
 
-    // 2. Busca por nome da peça com primeiras letras (NOVO)
+    // 2. Search by part name with prefix matching
     if (filters.partName.trim()) {
       const searchTerm = filters.partName.toLowerCase();
       filtered = filtered.filter(p => {
         const productName = p.name.toLowerCase();
-        // Busca por 7, 6, 5, 4, 3, 2 primeiras letras
+        // Search by 7, 6, 5, 4, 3, 2 first letters
         for (let i = Math.min(7, searchTerm.length); i >= 2; i--) {
           if (productName.startsWith(searchTerm.substring(0, i))) {
             return true;
@@ -205,47 +251,43 @@ export default function SearchScreen() {
       });
     }
 
-    // 3. Filtro por posição (NOVO)
+    // 3. Filter by part position
     if (filters.partPosition) {
       filtered = filtered.filter(p => p.part_position === filters.partPosition);
     }
 
+    // 4. Filter by compatibility (using DB-provided is_compatible flag)
     if (filters.compatibilityGuaranteed && userVehicle) {
-      filtered = filtered.filter((product: any) => {
-        const compatibilities = product.product_compatibility || [];
-        return compatibilities.some((comp: any) => {
-          if (! comp.brand || !comp.model) return false;
-          const brandMatch = comp.brand.toLowerCase() === userVehicle.brand. toLowerCase();
-          const modelMatch = comp.model.toLowerCase() === userVehicle.model.toLowerCase();
-          const yearMatch = userVehicle.year >= comp.year_start && (! comp.year_end || userVehicle.year <= comp.year_end);
-          return brandMatch && modelMatch && yearMatch;
-        });
-      });
+      filtered = filtered.filter(p => p.is_compatible === true);
     }
 
+    // 5. Filter by category
     if (filters.category) {
       filtered = filtered.filter(p => p.category === filters.category);
     }
 
+    // 6. Filter by specifications (not implemented in RPC yet, keeping for future)
     if (filters.specifications.length > 0) {
       filtered = filtered.filter((p: any) => {
         const productSpecs = p.specifications?.[filters.category] || [];
-        return filters. specifications.some(spec => 
+        return filters.specifications.some(spec => 
           productSpecs.includes(spec)
         );
       });
     }
 
+    // 7. Filter by price range
     filtered = filtered.filter(p =>
-      p.price >= filters. priceMin && p.price <= filters.priceMax
+      p.price >= filters.priceMin && p.price <= filters.priceMax
     );
 
+    // 8. Sort by price
     switch (filters.sortBy) {
       case 'price_asc':
-        filtered. sort((a, b) => a.price - b.price);
+        filtered.sort((a, b) => a.price - b.price);
         break;
       case 'price_desc':
-        filtered. sort((a, b) => b.price - a.price);
+        filtered.sort((a, b) => b.price - a.price);
         break;
       default:
         break;
@@ -288,7 +330,7 @@ export default function SearchScreen() {
                   value={searchQuery}
                   onChangeText={handleSearch}
                 />
-                {searchQuery. length > 0 && (
+                {searchQuery.length > 0 && (
                   <TouchableOpacity onPress={clearSearch}>
                     <X color="#6b7280" size={20} />
                   </TouchableOpacity>
@@ -314,7 +356,7 @@ export default function SearchScreen() {
               {filteredProducts.length} produtos encontrados
             </Text>
 
-            {loading ?  (
+            {loading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#1e3a8a" />
               </View>
@@ -329,15 +371,15 @@ export default function SearchScreen() {
                     activeOpacity={0.8}
                   >
                     <Image
-                      source={{ uri: item. image || 'https://via.placeholder.com/80' }}
+                      source={{ uri: item.image || 'https://via.placeholder.com/80' }}
                       style={styles.productImage}
                     />
                     <View style={styles.productInfo}>
                       <Text style={styles.productCategory}>{item.category}</Text>
-                      <Text style={styles. productName} numberOfLines={2}>
+                      <Text style={styles.productName} numberOfLines={2}>
                         {item.name}
                       </Text>
-                      <Text style={styles. productStore}>{item.store}</Text>
+                      <Text style={styles.productStore}>{item.store}</Text>
                       <Text style={styles.productPrice}>
                         {formatCurrency(item.price)}
                       </Text>
@@ -381,26 +423,26 @@ const styles = StyleSheet.create({
   headerBlue: {
     backgroundColor: '#1e3a8a',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ?  20 : 50,
+    paddingTop: Platform.OS === 'ios' ? 20 : 50,
     paddingBottom: 30,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     zIndex: 1,
   },
-  headerTitle:  {
+  headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
     marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize:  14,
+    fontSize: 14,
     color: '#93c5fd',
     marginBottom: 20,
   },
   searchRow: {
     flexDirection: 'row',
-    alignItems:  'center',
+    alignItems: 'center',
     gap: 12,
     marginTop: 10,
   },
@@ -411,12 +453,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical:Platform.OS === 'ios' ?  10 : 4,
-    ... Platform.select({
+    paddingVertical: Platform.OS === 'ios' ? 10 : 4,
+    ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity:  0.1,
+        shadowOpacity: 0.1,
         shadowRadius: 8,
       },
       android: {
@@ -427,7 +469,7 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 12,
   },
-  searchInput:  {
+  searchInput: {
     flex: 1,
     fontSize: 16,
     color: '#1f2937',
@@ -435,16 +477,16 @@ const styles = StyleSheet.create({
   filterButton: {
     backgroundColor: '#ffffff',
     width: 52,
-    height:  Platform.OS === 'ios' ?  42 :52,
-    borderRadius:  12,
+    height: Platform.OS === 'ios' ? 42 : 52,
+    borderRadius: 12,
     alignItems: 'center',
-    justifyContent:  'center',
+    justifyContent: 'center',
     position: 'relative',
-    ... Platform.select({
+    ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity:  0.1,
+        shadowOpacity: 0.1,
         shadowRadius: 8,
       },
       android: {
@@ -483,26 +525,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom:  16,
+    marginBottom: 16,
   },
   listContent: {
-    paddingBottom:  100,
+    paddingBottom: 100,
   },
   productCard: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding:  12,
+    padding: 12,
     marginBottom: 12,
     flexDirection: 'row',
     gap: 12,
-    ... Platform.select({
+    ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity:  0.05,
+        shadowOpacity: 0.05,
         shadowRadius: 4,
       },
-      android:  {
+      android: {
         elevation: 2,
       },
     }),
@@ -539,7 +581,7 @@ const styles = StyleSheet.create({
     color: '#1e3a8a',
   },
   loadingContainer: {
-    flex:  1,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -549,6 +591,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: '#9ca3af',
-    fontSize:  16,
+    fontSize: 16,
   },
 });
