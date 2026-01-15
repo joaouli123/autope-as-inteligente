@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import { supabase } from '../../services/supabaseClient';
 
 export interface Vehicle {
+  id?: string;
   type: 'carros' | 'motos' | 'caminhoes';
   brand: string;
   model: string;
@@ -13,6 +14,7 @@ export interface Vehicle {
 }
 
 export interface UserProfile {
+  id: string;
   name: string;
   email: string;
   cpfCnpj: string;
@@ -25,7 +27,7 @@ export interface UserProfile {
     city: string;
     state: string;
   };
-  vehicle: Vehicle;
+  vehicle: Vehicle | null;
 }
 
 // Database vehicle data structure
@@ -40,6 +42,7 @@ interface DbVehicleData {
 
 interface AuthContextData {
   user: UserProfile | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (userData: UserProfile, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -93,6 +96,7 @@ const createEmptyUserProfile = (email: string, name?: string): UserProfile => {
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -240,18 +244,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateUser = async (userData: Partial<UserProfile>): Promise<boolean> => {
-    if (user) {
-      // Deep merge for nested objects
-      const updatedUser = {
-        ...user,
-        ...userData,
-        address: userData.address ? { ...user.address, ...userData.address } : user.address,
-        vehicle: userData.vehicle ? { ...user.vehicle, ...userData.vehicle } : user.vehicle,
-      };
-      setUser(updatedUser);
-      return true;
-    }
-    return false;
+    if (!user) return false;
+    
+    const updatedUser = { ...user, ...userData };
+    setUser(updatedUser);
+    return true;
   };
 
   // Carregar sessão existente ao iniciar
@@ -294,10 +291,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, updateProfile, updateUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        signup,
+        logout,
+        updateProfile,
+        updateUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+  return context;
+};
