@@ -29,6 +29,21 @@ interface Product {
   category: string;
   part_code?: string;
   part_position?: string;
+  is_compatible?: boolean;
+}
+
+// Type for RPC response from get_products_for_user_vehicle
+interface ProductRPCResponse {
+  product_id: string;
+  product_name: string;
+  part_code: string | null;
+  category: string;
+  part_position: string | null;
+  price: number;
+  image_url: string | null;
+  store_id: string;
+  store_name: string;
+  is_compatible: boolean;
 }
 
 const mockProducts: Product[] = [
@@ -156,16 +171,45 @@ export default function SearchScreen() {
   const loadAllProducts = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`*, stores!inner(name), product_compatibility(*)`)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('[SearchScreen] No user found, using mock products');
+        setAllProducts(mockProducts);
+        return;
+      }
 
-      if (error) throw error;
-      setAllProducts(data || []);
+      // Use RPC function to get products with compatibility check
+      const { data, error } = await supabase.rpc('get_products_for_user_vehicle', {
+        p_user_id: user.id,
+        p_category: null,
+        p_max_price: null,
+      });
+
+      if (error) {
+        console.error('[SearchScreen] Error loading products from RPC:', error);
+        setAllProducts(mockProducts);
+        return;
+      }
+
+      // Transform RPC response to Product interface
+      const products: Product[] = (data || []).map((item: ProductRPCResponse) => ({
+        id: item.product_id,
+        name: item.product_name,
+        price: item.price,
+        store: item.store_name,
+        image: item.image_url || 'https://via.placeholder.com/80',
+        category: item.category,
+        part_code: item.part_code || undefined,
+        part_position: item.part_position || undefined,
+        is_compatible: item.is_compatible,
+      }));
+
+      console.log('[SearchScreen] Loaded', products.length, 'products from RPC');
+      setAllProducts(products);
     } catch (error) {
-      console.error('Error loading products:', error);
+      console.error('[SearchScreen] Unexpected error loading products:', error);
       setAllProducts(mockProducts);
     } finally {
       setLoading(false);
@@ -183,19 +227,19 @@ export default function SearchScreen() {
       );
     }
 
-    // 1. Busca por código da peça (NOVO)
+    // 1. Search by part code (EXACT match)
     if (filters.partCode.trim()) {
       filtered = filtered.filter(p => 
         p.part_code?.toLowerCase() === filters.partCode.toLowerCase()
       );
     }
 
-    // 2. Busca por nome da peça com primeiras letras (NOVO)
+    // 2. Search by part name with prefix matching
     if (filters.partName.trim()) {
       const searchTerm = filters.partName.toLowerCase();
       filtered = filtered.filter(p => {
         const productName = p.name.toLowerCase();
-        // Busca por 7, 6, 5, 4, 3, 2 primeiras letras
+        // Search by 7, 6, 5, 4, 3, 2 first letters
         for (let i = Math.min(7, searchTerm.length); i >= 2; i--) {
           if (productName.startsWith(searchTerm.substring(0, i))) {
             return true;
@@ -205,28 +249,22 @@ export default function SearchScreen() {
       });
     }
 
-    // 3. Filtro por posição (NOVO)
+    // 3. Filter by part position
     if (filters.partPosition) {
       filtered = filtered.filter(p => p.part_position === filters.partPosition);
     }
 
+    // 4. Filter by compatibility (using DB-provided is_compatible flag)
     if (filters.compatibilityGuaranteed && userVehicle) {
-      filtered = filtered.filter((product: any) => {
-        const compatibilities = product.product_compatibility || [];
-        return compatibilities.some((comp: any) => {
-          if (!comp.brand || !comp.model) return false;
-          const brandMatch = comp.brand.toLowerCase() === userVehicle.brand.toLowerCase();
-          const modelMatch = comp.model.toLowerCase() === userVehicle.model.toLowerCase();
-          const yearMatch = userVehicle.year >= comp.year_start && (!comp.year_end || userVehicle.year <= comp.year_end);
-          return brandMatch && modelMatch && yearMatch;
-        });
-      });
+      filtered = filtered.filter(p => p.is_compatible === true);
     }
 
+    // 5. Filter by category
     if (filters.category) {
       filtered = filtered.filter(p => p.category === filters.category);
     }
 
+    // 6. Filter by specifications (not implemented in RPC yet, keeping for future)
     if (filters.specifications.length > 0) {
       filtered = filtered.filter((p: any) => {
         const productSpecs = p.specifications?.[filters.category] || [];
@@ -236,10 +274,12 @@ export default function SearchScreen() {
       });
     }
 
+    // 7. Filter by price range
     filtered = filtered.filter(p =>
       p.price >= filters.priceMin && p.price <= filters.priceMax
     );
 
+    // 8. Sort by price
     switch (filters.sortBy) {
       case 'price_asc':
         filtered.sort((a, b) => a.price - b.price);
