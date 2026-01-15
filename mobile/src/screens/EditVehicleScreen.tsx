@@ -66,6 +66,16 @@ export default function EditVehicleScreen() {
     loadBrands(vehicleType);
   }, [vehicleType]);
 
+  // Auto-load models when brand is already set (e.g., on edit screen)
+  React.useEffect(() => {
+    if (selectedBrand && brands.length > 0 && models.length === 0) {
+      const brandCode = brands.find(b => b.nome === selectedBrand)?.codigo;
+      if (brandCode) {
+        loadModels(brandCode);
+      }
+    }
+  }, [selectedBrand, brands, models.length]);
+
   const handleSave = async () => {
     if (!selectedBrand || !selectedModel) {
       Alert.alert('Erro', 'Marca e Modelo são obrigatórios');
