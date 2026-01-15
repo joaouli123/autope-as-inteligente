@@ -293,9 +293,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       // 3. Auto-login after signup - create full user profile from signup data
-      const userProfile = { ...userData, id: data.user.id };
+      const userProfile = { ...userData, id: data.user.id, vehicle: null };
       const vehicle = await loadUserVehicle(data.user.id);
-      userProfile.vehicle = vehicle;
+      if (vehicle) {
+        userProfile.vehicle = vehicle;
+      }
       
       setUser(userProfile);
       console.log('[AuthContext] Signup complete!');

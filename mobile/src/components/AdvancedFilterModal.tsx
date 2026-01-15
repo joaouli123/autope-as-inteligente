@@ -71,23 +71,23 @@ const SORT_OPTIONS = [
 const cleanModelName = (modelName: string): string => {
   let cleaned = modelName;
   
-  // Remove engine patterns (e.g., "1.0", "1.6", "2.0")
-  cleaned = cleaned.replace(/\b\d+\.\d+\b/g, '');
+  // Remove engine patterns with word boundaries (e.g., " 1.0 ", " 1.6 ", " 2.0 ")
+  cleaned = cleaned.replace(/\s+\d+\.\d+\s+/g, ' ');
   
-  // Remove valves patterns (e.g., "8V", "12V", "16V", "24V")
-  cleaned = cleaned.replace(/\b(8|12|16|20|24)\s*V\b/gi, '');
+  // Remove valves patterns with word boundaries (e.g., "8V", "12V", "16V", "24V")
+  cleaned = cleaned.replace(/\s+(8|12|16|20|24)\s*V\b/gi, '');
   
-  // Remove fuel type patterns
-  cleaned = cleaned.replace(/\b(Flex|Gasolina|Diesel|Álcool|Etanol|Elétrico|Híbrido|Gas\.|Alc\.)\b/gi, '');
+  // Remove fuel type patterns with word boundaries
+  cleaned = cleaned.replace(/\s+(Flex|Gasolina|Diesel|Álcool|Etanol|Elétrico|Híbrido|Gas\.|Alc\.)\b/gi, '');
   
-  // Remove doors patterns (e.g., "2p", "4p")
-  cleaned = cleaned.replace(/\b\d+p\b/gi, '');
+  // Remove doors patterns (e.g., "2p", "4p") with word boundaries
+  cleaned = cleaned.replace(/\s+\d+p\b/gi, '');
   
-  // Remove common engine tech terms
-  cleaned = cleaned.replace(/\b(Mi|Turbo|TSI|TDI|TFSI|GTI|Ti)\b/gi, '');
+  // Remove common engine tech terms with word boundaries
+  cleaned = cleaned.replace(/\s+(Mi|Turbo|TSI|TDI|TFSI|GTI)\b/gi, '');
   
-  // Remove "Total" when followed by "Flex"
-  cleaned = cleaned.replace(/\bTotal\s+/gi, '');
+  // Remove "Total" when followed by space (commonly "Total Flex")
+  cleaned = cleaned.replace(/\s+Total\s+/gi, ' ');
   
   // Clean up extra spaces and trim
   cleaned = cleaned.replace(/\s+/g, ' ').trim();

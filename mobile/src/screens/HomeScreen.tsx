@@ -102,7 +102,7 @@ export default function HomeScreen() {
               </View>
               <TouchableOpacity 
                 style={styles.editButton}
-                onPress={() => navigation.navigate('EditVehicle' as any)}
+                onPress={() => navigation.navigate('EditVehicle')}
               >
                 <Edit2 color="#ffffff" size={18} />
               </TouchableOpacity>
