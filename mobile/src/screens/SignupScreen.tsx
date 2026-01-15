@@ -208,7 +208,6 @@ export default function SignupScreen() {
       },
     };
 
-    // MUDANÇA AQUI: passar a senha como segundo parâmetro
     const success = await signup(userData, password);
     if (success) {
       // Enviar email de boas-vindas

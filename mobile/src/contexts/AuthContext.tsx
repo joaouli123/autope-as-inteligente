@@ -30,6 +30,16 @@ export interface UserProfile {
   vehicle: Vehicle | null;
 }
 
+// Database vehicle data structure
+interface DbVehicleData {
+  brand: string;
+  model: string;
+  year: number;
+  engine: string | null;
+  valves: number | null;
+  fuel_type: string | null;
+}
+
 interface AuthContextData {
   user: UserProfile | null;
   loading: boolean;
@@ -42,94 +52,64 @@ interface AuthContextData {
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
+// Helper function to map vehicle data from database to UserProfile vehicle
+const mapVehicleData = (vehicleData: DbVehicleData): Vehicle => {
+  return {
+    type: 'carros', // Default to carros for now, can be extended later
+    brand: vehicleData.brand,
+    model: vehicleData.model,
+    year: vehicleData.year.toString(),
+    engine: vehicleData.engine || '',
+    valves: vehicleData.valves ? vehicleData.valves.toString() : '',
+    fuel: vehicleData.fuel_type || '',
+    transmission: '',
+  };
+};
+
+// Helper function to create empty user profile
+const createEmptyUserProfile = (email: string, name?: string): UserProfile => {
+  return {
+    name: name || email.split('@')[0] || 'Usuário',
+    email: email,
+    cpfCnpj: '',
+    phone: '',
+    address: {
+      cep: '',
+      street: '',
+      number: '',
+      complement: '',
+      city: '',
+      state: '',
+    },
+    vehicle: {
+      type: 'carros',
+      brand: '',
+      model: '',
+      year: '',
+      engine: '',
+      valves: '',
+      fuel: '',
+      transmission: '',
+    },
+  };
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Verificar sessão existente ao iniciar
-    checkSession();
-  }, []);
-
-  const checkSession = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        await loadUserProfile(session.user.id);
-      }
-    } catch (error) {
-      console.error('[AuthContext] Erro ao verificar sessão:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUserProfile = async (userId: string) => {
-    try {
-      // Buscar dados do usuário (futuro: criar tabela profiles)
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
-      if (!authUser) return;
-
-      // Buscar veículo primário do usuário
-      const { data: vehicleData } = await supabase
-        .from('user_vehicles')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_primary', true)
-        .single();
-
-      let vehicle: Vehicle | null = null;
-      if (vehicleData) {
-        vehicle = {
-          id: vehicleData.id,
-          type: 'carros',
-          brand: vehicleData.brand,
-          model: vehicleData.model,
-          year: vehicleData.year.toString(),
-          engine: vehicleData.engine || '',
-          valves: vehicleData.valves?.toString() || '',
-          fuel: vehicleData.fuel_type || '',
-          transmission: vehicleData.transmission || 'Manual',
-        };
-      }
-
-      const userProfile: UserProfile = {
-        id: authUser.id,
-        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário',
-        email: authUser.email || '',
-        cpfCnpj: authUser.user_metadata?.cpfCnpj || '',
-        phone: authUser.user_metadata?.phone || '',
-        address: {
-          cep: authUser.user_metadata?.cep || '',
-          street: authUser.user_metadata?.street || '',
-          number: authUser.user_metadata?.number || '',
-          complement: authUser.user_metadata?.complement || '',
-          city: authUser.user_metadata?.city || '',
-          state: authUser.user_metadata?.state || '',
-        },
-        vehicle,
-      };
-
-      setUser(userProfile);
-      console.log('[AuthContext] Perfil carregado:', userProfile);
-    } catch (error) {
-      console.error('[AuthContext] Erro ao carregar perfil:', error);
-    }
-  };
-
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      console.log('[AuthContext] Tentando login com:', email);
-
+      console.log('[AuthContext] Iniciando login...');
+      
+      // 1. Autenticar no Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error('[AuthContext] Erro no login:', error.message);
+        console.error('[AuthContext] Erro de login:', error.message);
         return false;
       }
 
@@ -138,8 +118,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return false;
       }
 
-      console.log('[AuthContext] Login bem-sucedido! User ID:', data.user.id);
-      await loadUserProfile(data.user.id);
+      console.log('[AuthContext] Login bem-sucedido:', data.user.id);
+
+      // 2. Carregar perfil do usuário (se existir na tabela users ou outra)
+      // Por enquanto, criar perfil básico
+      const userProfile = createEmptyUserProfile(data.user.email || '');
+
+      // 3. Carregar veículo do usuário
+      const { data: vehicleData, error: vehicleError } = await supabase
+        .from('user_vehicles')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .eq('is_primary', true)
+        .single();
+
+      if (vehicleError && vehicleError.code !== 'PGRST116') {
+        // PGRST116 = no rows returned, which is acceptable
+        console.error('[AuthContext] Erro ao carregar veículo:', vehicleError.message);
+      }
+
+      if (vehicleData) {
+        console.log('[AuthContext] Veículo carregado:', vehicleData);
+        userProfile.vehicle = mapVehicleData(vehicleData);
+      }
+
+      setUser(userProfile);
       return true;
     } catch (error) {
       console.error('[AuthContext] Erro inesperado no login:', error);
@@ -149,29 +152,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signup = async (userData: UserProfile, password: string): Promise<boolean> => {
     try {
-      console.log('[AuthContext] Criando conta para:', userData.email);
+      console.log('[AuthContext] Iniciando cadastro...');
 
       // 1. Criar usuário no Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: password,
-        options: {
-          data: {
-            name: userData.name,
-            cpfCnpj: userData.cpfCnpj,
-            phone: userData.phone,
-            cep: userData.address.cep,
-            street: userData.address.street,
-            number: userData.address.number,
-            complement: userData.address.complement,
-            city: userData.address.city,
-            state: userData.address.state,
-          },
-        },
       });
 
       if (error) {
-        console.error('[AuthContext] Erro ao criar conta:', error.message);
+        console.error('[AuthContext] Erro ao criar usuário:', error.message);
         return false;
       }
 
@@ -180,11 +170,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return false;
       }
 
-      console.log('[AuthContext] Conta criada! User ID:', data.user.id);
+      console.log('[AuthContext] Usuário criado:', data.user.id);
 
-      // 2. Salvar veículo (se fornecido)
-      if (userData.vehicle) {
-        console.log('[AuthContext] Salvando veículo do usuário...');
+      // 2. Salvar veículo do usuário em user_vehicles
+      if (userData.vehicle && userData.vehicle.brand && userData.vehicle.model) {
+        console.log('[AuthContext] Salvando veículo...');
+        
+        // Validate numeric fields before inserting
+        const year = parseInt(userData.vehicle.year, 10);
+        let valves: number | null = null;
+        
+        if (userData.vehicle.valves) {
+          const parsedValves = parseInt(userData.vehicle.valves, 10);
+          if (!isNaN(parsedValves)) {
+            valves = parsedValves;
+          } else {
+            console.warn('[AuthContext] Válvulas inválidas, salvando como null:', userData.vehicle.valves);
+          }
+        }
+        
+        if (isNaN(year)) {
+          console.error('[AuthContext] Ano inválido:', userData.vehicle.year);
+          // Continue without saving vehicle - don't fail the entire signup
+          setUser(userData);
+          console.log('[AuthContext] Cadastro completo (sem veículo)!');
+          return true;
+        }
         
         const { error: vehicleError } = await supabase
           .from('user_vehicles')
@@ -192,23 +203,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             user_id: data.user.id,
             brand: userData.vehicle.brand,
             model: userData.vehicle.model,
-            year: parseInt(userData.vehicle.year, 10),
-            engine: userData.vehicle.engine,
-            valves: parseInt(userData.vehicle.valves, 10) || null,
-            fuel_type: userData.vehicle.fuel,
-            transmission: userData.vehicle.transmission,
+            year: year,
+            engine: userData.vehicle.engine || null,
+            valves: valves,
+            fuel_type: userData.vehicle.fuel || null,
             is_primary: true,
           });
 
         if (vehicleError) {
           console.error('[AuthContext] Erro ao salvar veículo:', vehicleError.message);
+          // Não falha o cadastro, apenas loga o erro
         } else {
           console.log('[AuthContext] Veículo salvo com sucesso!');
         }
       }
 
-      // 3. Fazer login automaticamente
-      await loadUserProfile(data.user.id);
+      // 3. Fazer login automático após cadastro
+      setUser(userData);
+      console.log('[AuthContext] Cadastro completo!');
       return true;
     } catch (error) {
       console.error('[AuthContext] Erro inesperado no cadastro:', error);
@@ -223,7 +235,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(null);
       console.log('[AuthContext] Logout concluído');
     } catch (error) {
-      console.error('[AuthContext] Erro no logout:', error);
+      console.error('[AuthContext] Erro ao fazer logout:', error);
     }
   };
 
@@ -238,6 +250,45 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(updatedUser);
     return true;
   };
+
+  // Carregar sessão existente ao iniciar
+  useEffect(() => {
+    const loadSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          console.log('[AuthContext] Sessão encontrada:', session.user.id);
+          
+          // Carregar dados do usuário
+          const userProfile = createEmptyUserProfile(session.user.email || '');
+
+          // Carregar veículo
+          const { data: vehicleData, error: vehicleError } = await supabase
+            .from('user_vehicles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .eq('is_primary', true)
+            .single();
+
+          if (vehicleError && vehicleError.code !== 'PGRST116') {
+            // PGRST116 = no rows returned, which is acceptable
+            console.error('[AuthContext] Erro ao carregar veículo na sessão:', vehicleError.message);
+          }
+
+          if (vehicleData) {
+            userProfile.vehicle = mapVehicleData(vehicleData);
+          }
+
+          setUser(userProfile);
+        }
+      } catch (error) {
+        console.error('[AuthContext] Erro ao carregar sessão:', error);
+      }
+    };
+
+    loadSession();
+  }, []);
 
   return (
     <AuthContext.Provider
