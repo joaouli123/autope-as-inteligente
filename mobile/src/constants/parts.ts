@@ -1,4 +1,4 @@
-// Part position options (4 standard positions)
+// Part position options (4 standard vehicle positions)
 // Must match database schema constraints
 export const PART_POSITION_OPTIONS = [
   { value: 'Dianteiro Direito', label: 'Dianteiro Direito' },
