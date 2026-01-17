@@ -338,15 +338,15 @@ INSERT INTO product_compatibility (
 SELECT 
   id,
   'VW - VolksWagen',
-  'Gol',
+  'Gol (novo) 1.0 Mi Total Flex 8V 4p',
   '59',
-  '517',
-  2013,
-  2023,
-  ARRAY['1.0', '1.6'],
+  '4689',
+  2015,
+  2015,
+  ARRAY['1.0'],
   NULL,
-  ARRAY['Flex', 'Gasolina'],
-  NULL
+  ARRAY['Flex'],
+  8
 FROM last_product;
 
 -- Product 2: Bateria (Store 2)
@@ -398,15 +398,15 @@ INSERT INTO product_compatibility (
 SELECT 
   id,
   'VW - VolksWagen',
-  'Gol',
+  'Gol (novo) 1.0 Mi Total Flex 8V 4p',
   '59',
-  '517',
-  2008,
-  2023,
+  '4689',
+  2015,
+  2015,
+  ARRAY['1.0'],
   NULL,
-  NULL,
-  NULL,
-  NULL
+  ARRAY['Flex'],
+  8
 FROM last_product;
 
 -- Product 3: Disco de Freio (Store 3)
@@ -460,13 +460,13 @@ INSERT INTO product_compatibility (
 SELECT 
   id,
   'VW - VolksWagen',
-  'Gol',
+  'Gol (novo) 1.0 Mi Total Flex 8V 4p',
   '59',
-  '517',
-  2008,
-  2023,
-  ARRAY['1.0', '1.6'],
+  '4689',
+  2015,
+  2015,
+  ARRAY['1.0'],
   NULL,
-  NULL,
-  NULL
+  ARRAY['Flex'],
+  8
 FROM last_product;
