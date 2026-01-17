@@ -13,103 +13,55 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Search, Filter, X, ShoppingBag, Star, Plus } from 'lucide-react-native';
+import type { RootStackParamList } from '../types/navigation';
+import AdvancedFilterModal from '../components/AdvancedFilterModal';
+import { supabase } from '../../services/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  store: string;
+  image: string;
+  category: string;
+  part_code?: string;
   part_position?: string;
-  productImageWrap: {
-    width: 74,
-    height: 74,
-    borderRadius: 12,
-    backgroundColor: '#f3f4f6',
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-  },
-  productImageFallback: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  productImageFallbackText: {
-    fontSize: 10,
-    color: '#9ca3af',
-    textAlign: 'center',
-  },
-  product_name: string;
-    flex: 1,
-    justifyContent: 'center',
-    gap: 6,
-  part_position: string | null;
-  productCategoryPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  productCategoryText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#6b7280',
-    letterSpacing: 0.5,
-  },
+  is_compatible?: boolean;
 }
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+
+// Type for RPC response from get_products_for_user_vehicle
+interface ProductRPCResponse {
+  product_id: string;
+  product_name: string;
+  part_code: string | null;
+  category: string;
+  part_position: string | null;
+  price: number;
+  image_url: string | null;
+  store_id: string;
+  store_name: string;
+  is_compatible: boolean;
+}
+
+const mockProducts: Product[] = [
+  {
+    id: '1',
     name: 'Pastilha de Freio Dianteira Cerâmica',
-  productStoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  productStore: {
-    fontSize: 12,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  productRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  productRatingText: {
-    fontSize: 11,
-    color: '#6b7280',
-    marginLeft: 4,
+    price: 145.9,
+    store: 'Auto Peças Central',
+    image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400',
+    category: 'Freios',
   },
   {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1e3a8a',
+    id: '2',
+    name: 'Filtro de Óleo Original',
+    price: 35.9,
     store: 'Auto Peças Central',
-  addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#1e3a8a',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
     image: 'https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=400',
     category: 'Óleo e Filtros',
   },
