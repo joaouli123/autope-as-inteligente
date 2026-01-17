@@ -152,7 +152,7 @@ SELECT
   2012,
   2012,
   ARRAY['1.4'],
-  NULL,
+  ARRAY['Automático'],
   ARRAY['Gasolina'],
   16
 FROM last_product;
@@ -216,7 +216,7 @@ SELECT
   2012,
   2012,
   ARRAY['1.4'],
-  NULL,
+  ARRAY['Automático'],
   ARRAY['Gasolina'],
   NULL
 FROM last_product;
