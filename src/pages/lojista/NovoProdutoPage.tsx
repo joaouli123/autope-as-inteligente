@@ -833,9 +833,12 @@ export default function NovoProdutoPage() {
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Produto ativo e disponível para venda
+                  Disponível para venda
                 </span>
               </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                Marque para tornar o produto ativo e visível aos clientes
+              </p>
             </div>
           </div>
         </div>
