@@ -304,8 +304,10 @@ export default function ProductScreen() {
                       <View style={styles.specRow}>
                         <Text style={styles.specKey}>Ano</Text>
                         <Text style={styles.specValue}>
-                          {product.compatibility.year_end
+                          {product.compatibility.year_end && product.compatibility.year_end !== product.compatibility.year_start
                             ? `${product.compatibility.year_start} - ${product.compatibility.year_end}`
+                            : product.compatibility.year_end
+                            ? `${product.compatibility.year_start}`
                             : `${product.compatibility.year_start}+`}
                         </Text>
                       </View>
