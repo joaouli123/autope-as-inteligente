@@ -89,6 +89,7 @@ export default function NovoProdutoPage() {
       engines: [],
       transmissions: [],
       fuel_types: [],
+      valves: null,
     },
     is_active: true,
   });
@@ -151,7 +152,7 @@ export default function NovoProdutoPage() {
 
       const { data: compatibilityData } = await supabase
         .from('product_compatibility')
-        .select('brand, model, year_start, engines, transmissions, fuel_types, brand_code, model_code')
+        .select('brand, model, year_start, engines, transmissions, fuel_types, valves, brand_code, model_code')
         .eq('product_id', productId)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -189,6 +190,10 @@ export default function NovoProdutoPage() {
           engines: compatibility?.engines || [],
           transmissions: compatibility?.transmissions || [],
           fuel_types: compatibility?.fuel_types || [],
+          valves:
+            compatibility?.valves !== null && compatibility?.valves !== undefined
+              ? Number(compatibility.valves)
+              : null,
         },
         is_active: data.is_active,
       });
@@ -454,6 +459,7 @@ export default function NovoProdutoPage() {
               engines: comp.engines.length > 0 ? comp.engines : null,
               transmissions: comp.transmissions.length > 0 ? comp.transmissions : null,
               fuel_types: comp.fuel_types.length > 0 ? comp.fuel_types : null,
+              valves: comp.valves ?? null,
               notes: null,
             },
           ];
@@ -520,6 +526,7 @@ export default function NovoProdutoPage() {
               engines: comp.engines.length > 0 ? comp.engines : null,
               transmissions: comp.transmissions.length > 0 ? comp.transmissions : null,
               fuel_types: comp.fuel_types.length > 0 ? comp.fuel_types : null,
+              valves: comp.valves ?? null,
               notes: null,
             },
           ];

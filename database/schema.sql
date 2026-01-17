@@ -271,6 +271,7 @@ CREATE TABLE IF NOT EXISTS product_compatibility (
   engines TEXT[],
   transmissions TEXT[],
   fuel_types TEXT[],
+  valves INTEGER,
   year_start INTEGER NOT NULL,
   year_end INTEGER,
   notes TEXT,

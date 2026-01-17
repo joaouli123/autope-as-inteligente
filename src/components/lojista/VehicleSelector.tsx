@@ -15,6 +15,7 @@ export interface VehicleSelection {
   engines: string[];
   transmissions: string[];
   fuel_types: string[];
+  valves: number | null;
 }
 
 interface VehicleSelectorProps {
@@ -278,6 +279,30 @@ export default function VehicleSelector({ value, onChange }: VehicleSelectorProp
               <option value="Automática">Automática</option>
               <option value="CVT">CVT</option>
               <option value="Automatizada">Automatizada</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Válvulas
+            </label>
+            <select
+              value={value.valves !== null ? String(value.valves) : ''}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  valves: e.target.value ? parseInt(e.target.value, 10) : null,
+                })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Selecione as válvulas</option>
+              <option value="8">8</option>
+              <option value="12">12</option>
+              <option value="16">16</option>
+              <option value="20">20</option>
+              <option value="24">24</option>
+              <option value="32">32</option>
             </select>
           </div>
 

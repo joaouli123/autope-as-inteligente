@@ -74,6 +74,7 @@ export interface ProductCompatibility {
   engines?: string[];
   transmissions?: string[];
   fuel_types?: string[];
+  valves?: number;
   notes?: string;
   created_at: string;
 }
