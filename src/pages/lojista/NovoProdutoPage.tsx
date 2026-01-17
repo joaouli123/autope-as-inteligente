@@ -548,10 +548,13 @@ export default function NovoProdutoPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Informações Básicas
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            📝 Informações Básicas
           </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Informações gerais sobre o produto
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -611,7 +614,18 @@ export default function NovoProdutoPage() {
                 <p className="text-red-600 text-sm mt-1">{errors.category}</p>
               )}
             </div>
+          </div>
+        </div>
 
+        {/* Product Codes */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            🔢 Códigos de Identificação
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            SKU, códigos OEM e identificadores do produto
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 SKU/Código *
@@ -662,6 +676,51 @@ export default function NovoProdutoPage() {
               </p>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Código da Peça
+              </label>
+              <input
+                type="text"
+                value={formData.part_code}
+                onChange={(e) => handleChange('part_code', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ex: KL1045008"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Código único da peça para busca exata
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Posição da Peça
+              </label>
+              <select
+                value={formData.part_position}
+                onChange={(e) => handleChange('part_position', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Selecione a posição (opcional)</option>
+                {PART_POSITION_OPTIONS.map((position) => (
+                  <option key={position} value={position}>
+                    {position}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Manufacturer */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            🏭 Fabricante
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Marca e modelo do produto
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Marca
@@ -721,41 +780,18 @@ export default function NovoProdutoPage() {
                 placeholder="Ex: Cerâmica Plus"
               />
             </div>
+          </div>
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Código da Peça
-              </label>
-              <input
-                type="text"
-                value={formData.part_code}
-                onChange={(e) => handleChange('part_code', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ex: KL1045008"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Código único da peça para busca exata
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Posição da Peça
-              </label>
-              <select
-                value={formData.part_position}
-                onChange={(e) => handleChange('part_position', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Selecione a posição (opcional)</option>
-                {PART_POSITION_OPTIONS.map((position) => (
-                  <option key={position} value={position}>
-                    {position}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+        {/* Pricing and Stock */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            💰 Preço e Estoque
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Valores e disponibilidade do produto
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Preço (R$) *
@@ -797,18 +833,24 @@ export default function NovoProdutoPage() {
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Produto ativo
+                  Disponível para venda
                 </span>
               </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                Marque para tornar o produto ativo e visível aos clientes
+              </p>
             </div>
           </div>
         </div>
 
         {/* Images */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Imagens do Produto *
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            📸 Imagens do Produto *
           </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Adicione fotos do produto (máximo 5 imagens)
+          </p>
           <ImageUpload
             images={formData.images}
             onChange={(images) => {
@@ -825,10 +867,13 @@ export default function NovoProdutoPage() {
         </div>
 
         {/* Specifications */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Especificações Técnicas
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            ⚙️ Especificações Técnicas
           </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Características e detalhes técnicos do produto
+          </p>
           <div className="space-y-3">
             {formData.specifications.map((spec, index) => (
               <div key={index} className="flex gap-3">
@@ -872,7 +917,7 @@ export default function NovoProdutoPage() {
         </div>
 
         {/* Compatible Vehicles - Advanced Matrix */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200">
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <VehicleCompatibilityMatrix
             compatibilities={formData.vehicle_compatibilities}
             onChange={(compatibilities) =>
@@ -882,9 +927,9 @@ export default function NovoProdutoPage() {
         </div>
 
         {/* Legacy Compatible Vehicles (Simple Text List) */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Compatibilidade Simplificada (Legado)
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            📋 Compatibilidade Simplificada (Legado)
           </h2>
           <p className="text-sm text-gray-600 mb-4">
             Use este campo para descrição simples de compatibilidade ou deixe vazio para usar apenas a matriz acima.
