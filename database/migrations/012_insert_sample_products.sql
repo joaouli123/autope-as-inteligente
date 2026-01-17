@@ -1,9 +1,5 @@
 -- Migration 012: Insert sample products for Audi A1 and VW Gol
 
--- First, let's get the store_id (assuming there's at least one active store)
--- You'll need to replace 'YOUR_STORE_ID_HERE' with an actual store UUID from your stores table
--- To find it, run: SELECT id, name FROM stores WHERE is_active = true LIMIT 1;
-
 -- Products for Audi A1 1.4 TFSI 2012 (Gasolina, Automático, 16v)
 
 -- 1. Filtro de Ar para Audi A1
@@ -19,7 +15,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Filtro de Ar Esportivo K&N',
   'Filtro de ar de alto fluxo para melhor performance e economia. Lavável e reutilizável.',
   289.90,
@@ -29,9 +26,11 @@ INSERT INTO products (
   'Filtro de Ar Esportivo',
   '33-2888',
   15,
-  'YOUR_STORE_ID_HERE', -- Replace with actual store_id
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 -- Get the product_id we just inserted
 WITH last_product AS (
@@ -79,7 +78,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Pastilha de Freio Dianteira Bosch',
   'Pastilha de freio cerâmica premium com baixo nível de ruído e excelente durabilidade.',
   185.00,
@@ -91,9 +91,11 @@ INSERT INTO products (
   'BP1463',
   ARRAY['1K0698151', '5K0698151'],
   25,
-  'YOUR_STORE_ID_HERE',
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 WITH last_product AS (
   SELECT id FROM products WHERE part_code = 'BB1234-AUD' LIMIT 1
@@ -138,7 +140,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Óleo Sintético Mobil 1 5W-40',
   'Óleo lubrificante sintético de alta performance. Embalagem com 1 litro.',
   89.90,
@@ -148,9 +151,11 @@ INSERT INTO products (
   '5W-40 Sintético',
   'MB1-5W40',
   50,
-  'YOUR_STORE_ID_HERE',
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 WITH last_product AS (
   SELECT id FROM products WHERE part_code = 'MOB-5W40-1L' LIMIT 1
@@ -196,7 +201,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Vela de Ignição NGK Iridium',
   'Vela de ignição com ponta de irídio para maior durabilidade e melhor combustão. Jogo com 4 unidades.',
   156.00,
@@ -207,9 +213,11 @@ INSERT INTO products (
   'IFR6Q',
   ARRAY['101905601B', '06H905601A'],
   20,
-  'YOUR_STORE_ID_HERE',
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 WITH last_product AS (
   SELECT id FROM products WHERE part_code = 'NGK-IFR6Q-4SET' LIMIT 1
@@ -255,7 +263,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Amortecedor Traseiro Pressurizado (Par)',
   'Par de amortecedores traseiros pressurizados a gás com válvula de controle progressivo.',
   580.00,
@@ -266,9 +275,11 @@ INSERT INTO products (
   'Traseiro',
   'TG4567-PAR',
   10,
-  'YOUR_STORE_ID_HERE',
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 WITH last_product AS (
   SELECT id FROM products WHERE part_code = 'CONF-AUD-TRAS' LIMIT 1
@@ -316,7 +327,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Kit Correia Dentada + Tensor',
   'Kit completo com correia dentada, tensor e rolamento. Ideal para revisão preventiva.',
   199.50,
@@ -327,9 +339,11 @@ INSERT INTO products (
   'K015578XS',
   ARRAY['030109119M', '030109243J'],
   18,
-  'YOUR_STORE_ID_HERE',
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 WITH last_product AS (
   SELECT id FROM products WHERE part_code = 'GATES-KIT-GOL' LIMIT 1
@@ -374,7 +388,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Bateria 60Ah Livre de Manutenção',
   'Bateria selada de alta durabilidade com 60Ah de capacidade. 18 meses de garantia.',
   450.00,
@@ -384,9 +399,11 @@ INSERT INTO products (
   'M60GD',
   'M60GD-DIR',
   12,
-  'YOUR_STORE_ID_HERE',
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 WITH last_product AS (
   SELECT id FROM products WHERE part_code = 'MOURA-60AH-GOL' LIMIT 1
@@ -432,7 +449,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Disco de Freio Ventilado Dianteiro',
   'Disco de freio ventilado em ferro fundido de alta qualidade. Tratamento anticorrosivo.',
   145.90,
@@ -443,9 +461,11 @@ INSERT INTO products (
   'Dianteiro',
   'DF4321',
   22,
-  'YOUR_STORE_ID_HERE',
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 WITH last_product AS (
   SELECT id FROM products WHERE part_code = 'TRW-DF4321-GOL' LIMIT 1
@@ -491,7 +511,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Filtro de Combustível Tecfil',
   'Filtro de combustível com alta eficiência de filtragem. Compatível com etanol e gasolina.',
   45.90,
@@ -502,9 +523,11 @@ INSERT INTO products (
   'PSC939',
   ARRAY['6Q0201051J', '6Q0201051C'],
   35,
-  'YOUR_STORE_ID_HERE',
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 WITH last_product AS (
   SELECT id FROM products WHERE part_code = 'TECFIL-PSC939' LIMIT 1
@@ -550,7 +573,8 @@ INSERT INTO products (
   stock_quantity,
   store_id,
   is_active
-) VALUES (
+)
+SELECT 
   'Terminal de Direção Axial Esquerdo',
   'Terminal de direção lado esquerdo com ponteira de alta resistência e pino cônico temperado.',
   78.50,
@@ -561,9 +585,11 @@ INSERT INTO products (
   'Esquerdo',
   'N99145',
   16,
-  'YOUR_STORE_ID_HERE',
+  s.id,
   true
-);
+FROM stores s
+WHERE s.is_active = true
+LIMIT 1;
 
 WITH last_product AS (
   SELECT id FROM products WHERE part_code = 'NAKATA-N99145-ESQ' LIMIT 1
@@ -594,6 +620,3 @@ SELECT
   NULL,
   NULL
 FROM last_product;
-
--- Note: Remember to replace 'YOUR_STORE_ID_HERE' with an actual store UUID from your database
--- Run this query first to get a store_id: SELECT id FROM stores WHERE is_active = true LIMIT 1;
