@@ -63,6 +63,20 @@ export default function VehicleSelector({ value, onChange }: VehicleSelectorProp
   }, []);
 
   useEffect(() => {
+    if (value.brandId || !value.brand || brands.length === 0) return;
+
+    const normalized = value.brand.trim().toLowerCase();
+    const match = brands.find((b) => b.nome.trim().toLowerCase() === normalized);
+    if (!match) return;
+
+    onChange({
+      ...value,
+      brandId: String(match.codigo),
+      brand: match.nome,
+    });
+  }, [brands, onChange, value]);
+
+  useEffect(() => {
     // reset dependent fields when brand changes
     setModels([]);
     setModelsError('');
@@ -94,6 +108,20 @@ export default function VehicleSelector({ value, onChange }: VehicleSelectorProp
       controller.abort();
     };
   }, [value.brandId]);
+
+  useEffect(() => {
+    if (!value.brandId || value.modelId || !value.model || models.length === 0) return;
+
+    const normalized = value.model.trim().toLowerCase();
+    const match = models.find((m) => m.nome.trim().toLowerCase() === normalized);
+    if (!match) return;
+
+    onChange({
+      ...value,
+      modelId: String(match.codigo),
+      model: match.nome,
+    });
+  }, [models, onChange, value]);
 
   const yearOptions = useMemo(() => {
     const currentYear = new Date().getFullYear();
