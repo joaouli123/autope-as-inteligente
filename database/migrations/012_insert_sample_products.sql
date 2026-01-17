@@ -183,7 +183,7 @@ SELECT
   'Pastilha Cerâmica',
   'Dianteira',
   'BP1463',
-  ARRAY['1K0698151', '5K0698151'],
+  '["1K0698151", "5K0698151"]'::jsonb,
   25,
   s.id,
   true
@@ -245,7 +245,7 @@ SELECT
   'NGK',
   'Iridium IFR6Q',
   'IFR6Q',
-  ARRAY['101905601B', '06H905601A'],
+  '["101905601B", "06H905601A"]'::jsonb,
   20,
   s.id,
   true
@@ -311,7 +311,7 @@ SELECT
   'Gates',
   'Kit Correia Dentada',
   'K015578XS',
-  ARRAY['030109119M', '030109243J'],
+  '["030109119M", "030109243J"]'::jsonb,
   18,
   s.id,
   true
