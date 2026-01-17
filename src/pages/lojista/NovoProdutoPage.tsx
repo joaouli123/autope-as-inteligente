@@ -807,20 +807,13 @@ export default function NovoProdutoPage() {
               </label>
               <input
                 type="text"
-                value={formData.price}
+                value={formData.price ? Number(formData.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
                 onChange={(e) => {
-                  // Remove tudo exceto números e vírgula/ponto
-                  let value = e.target.value.replace(/[^\d.,]/g, '');
-                  // Substitui vírgula por ponto para cálculos
-                  value = value.replace(',', '.');
-                  handleChange('price', value);
-                }}
-                onBlur={(e) => {
-                  // Formata ao sair do campo
-                  const value = parseFloat(e.target.value.replace(',', '.'));
-                  if (!isNaN(value)) {
-                    handleChange('price', value.toFixed(2));
-                  }
+                  // Remove tudo exceto números
+                  const rawValue = e.target.value.replace(/\D/g, '');
+                  // Converte para centavos e depois para reais
+                  const numValue = parseFloat(rawValue) / 100;
+                  handleChange('price', numValue > 0 ? numValue.toString() : '');
                 }}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.price ? 'border-red-500' : 'border-gray-300'

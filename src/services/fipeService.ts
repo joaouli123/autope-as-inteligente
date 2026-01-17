@@ -27,8 +27,17 @@ const BASE_URL = 'https://parallelum.com.br/fipe/api/v1';
 
 export const getBrands = async (vehicleType: 'carros' | 'motos' | 'caminhoes'): Promise<FipeItem[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/${vehicleType}/marcas`);
-    return await response.json();
+    const response = await fetch(`${BASE_URL}/${vehicleType}/marcas`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error fetching brands", error);
     return [];
@@ -37,7 +46,15 @@ export const getBrands = async (vehicleType: 'carros' | 'motos' | 'caminhoes'): 
 
 export const getModels = async (vehicleType: 'carros' | 'motos' | 'caminhoes', brandId: string): Promise<FipeItem[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/${vehicleType}/marcas/${brandId}/modelos`);
+    const response = await fetch(`${BASE_URL}/${vehicleType}/marcas/${brandId}/modelos`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const data = await response.json();
     return data.modelos || [];
   } catch (error) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader, AlertCircle } from 'lucide-react';
+import { Loader } from 'lucide-react';
 import { getBrands, getModels, getYears, type FipeItem, type FipeYear } from '../../services/fipeService';
 
 export interface VehicleCompatibility {
@@ -18,13 +18,106 @@ interface VehicleCompatibilityMatrixProps {
   onChange: (compatibilities: VehicleCompatibility[]) => void;
 }
 
+// Lista de marcas de fallback caso a API FIPE esteja indisponível
+const FALLBACK_BRANDS: FipeItem[] = [
+  { codigo: '1', nome: 'Acura' },
+  { codigo: '2', nome: 'Agrale' },
+  { codigo: '3', nome: 'Alfa Romeo' },
+  { codigo: '4', nome: 'AM Gen' },
+  { codigo: '5', nome: 'Asia Motors' },
+  { codigo: '6', nome: 'ASTON MARTIN' },
+  { codigo: '7', nome: 'Audi' },
+  { codigo: '8', nome: 'BMW' },
+  { codigo: '9', nome: 'BRM' },
+  { codigo: '10', nome: 'Buggy' },
+  { codigo: '11', nome: 'Bugre' },
+  { codigo: '12', nome: 'Buick' },
+  { codigo: '13', nome: 'Cadillac' },
+  { codigo: '14', nome: 'CBT Jipe' },
+  { codigo: '15', nome: 'CHANA' },
+  { codigo: '16', nome: 'CHANGAN' },
+  { codigo: '17', nome: 'CHERY' },
+  { codigo: '18', nome: 'Chevrolet' },
+  { codigo: '19', nome: 'Chrysler' },
+  { codigo: '20', nome: 'Citroën' },
+  { codigo: '21', nome: 'Cross Lander' },
+  { codigo: '22', nome: 'Daewoo' },
+  { codigo: '23', nome: 'Daihatsu' },
+  { codigo: '24', nome: 'Dodge' },
+  { codigo: '25', nome: 'EFFA' },
+  { codigo: '26', nome: 'Engesa' },
+  { codigo: '27', nome: 'Envemo' },
+  { codigo: '28', nome: 'Ferrari' },
+  { codigo: '29', nome: 'Fiat' },
+  { codigo: '30', nome: 'Fibravan' },
+  { codigo: '31', nome: 'Ford' },
+  { codigo: '32', nome: 'FOTON' },
+  { codigo: '33', nome: 'Fyber' },
+  { codigo: '34', nome: 'GEELY' },
+  { codigo: '35', nome: 'GM - Chevrolet' },
+  { codigo: '36', nome: 'GREAT WALL' },
+  { codigo: '37', nome: 'Gurgel' },
+  { codigo: '38', nome: 'HAFEI' },
+  { codigo: '39', nome: 'Honda' },
+  { codigo: '40', nome: 'Hyundai' },
+  { codigo: '41', nome: 'Isuzu' },
+  { codigo: '42', nome: 'IVECO' },
+  { codigo: '43', nome: 'JAC' },
+  { codigo: '44', nome: 'Jaguar' },
+  { codigo: '45', nome: 'Jeep' },
+  { codigo: '46', nome: 'JINBEI' },
+  { codigo: '47', nome: 'JPX' },
+  { codigo: '48', nome: 'Kia Motors' },
+  { codigo: '49', nome: 'Lada' },
+  { codigo: '50', nome: 'Lamborghini' },
+  { codigo: '51', nome: 'Land Rover' },
+  { codigo: '52', nome: 'Lexus' },
+  { codigo: '53', nome: 'LIFAN' },
+  { codigo: '54', nome: 'Lobini' },
+  { codigo: '55', nome: 'Lotus' },
+  { codigo: '56', nome: 'Mahindra' },
+  { codigo: '57', nome: 'Maserati' },
+  { codigo: '58', nome: 'Matra' },
+  { codigo: '59', nome: 'Mazda' },
+  { codigo: '60', nome: 'Mercedes-Benz' },
+  { codigo: '61', nome: 'Mercury' },
+  { codigo: '62', nome: 'MG' },
+  { codigo: '63', nome: 'MINI' },
+  { codigo: '64', nome: 'Mitsubishi' },
+  { codigo: '65', nome: 'Miura' },
+  { codigo: '66', nome: 'Nissan' },
+  { codigo: '67', nome: 'Peugeot' },
+  { codigo: '68', nome: 'Plymouth' },
+  { codigo: '69', nome: 'Pontiac' },
+  { codigo: '70', nome: 'Porsche' },
+  { codigo: '71', nome: 'RAM' },
+  { codigo: '72', nome: 'RELY' },
+  { codigo: '73', nome: 'Renault' },
+  { codigo: '74', nome: 'Rolls-Royce' },
+  { codigo: '75', nome: 'Rover' },
+  { codigo: '76', nome: 'Saab' },
+  { codigo: '77', nome: 'Saturn' },
+  { codigo: '78', nome: 'Seat' },
+  { codigo: '79', nome: 'SHINERAY' },
+  { codigo: '80', nome: 'smart' },
+  { codigo: '81', nome: 'SSANGYONG' },
+  { codigo: '82', nome: 'Subaru' },
+  { codigo: '83', nome: 'Suzuki' },
+  { codigo: '84', nome: 'TAC' },
+  { codigo: '85', nome: 'Toyota' },
+  { codigo: '86', nome: 'Troller' },
+  { codigo: '87', nome: 'Volkswagen' },
+  { codigo: '88', nome: 'Volvo' },
+  { codigo: '89', nome: 'Wake' },
+  { codigo: '90', nome: 'Walk' },
+];
+
 export default function VehicleCompatibilityMatrix({
   compatibilities,
   onChange,
 }: VehicleCompatibilityMatrixProps) {
   const [brands, setBrands] = useState<FipeItem[]>([]);
   const [loadingBrands, setLoadingBrands] = useState(false);
-  const [errorLoadingBrands, setErrorLoadingBrands] = useState(false);
 
   useEffect(() => {
     fetchBrands();
@@ -32,18 +125,20 @@ export default function VehicleCompatibilityMatrix({
 
   const fetchBrands = async () => {
     setLoadingBrands(true);
-    setErrorLoadingBrands(false);
     try {
+      console.log('Fetching brands from FIPE API...');
       const data = await getBrands('carros');
-      if (data && data.length > 0) {
+      console.log('FIPE API response:', data);
+      if (data && Array.isArray(data) && data.length > 0) {
         setBrands(data);
+        console.log(`Loaded ${data.length} brands successfully`);
       } else {
-        console.error('FIPE API: No brands returned for vehicle type "carros"');
-        setErrorLoadingBrands(true);
+        console.log('FIPE API returned no data, using fallback brands');
+        setBrands(FALLBACK_BRANDS);
       }
     } catch (error) {
-      console.error('FIPE API: Error fetching brands for vehicle type "carros":', error);
-      setErrorLoadingBrands(true);
+      console.error('FIPE API: Error fetching brands, using fallback:', error);
+      setBrands(FALLBACK_BRANDS);
     } finally {
       setLoadingBrands(false);
     }
@@ -84,26 +179,6 @@ export default function VehicleCompatibilityMatrix({
         </p>
       </div>
 
-      {errorLoadingBrands && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
-          <div>
-            <h4 className="text-sm font-semibold text-yellow-800">API FIPE Temporariamente Indisponível</h4>
-            <p className="text-sm text-yellow-700 mt-1">
-              Não foi possível carregar as marcas da API FIPE. Você pode adicionar compatibilidades manualmente 
-              digitando os nomes de marca e modelo, ou tentar novamente mais tarde.
-            </p>
-            <button
-              type="button"
-              onClick={fetchBrands}
-              className="mt-2 text-sm text-yellow-800 hover:text-yellow-900 underline font-medium"
-            >
-              Tentar Novamente
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="space-y-4">
         {compatibilities.map((comp, index) => (
           <VehicleCompatibilityRow
@@ -112,7 +187,6 @@ export default function VehicleCompatibilityMatrix({
             index={index}
             brands={brands}
             loadingBrands={loadingBrands}
-            errorLoadingBrands={errorLoadingBrands}
             onUpdate={updateCompatibility}
             onRemove={() => removeCompatibility(index)}
           />
@@ -127,7 +201,6 @@ interface VehicleCompatibilityRowProps {
   index: number;
   brands: FipeItem[];
   loadingBrands: boolean;
-  errorLoadingBrands: boolean;
   onUpdate: (index: number, field: keyof VehicleCompatibility, value: any) => void;
   onRemove: () => void;
 }
@@ -137,7 +210,6 @@ function VehicleCompatibilityRow({
   index,
   brands,
   loadingBrands,
-  errorLoadingBrands,
   onUpdate,
   onRemove,
 }: VehicleCompatibilityRowProps) {
