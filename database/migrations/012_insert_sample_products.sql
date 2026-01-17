@@ -215,7 +215,7 @@ SELECT
   '5537',
   2010,
   2018,
-  ARRAY['1.4', '1.6'],
+  ARRAY['1.4'],
   NULL,
   ARRAY['Gasolina'],
   NULL
