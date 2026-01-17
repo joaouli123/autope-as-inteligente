@@ -483,29 +483,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // Keep existing user data, just update if needed
-        if (!user) {
-          const metadata = session.user.user_metadata || {};
-          const userProfile: UserProfile = {
-            id: session.user.id,
-            name: metadata.name || session.user.email?.split('@')[0] || 'Usuário',
-            email: session.user.email || '',
-            cpfCnpj: metadata.cpfCnpj || '',
-            phone: metadata.phone || '',
-            address: {
-              cep: metadata.address?.cep || '',
-              street: metadata.address?.street || '',
-              number: metadata.address?.number || '',
-              complement: metadata.address?.complement || '',
-              city: metadata.address?.city || '',
-              state: metadata.address?.state || '',
-            },
-            vehicle: null,
-          };
-          const vehicle = await loadUserVehicle(session.user.id);
-          userProfile.vehicle = vehicle;
-          setUser(userProfile);
-        }
+        // Token refresh should not trigger a full user reload to prevent loops
+        // The user is already authenticated and has their data loaded
+        console.log('[AuthContext] Token refreshed, maintaining current user state');
       }
     });
 
@@ -513,7 +493,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Empty dependency array is correct - we only want to set up auth listener once
 
   return (
     <AuthContext.Provider

@@ -417,12 +417,12 @@ export default function NovoProdutoPage() {
               product_id: id,
               brand: comp.brand,
               model: comp.model,
-              year_start: comp.year_start,
-              year_end: comp.year_end || null,
+              year_start: comp.year,
+              year_end: comp.year, // Use same year for both start and end
               engines: comp.engines.length > 0 ? comp.engines : null,
               transmissions: comp.transmissions.length > 0 ? comp.transmissions : null,
               fuel_types: comp.fuel_types.length > 0 ? comp.fuel_types : null,
-              notes: comp.notes || null,
+              notes: null,
             }));
 
           if (compatibilityData.length > 0) {
@@ -476,12 +476,12 @@ export default function NovoProdutoPage() {
               product_id: newProduct.id,
               brand: comp.brand,
               model: comp.model,
-              year_start: comp.year_start,
-              year_end: comp.year_end || null,
+              year_start: comp.year,
+              year_end: comp.year, // Use same year for both start and end
               engines: comp.engines.length > 0 ? comp.engines : null,
               transmissions: comp.transmissions.length > 0 ? comp.transmissions : null,
               fuel_types: comp.fuel_types.length > 0 ? comp.fuel_types : null,
-              notes: comp.notes || null,
+              notes: null,
             }));
 
           if (compatibilityData.length > 0) {
@@ -924,45 +924,6 @@ export default function NovoProdutoPage() {
               handleChange('vehicle_compatibilities', compatibilities)
             }
           />
-        </div>
-
-        {/* Legacy Compatible Vehicles (Simple Text List) */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            📋 Compatibilidade Simplificada (Legado)
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Use este campo para descrição simples de compatibilidade ou deixe vazio para usar apenas a matriz acima.
-          </p>
-          <div className="space-y-3">
-            {formData.compatible_vehicles.map((vehicle, index) => (
-              <div key={index} className="flex gap-3">
-                <input
-                  type="text"
-                  value={vehicle}
-                  onChange={(e) => handleVehicleChange(index, e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: Fiat Uno 2015-2020"
-                />
-                {formData.compatible_vehicles.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeVehicle(index)}
-                    className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                  >
-                    Remover
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addVehicle}
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-            >
-              + Adicionar Veículo
-            </button>
-          </div>
         </div>
 
         {/* Actions */}

@@ -7,12 +7,10 @@ export interface VehicleCompatibility {
   brandId: string;
   model: string;
   modelId: string;
-  year_start: number;
-  year_end?: number;
+  year: number; // Single model year instead of start/end range
   engines: string[];
   transmissions: string[];
   fuel_types: string[];
-  notes?: string;
 }
 
 interface VehicleCompatibilityMatrixProps {
@@ -59,12 +57,10 @@ export default function VehicleCompatibilityMatrix({
         brandId: '',
         model: '',
         modelId: '',
-        year_start: new Date().getFullYear() - 10,
-        year_end: new Date().getFullYear(),
+        year: new Date().getFullYear(), // Default to current year
         engines: [],
         transmissions: [],
         fuel_types: [],
-        notes: '',
       },
     ]);
   };
@@ -239,6 +235,16 @@ function VehicleCompatibilityRow({
     onUpdate(index, 'modelId', '');
   };
 
+  // Generate years from 1950 to 2026
+  const generateYears = () => {
+    const currentYear = 2026;
+    const years = [];
+    for (let year = currentYear; year >= 1950; year--) {
+      years.push(year);
+    }
+    return years;
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
       <div className="flex justify-between items-start">
@@ -341,35 +347,23 @@ function VehicleCompatibilityRow({
           )}
         </div>
 
-        {/* Year Start */}
+        {/* Year */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Ano Inicial *
+            Ano do Modelo *
           </label>
-          <input
-            type="number"
-            value={compatibility.year_start}
-            onChange={(e) => onUpdate(index, 'year_start', parseInt(e.target.value))}
+          <select
+            value={compatibility.year}
+            onChange={(e) => onUpdate(index, 'year', parseInt(e.target.value))}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            min="1950"
-            max={new Date().getFullYear() + 1}
-          />
-        </div>
-
-        {/* Year End */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Ano Final (opcional)
-          </label>
-          <input
-            type="number"
-            value={compatibility.year_end || ''}
-            onChange={(e) => onUpdate(index, 'year_end', e.target.value ? parseInt(e.target.value) : undefined)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            min={compatibility.year_start}
-            max={new Date().getFullYear() + 1}
-            placeholder="Deixe vazio para atual"
-          />
+          >
+            <option value="">Selecione o ano</option>
+            {generateYears().map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Engines */}
@@ -432,20 +426,6 @@ function VehicleCompatibilityRow({
             }
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Ex: Gasolina, Flex, Diesel"
-          />
-        </div>
-
-        {/* Notes */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Observações
-          </label>
-          <input
-            type="text"
-            value={compatibility.notes || ''}
-            onChange={(e) => onUpdate(index, 'notes', e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Informações adicionais sobre compatibilidade"
           />
         </div>
       </div>
