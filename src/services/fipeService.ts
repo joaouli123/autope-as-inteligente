@@ -25,13 +25,17 @@ export interface FipeVehicleDetail {
 
 const BASE_URL = 'https://parallelum.com.br/fipe/api/v1';
 
-export const getBrands = async (vehicleType: 'carros' | 'motos' | 'caminhoes'): Promise<FipeItem[]> => {
+export const getBrands = async (
+  vehicleType: 'carros' | 'motos' | 'caminhoes',
+  signal?: AbortSignal
+): Promise<FipeItem[]> => {
   try {
     const response = await fetch(`${BASE_URL}/${vehicleType}/marcas`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
       },
+      signal,
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -44,13 +48,18 @@ export const getBrands = async (vehicleType: 'carros' | 'motos' | 'caminhoes'): 
   }
 };
 
-export const getModels = async (vehicleType: 'carros' | 'motos' | 'caminhoes', brandId: string): Promise<FipeItem[]> => {
+export const getModels = async (
+  vehicleType: 'carros' | 'motos' | 'caminhoes',
+  brandId: string,
+  signal?: AbortSignal
+): Promise<FipeItem[]> => {
   try {
     const response = await fetch(`${BASE_URL}/${vehicleType}/marcas/${brandId}/modelos`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
       },
+      signal,
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -66,11 +75,13 @@ export const getModels = async (vehicleType: 'carros' | 'motos' | 'caminhoes', b
 export const getYears = async (
   vehicleType: 'carros' | 'motos' | 'caminhoes',
   brandId: string,
-  modelId: string
+  modelId: string,
+  signal?: AbortSignal
 ): Promise<FipeYear[]> => {
   try {
     const response = await fetch(
-      `${BASE_URL}/${vehicleType}/marcas/${brandId}/modelos/${modelId}/anos`
+      `${BASE_URL}/${vehicleType}/marcas/${brandId}/modelos/${modelId}/anos`,
+      { signal }
     );
     return await response.json();
   } catch (error) {
@@ -83,11 +94,13 @@ export const getVehicleDetails = async (
   vehicleType: 'carros' | 'motos' | 'caminhoes',
   brandId: string,
   modelId: string,
-  yearId: string
+  yearId: string,
+  signal?: AbortSignal
 ): Promise<FipeVehicleDetail | null> => {
   try {
     const response = await fetch(
-      `${BASE_URL}/${vehicleType}/marcas/${brandId}/modelos/${modelId}/anos/${yearId}`
+      `${BASE_URL}/${vehicleType}/marcas/${brandId}/modelos/${modelId}/anos/${yearId}`,
+      { signal }
     );
     return await response.json();
   } catch (error) {

@@ -142,13 +142,21 @@ function VehicleCompatibilityRow({
   useEffect(() => {
     if (compatibility.brandId) {
       fetchModels(compatibility.brandId);
+    } else {
+      setModels([]);
     }
   }, [compatibility.brandId]);
 
   const fetchModels = async (brandId: string) => {
     setLoadingModels(true);
     try {
-      const data = await getModels('carros', brandId);
+      // Avoid leaving the UI stuck in a disabled/loading state.
+      // Abort after 12s (common in CORS/network issues).
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 12_000);
+      const data = await getModels('carros', brandId, controller.signal);
+      window.clearTimeout(timeoutId);
+
       if (data && data.length > 0) {
         setModels(data);
       } else {
@@ -176,7 +184,8 @@ function VehicleCompatibilityRow({
 
   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const brandId = e.target.value;
-    const brandName = e.target.selectedOptions?.[0]?.textContent?.trim() || '';
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    const brandName = (selectedOption?.textContent || '').trim();
 
     if (!brandId) {
       onUpdate(index, 'brandId', '');
@@ -198,7 +207,8 @@ function VehicleCompatibilityRow({
 
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const modelId = e.target.value;
-    const modelName = e.target.selectedOptions?.[0]?.textContent?.trim() || '';
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    const modelName = (selectedOption?.textContent || '').trim();
 
     if (!modelId) {
       onUpdate(index, 'modelId', '');
@@ -233,7 +243,7 @@ function VehicleCompatibilityRow({
           <select
             value={String(compatibility.brandId || '')}
             onChange={handleBrandChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             disabled={loadingBrands || brands.length === 0}
           >
             <option value="">Selecione a marca</option>
@@ -259,25 +269,29 @@ function VehicleCompatibilityRow({
           <select
             value={String(compatibility.modelId || '')}
             onChange={handleModelChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={!compatibility.brandId || loadingModels}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            disabled={!compatibility.brandId}
           >
             <option value="">Selecione o modelo</option>
+            {loadingModels && (
+              <option value="" disabled>
+                Carregando modelos...
+              </option>
+            )}
             {models.map((model) => (
               <option key={String(model.codigo)} value={String(model.codigo)}>
                 {model.nome}
               </option>
             ))}
           </select>
-          {loadingModels && (
-            <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-              <Loader size={16} className="animate-spin" />
-              Carregando modelos...
-            </div>
-          )}
-          {!loadingModels && compatibility.brandId && models.length === 0 && (
+          {!compatibility.brandId && (
             <p className="text-xs text-gray-500 mt-2">
-              Nenhum modelo carregado para esta marca.
+              Selecione uma marca para carregar os modelos.
+            </p>
+          )}
+          {compatibility.brandId && !loadingModels && models.length === 0 && (
+            <p className="text-xs text-gray-500 mt-2">
+              Nenhum modelo foi carregado. Verifique a conexão ou tente outra marca.
             </p>
           )}
         </div>
