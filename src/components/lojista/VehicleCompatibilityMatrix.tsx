@@ -145,31 +145,24 @@ function VehicleCompatibilityRow({
   const [years, setYears] = useState<FipeYear[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingYears, setLoadingYears] = useState(false);
-  const [errorLoadingModels, setErrorLoadingModels] = useState(false);
-  const [manualEntry, setManualEntry] = useState(errorLoadingBrands);
 
   useEffect(() => {
-    if (compatibility.brandId && !manualEntry) {
+    if (compatibility.brandId) {
       fetchModels(compatibility.brandId);
     }
-  }, [compatibility.brandId, manualEntry]);
+  }, [compatibility.brandId]);
 
   const fetchModels = async (brandId: string) => {
     setLoadingModels(true);
-    setErrorLoadingModels(false);
     try {
       const data = await getModels('carros', brandId);
       if (data && data.length > 0) {
         setModels(data);
       } else {
         console.error(`FIPE API: No models returned for brand ID "${brandId}"`);
-        setErrorLoadingModels(true);
-        setManualEntry(true);
       }
     } catch (error) {
       console.error(`FIPE API: Error fetching models for brand ID "${brandId}":`, error);
-      setErrorLoadingModels(true);
-      setManualEntry(true);
     } finally {
       setLoadingModels(false);
     }
@@ -206,12 +199,6 @@ function VehicleCompatibilityRow({
     }
   };
 
-  const handleManualBrandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    onUpdate(index, 'brand', value);
-    onUpdate(index, 'brandId', '');
-  };
-
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     const selectedModel = models.find((m) => m.codigo === value);
@@ -223,12 +210,6 @@ function VehicleCompatibilityRow({
       onUpdate(index, 'modelId', '');
       onUpdate(index, 'model', '');
     }
-  };
-
-  const handleManualModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    onUpdate(index, 'model', value);
-    onUpdate(index, 'modelId', '');
   };
 
   // Generate years from 1950 to current year
@@ -243,19 +224,6 @@ function VehicleCompatibilityRow({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
-      <div className="flex justify-end items-start">
-        <div className="flex items-center gap-2">
-          {!errorLoadingBrands && (
-            <button
-              type="button"
-              onClick={() => setManualEntry(!manualEntry)}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              {manualEntry ? 'Usar FIPE API' : 'Entrada Manual'}
-            </button>
-          )}
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Brand */}
@@ -263,29 +231,19 @@ function VehicleCompatibilityRow({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Marca *
           </label>
-          {manualEntry ? (
-            <input
-              type="text"
-              value={compatibility.brand}
-              onChange={handleManualBrandChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Digite a marca (ex: Chevrolet)"
-            />
-          ) : (
-            <select
-              value={compatibility.brandId}
-              onChange={handleBrandChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={loadingBrands}
-            >
-              <option value="">Selecione a marca</option>
-              {brands.map((brand) => (
-                <option key={brand.codigo} value={brand.codigo}>
-                  {brand.nome}
-                </option>
-              ))}
-            </select>
-          )}
+          <select
+            value={compatibility.brandId}
+            onChange={handleBrandChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={loadingBrands}
+          >
+            <option value="">Selecione a marca</option>
+            {brands.map((brand) => (
+              <option key={brand.codigo} value={brand.codigo}>
+                {brand.nome}
+              </option>
+            ))}
+          </select>
           {loadingBrands && (
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
               <Loader size={16} className="animate-spin" />
@@ -299,39 +257,24 @@ function VehicleCompatibilityRow({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Modelo *
           </label>
-          {manualEntry ? (
-            <input
-              type="text"
-              value={compatibility.model}
-              onChange={handleManualModelChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Digite o modelo (ex: Onix)"
-            />
-          ) : (
-            <select
-              value={compatibility.modelId}
-              onChange={handleModelChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={!compatibility.brandId || loadingModels}
-            >
-              <option value="">Selecione o modelo</option>
-              {models.map((model) => (
-                <option key={model.codigo} value={model.codigo}>
-                  {model.nome}
-                </option>
-              ))}
-            </select>
-          )}
+          <select
+            value={compatibility.modelId}
+            onChange={handleModelChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={!compatibility.brandId || loadingModels}
+          >
+            <option value="">Selecione o modelo</option>
+            {models.map((model) => (
+              <option key={model.codigo} value={model.codigo}>
+                {model.nome}
+              </option>
+            ))}
+          </select>
           {loadingModels && (
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
               <Loader size={16} className="animate-spin" />
               Carregando modelos...
             </div>
-          )}
-          {errorLoadingModels && !manualEntry && (
-            <p className="text-xs text-yellow-600 mt-1">
-              Erro ao carregar modelos. Tente entrada manual.
-            </p>
           )}
         </div>
 

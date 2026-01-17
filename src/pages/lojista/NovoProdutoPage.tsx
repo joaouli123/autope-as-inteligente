@@ -806,15 +806,26 @@ export default function NovoProdutoPage() {
                 Preço (R$) *
               </label>
               <input
-                type="number"
-                step="0.01"
+                type="text"
                 value={formData.price}
-                onChange={(e) => handleChange('price', e.target.value)}
+                onChange={(e) => {
+                  // Remove tudo exceto números e vírgula/ponto
+                  let value = e.target.value.replace(/[^\d.,]/g, '');
+                  // Substitui vírgula por ponto para cálculos
+                  value = value.replace(',', '.');
+                  handleChange('price', value);
+                }}
+                onBlur={(e) => {
+                  // Formata ao sair do campo
+                  const value = parseFloat(e.target.value.replace(',', '.'));
+                  if (!isNaN(value)) {
+                    handleChange('price', value.toFixed(2));
+                  }
+                }}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.price ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="0,00"
-                min="0"
               />
               {errors.price && (
                 <p className="text-red-600 text-sm mt-1">{errors.price}</p>
