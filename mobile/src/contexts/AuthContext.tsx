@@ -5,7 +5,9 @@ export interface Vehicle {
   id?: string;
   type: 'carros' | 'motos' | 'caminhoes';
   brand: string;
+  brand_code?: string;  // FIPE brand code (marca)
   model: string;
+  model_code?: string;  // FIPE model code (modelo)
   year: string;
   engine: string;
   valves: string;
@@ -357,7 +359,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const vehicleData = {
           user_id: user.id,
           brand: userData.vehicle.brand,
+          brand_code: userData.vehicle.brand_code || null,
           model: userData.vehicle.model,
+          model_code: userData.vehicle.model_code || null,
           year: year,
           engine: userData.vehicle.engine || null,
           valves: valves,

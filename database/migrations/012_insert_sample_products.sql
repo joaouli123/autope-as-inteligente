@@ -344,7 +344,7 @@ SELECT
   2015,
   2015,
   ARRAY['1.0'],
-  NULL,
+  ARRAY['Manual'],
   ARRAY['Flex'],
   8
 FROM last_product;
@@ -404,7 +404,7 @@ SELECT
   2015,
   2015,
   ARRAY['1.0'],
-  NULL,
+  ARRAY['Manual'],
   ARRAY['Flex'],
   8
 FROM last_product;
@@ -466,7 +466,7 @@ SELECT
   2015,
   2015,
   ARRAY['1.0'],
-  NULL,
+  ARRAY['Manual'],
   ARRAY['Flex'],
   8
 FROM last_product;

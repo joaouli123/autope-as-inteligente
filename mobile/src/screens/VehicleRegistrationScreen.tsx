@@ -153,7 +153,9 @@ export default function VehicleRegistrationScreen() {
       const vehicleData = {
         user_id: user.id,
         brand: selectedBrand,
+        brand_code: selectedBrandId || null,  // Add FIPE brand code
         model: selectedModel,
+        model_code: selectedModelId || null,  // Add FIPE model code
         year: (() => {
           const yearParts = selectedYear.split('-');
           const yearNum = parseInt(yearParts[0]);
