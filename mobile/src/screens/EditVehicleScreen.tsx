@@ -114,10 +114,32 @@ export default function EditVehicleScreen() {
     }
 
     setSaving(true);
-    const resolvedBrandCode =
+    let resolvedBrandCode =
       selectedBrandCode || brands.find(b => b.nome === selectedBrand)?.codigo || '';
-    const resolvedModelCode =
+    let resolvedModelCode =
       selectedModelCode || models.find(m => m.nome === selectedModel)?.codigo || '';
+
+    try {
+      if (!resolvedBrandCode) {
+        const freshBrands = await getBrands(vehicleType);
+        resolvedBrandCode =
+          freshBrands.find(b => b.nome === selectedBrand)?.codigo || '';
+      }
+
+      if (resolvedBrandCode && !resolvedModelCode) {
+        const freshModels = await getModels(vehicleType, resolvedBrandCode);
+        resolvedModelCode =
+          freshModels.find(m => m.nome === selectedModel)?.codigo || '';
+      }
+    } catch (error) {
+      console.warn('[EditVehicleScreen] Failed to resolve FIPE codes:', error);
+    }
+
+    if (!resolvedBrandCode || !resolvedModelCode) {
+      setSaving(false);
+      Alert.alert('Erro', 'Não foi possível obter os códigos FIPE. Aguarde o carregamento e tente novamente.');
+      return;
+    }
     const success = await updateUser({
       vehicle: {
         type: vehicleType,
