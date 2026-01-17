@@ -13,54 +13,103 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Search, Filter, X, ShoppingBag } from 'lucide-react-native';
-import type { RootStackParamList } from '../types/navigation';
-import AdvancedFilterModal from '../components/AdvancedFilterModal';
-import { supabase } from '../../services/supabaseClient';
-import { useAuth } from '../contexts/AuthContext';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  store: string;
-  image: string;
-  category: string;
-  part_code?: string;
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   part_position?: string;
-  is_compatible?: boolean;
-}
-
-// Type for RPC response from get_products_for_user_vehicle
-interface ProductRPCResponse {
-  product_id: string;
+  productImageWrap: {
+    width: 74,
+    height: 74,
+    borderRadius: 12,
+    backgroundColor: '#f3f4f6',
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+  },
+  productImageFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  productImageFallbackText: {
+    fontSize: 10,
+    color: '#9ca3af',
+    textAlign: 'center',
+  },
   product_name: string;
-  part_code: string | null;
-  category: string;
+    flex: 1,
+    justifyContent: 'center',
+    gap: 6,
   part_position: string | null;
-  price: number;
-  image_url: string | null;
-  store_id: string;
-  store_name: string;
-  is_compatible: boolean;
+  productCategoryPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  productCategoryText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#6b7280',
+    letterSpacing: 0.5,
+  },
 }
-
-const mockProducts: Product[] = [
-  {
-    id: '1',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
     name: 'Pastilha de Freio Dianteira Cerâmica',
-    price: 145.90,
-    store: 'Auto Peças Central',
-    image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400',
-    category: 'Freios',
+  productStoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  productStore: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  productRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  productRatingText: {
+    fontSize: 11,
+    color: '#6b7280',
+    marginLeft: 4,
   },
   {
-    id: '2',
-    name: 'Filtro de Óleo Original',
-    price: 35.90,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1e3a8a',
     store: 'Auto Peças Central',
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1e3a8a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
     image: 'https://images.unsplash.com/photo-1625047509168-a7026f36de04?w=400',
     category: 'Óleo e Filtros',
   },
@@ -85,6 +134,7 @@ interface FilterState {
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const { user } = useAuth();
+  const { addToCart } = useCart();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -341,20 +391,61 @@ export default function SearchScreen() {
                     onPress={() => navigation.navigate('Product', { productId: item.id })}
                     activeOpacity={0.8}
                   >
-                    <Image
-                      source={{ uri: item.image || 'https://via.placeholder.com/80' }}
-                      style={styles.productImage}
-                    />
+                    <View style={styles.productImageWrap}>
+                      {item.image ? (
+                        <Image
+                          source={{ uri: item.image }}
+                          style={styles.productImage}
+                        />
+                      ) : (
+                        <View style={styles.productImageFallback}>
+                          <Text style={styles.productImageFallbackText}>Img Indisponível</Text>
+                        </View>
+                      )}
+                    </View>
+
                     <View style={styles.productInfo}>
-                      <Text style={styles.productCategory}>{item.category}</Text>
                       <Text style={styles.productName} numberOfLines={2}>
                         {item.name}
                       </Text>
-                      <Text style={styles.productStore}>{item.store}</Text>
+
+                      <View style={styles.productCategoryPill}>
+                        <Text style={styles.productCategoryText}>
+                          {item.category?.toUpperCase()}
+                        </Text>
+                      </View>
+
+                      <View style={styles.productStoreRow}>
+                        <Text style={styles.productStore}>{item.store}</Text>
+                        <View style={styles.productRating}>
+                          {Array.from({ length: 5 }).map((_, index) => (
+                            <Star key={index} size={12} color="#fbbf24" fill="#fbbf24" />
+                          ))}
+                          <Text style={styles.productRatingText}>(4.9)</Text>
+                        </View>
+                      </View>
+
                       <Text style={styles.productPrice}>
                         {formatCurrency(item.price)}
                       </Text>
                     </View>
+
+                    <TouchableOpacity
+                      style={styles.addButton}
+                      onPress={() =>
+                        addToCart({
+                          id: item.id,
+                          name: item.name,
+                          description: item.store,
+                          price: item.price,
+                          quantity: 1,
+                          brand: item.store,
+                          partNumber: item.part_code || '',
+                        })
+                      }
+                    >
+                      <Plus color="#ffffff" size={20} />
+                    </TouchableOpacity>
                   </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.listContent}
