@@ -813,7 +813,8 @@ export default function NovoProdutoPage() {
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.price ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="0.00"
+                placeholder="0,00"
+                min="0"
               />
               {errors.price && (
                 <p className="text-red-600 text-sm mt-1">{errors.price}</p>

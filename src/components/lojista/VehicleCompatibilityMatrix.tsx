@@ -78,9 +78,9 @@ export default function VehicleCompatibilityMatrix({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">🚗 Compatibilidade com Veículos</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Veículo Compatível</h3>
         <p className="text-sm text-gray-600">
-          Adicione os veículos compatíveis com este produto usando dados da FIPE
+          Informe o veículo específico para o qual esta peça se destina
         </p>
       </div>
 
@@ -117,16 +117,6 @@ export default function VehicleCompatibilityMatrix({
             onRemove={() => removeCompatibility(index)}
           />
         ))}
-        
-        {/* Always show add button for flexibility */}
-        <button
-          type="button"
-          onClick={addCompatibility}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={20} />
-          Adicionar Outro Veículo
-        </button>
       </div>
     </div>
   );
@@ -198,10 +188,18 @@ function VehicleCompatibilityRow({
   };
 
   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedBrand = brands.find((b) => b.codigo === e.target.value);
+    const value = e.target.value;
+    const selectedBrand = brands.find((b) => b.codigo === value);
     if (selectedBrand) {
       onUpdate(index, 'brandId', selectedBrand.codigo);
       onUpdate(index, 'brand', selectedBrand.nome);
+      // Reset model when brand changes
+      onUpdate(index, 'model', '');
+      onUpdate(index, 'modelId', '');
+      setModels([]);
+    } else if (value === '') {
+      onUpdate(index, 'brandId', '');
+      onUpdate(index, 'brand', '');
       onUpdate(index, 'model', '');
       onUpdate(index, 'modelId', '');
       setModels([]);
@@ -209,21 +207,27 @@ function VehicleCompatibilityRow({
   };
 
   const handleManualBrandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate(index, 'brand', e.target.value);
+    const value = e.target.value;
+    onUpdate(index, 'brand', value);
     onUpdate(index, 'brandId', '');
   };
 
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedModel = models.find((m) => m.codigo === e.target.value);
+    const value = e.target.value;
+    const selectedModel = models.find((m) => m.codigo === value);
     if (selectedModel) {
       onUpdate(index, 'modelId', selectedModel.codigo);
       onUpdate(index, 'model', selectedModel.nome);
       fetchYearsForModel(compatibility.brandId, selectedModel.codigo);
+    } else if (value === '') {
+      onUpdate(index, 'modelId', '');
+      onUpdate(index, 'model', '');
     }
   };
 
   const handleManualModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate(index, 'model', e.target.value);
+    const value = e.target.value;
+    onUpdate(index, 'model', value);
     onUpdate(index, 'modelId', '');
   };
 
@@ -239,8 +243,7 @@ function VehicleCompatibilityRow({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
-      <div className="flex justify-between items-start">
-        <h4 className="text-md font-semibold text-gray-900">Veículo #{index + 1}</h4>
+      <div className="flex justify-end items-start">
         <div className="flex items-center gap-2">
           {!errorLoadingBrands && (
             <button
@@ -251,13 +254,6 @@ function VehicleCompatibilityRow({
               {manualEntry ? 'Usar FIPE API' : 'Entrada Manual'}
             </button>
           )}
-          <button
-            type="button"
-            onClick={onRemove}
-            className="text-red-600 hover:text-red-700 p-1"
-          >
-            <Trash2 size={18} />
-          </button>
         </div>
       </div>
 
@@ -361,64 +357,66 @@ function VehicleCompatibilityRow({
         {/* Engines */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Motores (separados por vírgula)
+            Motores
           </label>
-          <input
-            type="text"
-            value={compatibility.engines.join(', ')}
-            onChange={(e) =>
-              onUpdate(
-                index,
-                'engines',
-                e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
-              )
-            }
+          <select
+            value={compatibility.engines[0] || ''}
+            onChange={(e) => onUpdate(index, 'engines', e.target.value ? [e.target.value] : [])}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Ex: 1.0, 1.4, 1.6"
-          />
+          >
+            <option value="">Selecione o motor</option>
+            <option value="1.0">1.0</option>
+            <option value="1.3">1.3</option>
+            <option value="1.4">1.4</option>
+            <option value="1.5">1.5</option>
+            <option value="1.6">1.6</option>
+            <option value="1.8">1.8</option>
+            <option value="2.0">2.0</option>
+            <option value="2.4">2.4</option>
+            <option value="3.0">3.0</option>
+          </select>
           <p className="text-xs text-gray-500 mt-1">
-            Cilindradas compatíveis
+            Cilindrada do motor
           </p>
         </div>
 
         {/* Transmissions */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Transmissões (separadas por vírgula)
+            Transmissão
           </label>
-          <input
-            type="text"
-            value={compatibility.transmissions.join(', ')}
-            onChange={(e) =>
-              onUpdate(
-                index,
-                'transmissions',
-                e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
-              )
-            }
+          <select
+            value={compatibility.transmissions[0] || ''}
+            onChange={(e) => onUpdate(index, 'transmissions', e.target.value ? [e.target.value] : [])}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Ex: Manual, Automática, CVT"
-          />
+          >
+            <option value="">Selecione a transmissão</option>
+            <option value="Manual">Manual</option>
+            <option value="Automática">Automática</option>
+            <option value="CVT">CVT</option>
+            <option value="Automatizada">Automatizada</option>
+          </select>
         </div>
 
         {/* Fuel Types */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Combustíveis (separados por vírgula)
+            Combustível
           </label>
-          <input
-            type="text"
-            value={compatibility.fuel_types.join(', ')}
-            onChange={(e) =>
-              onUpdate(
-                index,
-                'fuel_types',
-                e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
-              )
-            }
+          <select
+            value={compatibility.fuel_types[0] || ''}
+            onChange={(e) => onUpdate(index, 'fuel_types', e.target.value ? [e.target.value] : [])}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Ex: Gasolina, Flex, Diesel"
-          />
+          >
+            <option value="">Selecione o combustível</option>
+            <option value="Gasolina">Gasolina</option>
+            <option value="Etanol">Etanol</option>
+            <option value="Flex">Flex (Gasolina/Etanol)</option>
+            <option value="Diesel">Diesel</option>
+            <option value="GNV">GNV</option>
+            <option value="Elétrico">Elétrico</option>
+            <option value="Híbrido">Híbrido</option>
+          </select>
         </div>
       </div>
     </div>
