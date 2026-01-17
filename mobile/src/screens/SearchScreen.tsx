@@ -131,11 +131,15 @@ export default function SearchScreen() {
   // Reload products when user vehicle changes
   useEffect(() => {
     if (user?.vehicle) {
-      console.log('[SearchScreen] Vehicle changed, reloading products...');
+      console.log('[SearchScreen] Vehicle changed, reloading products...', {
+        brand: user.vehicle.brand,
+        model: user.vehicle.model,
+        year: user.vehicle.year
+      });
       loadAllProducts();
       setFilters(f => ({ ...f, compatibilityGuaranteed: true }));
     }
-  }, [user?.vehicle]);
+  }, [user?.vehicle?.brand, user?.vehicle?.model, user?.vehicle?.year, user?.vehicle?.engine]);
 
   useEffect(() => {
     applyFilters();
