@@ -15,6 +15,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, ShoppingCart, Star, MapPin } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../../services/supabaseClient';
 
 const { width } = Dimensions.get('window');
@@ -59,12 +60,16 @@ export default function ProductScreen() {
   const navigation = useNavigation<ProductScreenNavigationProp>();
   const route = useRoute<ProductScreenRouteProp>();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [error, setError] = useState<string>('');
 
   const productId = route.params?.productId;
+
+  // Get user's vehicle year
+  const userVehicleYear = user?.vehicle?.year;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -304,11 +309,7 @@ export default function ProductScreen() {
                       <View style={styles.specRow}>
                         <Text style={styles.specKey}>Ano</Text>
                         <Text style={styles.specValue}>
-                          {product.compatibility.year_end && product.compatibility.year_end !== product.compatibility.year_start
-                            ? `${product.compatibility.year_start} - ${product.compatibility.year_end}`
-                            : product.compatibility.year_end
-                            ? `${product.compatibility.year_start}`
-                            : `${product.compatibility.year_start}+`}
+                          {userVehicleYear || product.compatibility.year_start}
                         </Text>
                       </View>
                     )}
