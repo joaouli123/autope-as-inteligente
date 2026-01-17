@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader } from 'lucide-react';
+import { Plus, Trash2, Loader, AlertCircle } from 'lucide-react';
 import { getBrands, getModels, getYears, type FipeItem, type FipeYear } from '../../services/fipeService';
 
 export interface VehicleCompatibility {
@@ -26,6 +26,7 @@ export default function VehicleCompatibilityMatrix({
 }: VehicleCompatibilityMatrixProps) {
   const [brands, setBrands] = useState<FipeItem[]>([]);
   const [loadingBrands, setLoadingBrands] = useState(false);
+  const [errorLoadingBrands, setErrorLoadingBrands] = useState(false);
 
   useEffect(() => {
     fetchBrands();
@@ -33,9 +34,20 @@ export default function VehicleCompatibilityMatrix({
 
   const fetchBrands = async () => {
     setLoadingBrands(true);
-    const data = await getBrands('carros');
-    setBrands(data);
-    setLoadingBrands(false);
+    setErrorLoadingBrands(false);
+    try {
+      const data = await getBrands('carros');
+      if (data && data.length > 0) {
+        setBrands(data);
+      } else {
+        setErrorLoadingBrands(true);
+      }
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+      setErrorLoadingBrands(true);
+    } finally {
+      setLoadingBrands(false);
+    }
   };
 
   const addCompatibility = () => {
@@ -72,7 +84,7 @@ export default function VehicleCompatibilityMatrix({
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Compatibilidade com Veículos</h3>
           <p className="text-sm text-gray-600">
-            Adicione os veículos compatíveis com este produto
+            Adicione os veículos compatíveis com este produto usando dados da FIPE
           </p>
         </div>
         <button
@@ -84,6 +96,26 @@ export default function VehicleCompatibilityMatrix({
           Adicionar Veículo
         </button>
       </div>
+
+      {errorLoadingBrands && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
+          <div>
+            <h4 className="text-sm font-semibold text-yellow-800">API FIPE Temporariamente Indisponível</h4>
+            <p className="text-sm text-yellow-700 mt-1">
+              Não foi possível carregar as marcas da API FIPE. Você pode adicionar compatibilidades manualmente 
+              digitando os nomes de marca e modelo, ou tentar novamente mais tarde.
+            </p>
+            <button
+              type="button"
+              onClick={fetchBrands}
+              className="mt-2 text-sm text-yellow-800 hover:text-yellow-900 underline font-medium"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
+      )}
 
       {compatibilities.length === 0 ? (
         <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
@@ -100,6 +132,7 @@ export default function VehicleCompatibilityMatrix({
               index={index}
               brands={brands}
               loadingBrands={loadingBrands}
+              errorLoadingBrands={errorLoadingBrands}
               onUpdate={updateCompatibility}
               onRemove={() => removeCompatibility(index)}
             />
@@ -115,6 +148,7 @@ interface VehicleCompatibilityRowProps {
   index: number;
   brands: FipeItem[];
   loadingBrands: boolean;
+  errorLoadingBrands: boolean;
   onUpdate: (index: number, field: keyof VehicleCompatibility, value: any) => void;
   onRemove: () => void;
 }
@@ -124,6 +158,7 @@ function VehicleCompatibilityRow({
   index,
   brands,
   loadingBrands,
+  errorLoadingBrands,
   onUpdate,
   onRemove,
 }: VehicleCompatibilityRowProps) {
@@ -131,25 +166,45 @@ function VehicleCompatibilityRow({
   const [years, setYears] = useState<FipeYear[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingYears, setLoadingYears] = useState(false);
+  const [errorLoadingModels, setErrorLoadingModels] = useState(false);
+  const [manualEntry, setManualEntry] = useState(errorLoadingBrands);
 
   useEffect(() => {
-    if (compatibility.brandId) {
+    if (compatibility.brandId && !manualEntry) {
       fetchModels(compatibility.brandId);
     }
-  }, [compatibility.brandId]);
+  }, [compatibility.brandId, manualEntry]);
 
   const fetchModels = async (brandId: string) => {
     setLoadingModels(true);
-    const data = await getModels('carros', brandId);
-    setModels(data);
-    setLoadingModels(false);
+    setErrorLoadingModels(false);
+    try {
+      const data = await getModels('carros', brandId);
+      if (data && data.length > 0) {
+        setModels(data);
+      } else {
+        setErrorLoadingModels(true);
+        setManualEntry(true);
+      }
+    } catch (error) {
+      console.error('Error fetching models:', error);
+      setErrorLoadingModels(true);
+      setManualEntry(true);
+    } finally {
+      setLoadingModels(false);
+    }
   };
 
   const fetchYearsForModel = async (brandId: string, modelId: string) => {
     setLoadingYears(true);
-    const data = await getYears('carros', brandId, modelId);
-    setYears(data);
-    setLoadingYears(false);
+    try {
+      const data = await getYears('carros', brandId, modelId);
+      setYears(data);
+    } catch (error) {
+      console.error('Error fetching years:', error);
+    } finally {
+      setLoadingYears(false);
+    }
   };
 
   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -163,6 +218,11 @@ function VehicleCompatibilityRow({
     }
   };
 
+  const handleManualBrandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdate(index, 'brand', e.target.value);
+    onUpdate(index, 'brandId', '');
+  };
+
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedModel = models.find((m) => m.codigo === e.target.value);
     if (selectedModel) {
@@ -172,17 +232,33 @@ function VehicleCompatibilityRow({
     }
   };
 
+  const handleManualModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdate(index, 'model', e.target.value);
+    onUpdate(index, 'modelId', '');
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
       <div className="flex justify-between items-start">
         <h4 className="text-md font-semibold text-gray-900">Veículo #{index + 1}</h4>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="text-red-600 hover:text-red-700 p-1"
-        >
-          <Trash2 size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          {!errorLoadingBrands && (
+            <button
+              type="button"
+              onClick={() => setManualEntry(!manualEntry)}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              {manualEntry ? 'Usar FIPE API' : 'Entrada Manual'}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-red-600 hover:text-red-700 p-1"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -191,19 +267,29 @@ function VehicleCompatibilityRow({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Marca *
           </label>
-          <select
-            value={compatibility.brandId}
-            onChange={handleBrandChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={loadingBrands}
-          >
-            <option value="">Selecione a marca</option>
-            {brands.map((brand) => (
-              <option key={brand.codigo} value={brand.codigo}>
-                {brand.nome}
-              </option>
-            ))}
-          </select>
+          {manualEntry ? (
+            <input
+              type="text"
+              value={compatibility.brand}
+              onChange={handleManualBrandChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Digite a marca (ex: Chevrolet)"
+            />
+          ) : (
+            <select
+              value={compatibility.brandId}
+              onChange={handleBrandChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={loadingBrands}
+            >
+              <option value="">Selecione a marca</option>
+              {brands.map((brand) => (
+                <option key={brand.codigo} value={brand.codigo}>
+                  {brand.nome}
+                </option>
+              ))}
+            </select>
+          )}
           {loadingBrands && (
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
               <Loader size={16} className="animate-spin" />
@@ -217,24 +303,39 @@ function VehicleCompatibilityRow({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Modelo *
           </label>
-          <select
-            value={compatibility.modelId}
-            onChange={handleModelChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={!compatibility.brandId || loadingModels}
-          >
-            <option value="">Selecione o modelo</option>
-            {models.map((model) => (
-              <option key={model.codigo} value={model.codigo}>
-                {model.nome}
-              </option>
-            ))}
-          </select>
+          {manualEntry ? (
+            <input
+              type="text"
+              value={compatibility.model}
+              onChange={handleManualModelChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Digite o modelo (ex: Onix)"
+            />
+          ) : (
+            <select
+              value={compatibility.modelId}
+              onChange={handleModelChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={!compatibility.brandId || loadingModels}
+            >
+              <option value="">Selecione o modelo</option>
+              {models.map((model) => (
+                <option key={model.codigo} value={model.codigo}>
+                  {model.nome}
+                </option>
+              ))}
+            </select>
+          )}
           {loadingModels && (
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
               <Loader size={16} className="animate-spin" />
               Carregando modelos...
             </div>
+          )}
+          {errorLoadingModels && !manualEntry && (
+            <p className="text-xs text-yellow-600 mt-1">
+              Erro ao carregar modelos. Tente entrada manual.
+            </p>
           )}
         </div>
 
@@ -287,6 +388,9 @@ function VehicleCompatibilityRow({
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Ex: 1.0, 1.4, 1.6"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Cilindradas compatíveis
+          </p>
         </div>
 
         {/* Transmissions */}
