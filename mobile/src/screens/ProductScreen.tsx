@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -14,54 +15,114 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, ShoppingCart, Star, MapPin, Package } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import { useCart } from '../contexts/CartContext';
+import { supabase } from '../../services/supabaseClient';
 
 const { width } = Dimensions.get('window');
 
 type ProductScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Product'>;
 type ProductScreenRouteProp = RouteProp<RootStackParamList, 'Product'>;
 
-// Mock product data
-// TODO: Move to centralized mock data service and fetch from Supabase in production
-const mockProduct = {
-  id: '1',
-  name: 'Pastilha de Freio Dianteira Cerâmica',
-  description: 'Pastilha de freio de alta performance com composto cerâmico. Reduz ruídos e proporciona frenagem suave e eficiente.',
-  price: 145.90,
-  stock: 50,
-  images: [
-    'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800',
-    'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800',
-  ],
-  category: 'Freios',
-  specifications: {
-    tipo: 'Cerâmica',
-    posicao: 'Dianteira',
-    compatibilidade: 'Chevrolet Onix 2016-2022',
-    garantia: '1 ano',
-  },
+interface ProductDetails {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  stock_quantity: number;
+  images: string[];
+  image_url?: string | null;
+  category: string;
+  part_code?: string | null;
+  part_position?: string | null;
+  specifications?: Record<string, string>;
   store: {
-    name: 'Auto Peças Central',
-    rating: 4.8,
-    totalReviews: 152,
-    address: 'São Paulo, SP',
-  },
-};
+    name: string;
+    city?: string | null;
+    state?: string | null;
+  } | null;
+}
 
 export default function ProductScreen() {
   const navigation = useNavigation<ProductScreenNavigationProp>();
   const route = useRoute<ProductScreenRouteProp>();
   const { addToCart } = useCart();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [error, setError] = useState<string>('');
+
+  const productId = route.params?.productId;
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!productId) {
+        setError('Produto inválido.');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError('');
+      try {
+        const { data, error: productError } = await supabase
+          .from('products')
+          .select(
+            'id, name, description, price, stock_quantity, images, image_url, category, part_code, part_position, specifications, stores(name, city, state)'
+          )
+          .eq('id', productId)
+          .single();
+
+        if (productError) throw productError;
+
+        const images = Array.isArray(data.images) ? data.images : [];
+        const normalizedImages = images.length > 0
+          ? images
+          : data.image_url
+            ? [data.image_url]
+            : [];
+
+        setProduct({
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          price: Number(data.price),
+          stock_quantity: data.stock_quantity ?? 0,
+          images: normalizedImages,
+          image_url: data.image_url,
+          category: data.category,
+          part_code: data.part_code,
+          part_position: data.part_position,
+          specifications: data.specifications || undefined,
+          store: data.stores
+            ? {
+                name: data.stores.name,
+                city: data.stores.city,
+                state: data.stores.state,
+              }
+            : null,
+        });
+      } catch (err: any) {
+        setError('Não foi possível carregar o produto.');
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  const imageList = useMemo(() => product?.images || [], [product]);
 
   const handleAddToCart = () => {
+    if (!product) return;
     addToCart({
-      id: mockProduct.id,
-      name: mockProduct.name,
-      description: mockProduct.store.name,
-      price: mockProduct.price,
+      id: product.id,
+      name: product.name,
+      description: product.store?.name || '',
+      price: product.price,
       quantity: 1,
-      brand: mockProduct.store.name,
-      partNumber: 'MOCK-001',
+      brand: product.store?.name || '',
+      partNumber: product.part_code || '',
     });
     navigation.navigate('Main', { screen: 'Cart' });
   };
@@ -89,6 +150,21 @@ export default function ProductScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1 }}
         >
+          {loading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#1e3a8a" />
+              <Text style={styles.loadingText}>Carregando produto...</Text>
+            </View>
+          )}
+
+          {!loading && error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          {!loading && !error && product && (
+            <>
           {/* Images */}
           <View style={styles.imagesContainer}>
             <ScrollView
@@ -103,16 +179,22 @@ export default function ProductScreen() {
               }}
               scrollEventThrottle={16}
             >
-              {mockProduct.images.map((image, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: image }}
-                  style={styles.productImage}
-                />
-              ))}
+              {imageList.length > 0 ? (
+                imageList.map((image, index) => (
+                  <Image
+                    key={index}
+                    source={{ uri: image }}
+                    style={styles.productImage}
+                  />
+                ))
+              ) : (
+                <View style={styles.emptyImage}>
+                  <Text style={styles.emptyImageText}>Imagem indisponível</Text>
+                </View>
+              )}
             </ScrollView>
             <View style={styles.pagination}>
-              {mockProduct.images.map((_, index) => (
+              {imageList.map((_, index) => (
                 <View
                   key={index}
                   style={[
@@ -127,67 +209,68 @@ export default function ProductScreen() {
           {/* Content */}
           <View style={styles.content}>
             {/* Category */}
-            <Text style={styles.category}>{mockProduct.category}</Text>
+            <Text style={styles.category}>{product.category}</Text>
 
             {/* Title */}
-            <Text style={styles.title}>{mockProduct.name}</Text>
+            <Text style={styles.title}>{product.name}</Text>
 
             {/* Price */}
             <Text style={styles.price}>
-              R$ {mockProduct.price.toFixed(2).replace('.', ',')}
+              R$ {product.price.toFixed(2).replace('.', ',')}
             </Text>
 
             {/* Stock */}
             <View style={styles.stockBadge}>
               <Package size={16} color="#10b981" />
               <Text style={styles.stockText}>
-                {mockProduct.stock} em estoque
+                {product.stock_quantity} em estoque
               </Text>
             </View>
 
             {/* Store Info */}
-            <View style={styles.storeCard}>
-              <View style={styles.storeHeader}>
-                <View style={styles.storeIcon}>
-                  <MapPin size={20} color="#1e3a8a" />
-                </View>
-                <View style={styles.storeInfo}>
-                  <Text style={styles.storeName}>{mockProduct.store.name}</Text>
-                  <Text style={styles.storeAddress}>
-                    {mockProduct.store.address}
-                  </Text>
+            {product.store && (
+              <View style={styles.storeCard}>
+                <View style={styles.storeHeader}>
+                  <View style={styles.storeIcon}>
+                    <MapPin size={20} color="#1e3a8a" />
+                  </View>
+                  <View style={styles.storeInfo}>
+                    <Text style={styles.storeName}>{product.store.name}</Text>
+                    <Text style={styles.storeAddress}>
+                      {[product.store.city, product.store.state]
+                        .filter(Boolean)
+                        .join(', ')}
+                    </Text>
+                  </View>
                 </View>
               </View>
-              <View style={styles.storeRating}>
-                <Star size={16} color="#fbbf24" fill="#fbbf24" />
-                <Text style={styles.ratingText}>
-                  {mockProduct.store.rating.toFixed(1)}
-                </Text>
-                <Text style={styles.reviewsText}>
-                  ({mockProduct.store.totalReviews} avaliações)
-                </Text>
-              </View>
-            </View>
+            )}
 
             {/* Description */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Descrição</Text>
-              <Text style={styles.description}>{mockProduct.description}</Text>
+              <Text style={styles.description}>
+                {product.description || 'Sem descrição cadastrada.'}
+              </Text>
             </View>
 
             {/* Specifications */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Especificações</Text>
-              {Object.entries(mockProduct.specifications).map(([key, value]) => (
-                <View key={key} style={styles.specRow}>
-                  <Text style={styles.specKey}>
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </Text>
-                  <Text style={styles.specValue}>{value}</Text>
-                </View>
-              ))}
-            </View>
+            {product.specifications && Object.keys(product.specifications).length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Especificações</Text>
+                {Object.entries(product.specifications).map(([key, value]) => (
+                  <View key={key} style={styles.specRow}>
+                    <Text style={styles.specKey}>
+                      {key.charAt(0).toUpperCase() + key.slice(1)}
+                    </Text>
+                    <Text style={styles.specValue}>{value}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
+            </>
+          )}
         </ScrollView>
 
         {/* Footer */}
@@ -195,6 +278,7 @@ export default function ProductScreen() {
           <TouchableOpacity
             style={styles.addButton}
             onPress={handleAddToCart}
+            disabled={!product}
           >
             <ShoppingCart color="#ffffff" size={20} />
             <Text style={styles.addButtonText}>Adicionar ao Carrinho</Text>
@@ -208,6 +292,27 @@ export default function ProductScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    color: '#6b7280',
+    fontSize: 14,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 40,
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 14,
+    textAlign: 'center',
   },
   header: {
     position: 'absolute',
@@ -242,6 +347,17 @@ const styles = StyleSheet.create({
     width: width,
     height: width,
     backgroundColor: '#f3f4f6',
+  },
+  emptyImage: {
+    width: width,
+    height: width,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyImageText: {
+    color: '#9ca3af',
+    fontSize: 14,
   },
   pagination: {
     flexDirection: 'row',
