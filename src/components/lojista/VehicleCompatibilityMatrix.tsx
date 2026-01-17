@@ -7,12 +7,10 @@ export interface VehicleCompatibility {
   brandId: string;
   model: string;
   modelId: string;
-  year_start: number;
-  year_end?: number;
+  year: number; // Single model year instead of start/end range
   engines: string[];
   transmissions: string[];
   fuel_types: string[];
-  notes?: string;
 }
 
 interface VehicleCompatibilityMatrixProps {
@@ -59,12 +57,10 @@ export default function VehicleCompatibilityMatrix({
         brandId: '',
         model: '',
         modelId: '',
-        year_start: new Date().getFullYear() - 10,
-        year_end: new Date().getFullYear(),
+        year: new Date().getFullYear(), // Default to current year
         engines: [],
         transmissions: [],
         fuel_types: [],
-        notes: '',
       },
     ]);
   };
@@ -81,21 +77,11 @@ export default function VehicleCompatibilityMatrix({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">🚗 Compatibilidade com Veículos</h3>
-          <p className="text-sm text-gray-600">
-            Adicione os veículos compatíveis com este produto usando dados da FIPE
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={addCompatibility}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={20} />
-          Adicionar Veículo
-        </button>
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">🚗 Compatibilidade com Veículos</h3>
+        <p className="text-sm text-gray-600">
+          Adicione os veículos compatíveis com este produto usando dados da FIPE
+        </p>
       </div>
 
       {errorLoadingBrands && (
@@ -118,28 +104,30 @@ export default function VehicleCompatibilityMatrix({
         </div>
       )}
 
-      {compatibilities.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-          <p className="text-gray-500">
-            Nenhum veículo compatível adicionado. Clique em "Adicionar Veículo" para começar.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {compatibilities.map((comp, index) => (
-            <VehicleCompatibilityRow
-              key={index}
-              compatibility={comp}
-              index={index}
-              brands={brands}
-              loadingBrands={loadingBrands}
-              errorLoadingBrands={errorLoadingBrands}
-              onUpdate={updateCompatibility}
-              onRemove={() => removeCompatibility(index)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="space-y-4">
+        {compatibilities.map((comp, index) => (
+          <VehicleCompatibilityRow
+            key={index}
+            compatibility={comp}
+            index={index}
+            brands={brands}
+            loadingBrands={loadingBrands}
+            errorLoadingBrands={errorLoadingBrands}
+            onUpdate={updateCompatibility}
+            onRemove={() => removeCompatibility(index)}
+          />
+        ))}
+        
+        {/* Always show add button for flexibility */}
+        <button
+          type="button"
+          onClick={addCompatibility}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus size={20} />
+          Adicionar Outro Veículo
+        </button>
+      </div>
     </div>
   );
 }
@@ -237,6 +225,16 @@ function VehicleCompatibilityRow({
   const handleManualModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate(index, 'model', e.target.value);
     onUpdate(index, 'modelId', '');
+  };
+
+  // Generate years from 1950 to current year
+  const generateYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = currentYear; year >= 1950; year--) {
+      years.push(year);
+    }
+    return years;
   };
 
   return (
@@ -341,35 +339,23 @@ function VehicleCompatibilityRow({
           )}
         </div>
 
-        {/* Year Start */}
+        {/* Year */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Ano Inicial *
+            Ano do Modelo *
           </label>
-          <input
-            type="number"
-            value={compatibility.year_start}
-            onChange={(e) => onUpdate(index, 'year_start', parseInt(e.target.value))}
+          <select
+            value={compatibility.year}
+            onChange={(e) => onUpdate(index, 'year', parseInt(e.target.value))}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            min="1950"
-            max={new Date().getFullYear() + 1}
-          />
-        </div>
-
-        {/* Year End */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Ano Final (opcional)
-          </label>
-          <input
-            type="number"
-            value={compatibility.year_end || ''}
-            onChange={(e) => onUpdate(index, 'year_end', e.target.value ? parseInt(e.target.value) : undefined)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            min={compatibility.year_start}
-            max={new Date().getFullYear() + 1}
-            placeholder="Deixe vazio para atual"
-          />
+          >
+            <option value="">Selecione o ano</option>
+            {generateYears().map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Engines */}
@@ -432,20 +418,6 @@ function VehicleCompatibilityRow({
             }
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Ex: Gasolina, Flex, Diesel"
-          />
-        </div>
-
-        {/* Notes */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Observações
-          </label>
-          <input
-            type="text"
-            value={compatibility.notes || ''}
-            onChange={(e) => onUpdate(index, 'notes', e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Informações adicionais sobre compatibilidade"
           />
         </div>
       </div>
