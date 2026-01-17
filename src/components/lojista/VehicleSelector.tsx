@@ -304,9 +304,9 @@ export default function VehicleSelector({ value, onChange }: VehicleSelectorProp
             >
               <option value="">Selecione a transmissão</option>
               <option value="Manual">Manual</option>
-              <option value="Automática">Automática</option>
+              <option value="Automático">Automático</option>
               <option value="CVT">CVT</option>
-              <option value="Automatizada">Automatizada</option>
+              <option value="Automatizado">Automatizado</option>
             </select>
           </div>
 
@@ -349,11 +349,10 @@ export default function VehicleSelector({ value, onChange }: VehicleSelectorProp
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Selecione o combustível</option>
+              <option value="Flex">Flex</option>
               <option value="Gasolina">Gasolina</option>
-              <option value="Etanol">Etanol</option>
-              <option value="Flex">Flex (Gasolina/Etanol)</option>
               <option value="Diesel">Diesel</option>
-              <option value="GNV">GNV</option>
+              <option value="Álcool">Álcool</option>
               <option value="Elétrico">Elétrico</option>
               <option value="Híbrido">Híbrido</option>
             </select>
