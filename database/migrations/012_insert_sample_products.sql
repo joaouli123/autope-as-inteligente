@@ -12,6 +12,7 @@
 INSERT INTO stores (
   owner_id,
   name,
+  slug,
   email,
   phone,
   address,
@@ -24,6 +25,7 @@ INSERT INTO stores (
 SELECT 
   (SELECT id FROM auth.users LIMIT 1),
   'Auto Peças Central',
+  'auto-pecas-central',
   'contato@autopecascentral.com.br',
   '(81) 3333-4444',
   'Av. Principal, 1234',
@@ -38,6 +40,7 @@ WHERE EXISTS (SELECT 1 FROM auth.users LIMIT 1);
 INSERT INTO stores (
   owner_id,
   name,
+  slug,
   email,
   phone,
   address,
@@ -50,6 +53,7 @@ INSERT INTO stores (
 SELECT 
   (SELECT id FROM auth.users LIMIT 1),
   'Mecânica do Zé',
+  'mecanica-do-ze',
   'mecanicadoze@gmail.com',
   '(81) 3555-6666',
   'Rua das Oficinas, 567',
@@ -64,6 +68,7 @@ WHERE EXISTS (SELECT 1 FROM auth.users LIMIT 1);
 INSERT INTO stores (
   owner_id,
   name,
+  slug,
   email,
   phone,
   address,
@@ -76,6 +81,7 @@ INSERT INTO stores (
 SELECT 
   (SELECT id FROM auth.users LIMIT 1),
   'Express Parts',
+  'express-parts',
   'vendas@expressparts.com.br',
   '(81) 3777-8888',
   'Av. Norte, 890',
