@@ -1,24 +1,29 @@
 -- Migration 012: Insert sample stores and products for Audi A1 and VW Gol
 
 -- ========================================
--- STEP 1: Create sample stores
+-- STEP 1: Create sample stores (need owner_id from auth.users)
 -- ========================================
+
+-- First, let's create a test user if it doesn't exist and get stores
+-- For this to work, you need to have at least one user in auth.users
+-- You can create one through the Supabase Auth UI or through the app
 
 -- Store 1: Auto Peças Central
 INSERT INTO stores (
+  owner_id,
   name,
-  slug,
   email,
   phone,
   address,
   city,
   state,
-  postal_code,
+  zipcode,
   description,
   is_active
-) VALUES (
+)
+SELECT 
+  (SELECT id FROM auth.users LIMIT 1),
   'Auto Peças Central',
-  'auto-pecas-central',
   'contato@autopecascentral.com.br',
   '(81) 3333-4444',
   'Av. Principal, 1234',
@@ -27,23 +32,24 @@ INSERT INTO stores (
   '50000-000',
   'Especializada em peças automotivas de alta qualidade para todas as marcas.',
   true
-);
+WHERE EXISTS (SELECT 1 FROM auth.users LIMIT 1);
 
 -- Store 2: Mecânica do Zé
 INSERT INTO stores (
+  owner_id,
   name,
-  slug,
   email,
   phone,
   address,
   city,
   state,
-  postal_code,
+  zipcode,
   description,
   is_active
-) VALUES (
+)
+SELECT 
+  (SELECT id FROM auth.users LIMIT 1),
   'Mecânica do Zé',
-  'mecanica-do-ze',
   'mecanicadoze@gmail.com',
   '(81) 3555-6666',
   'Rua das Oficinas, 567',
@@ -52,23 +58,24 @@ INSERT INTO stores (
   '53000-000',
   'Mecânica de confiança há mais de 20 anos. Peças originais e nacionais.',
   true
-);
+WHERE EXISTS (SELECT 1 FROM auth.users LIMIT 1);
 
 -- Store 3: Express Parts
 INSERT INTO stores (
+  owner_id,
   name,
-  slug,
   email,
   phone,
   address,
   city,
   state,
-  postal_code,
+  zipcode,
   description,
   is_active
-) VALUES (
+)
+SELECT 
+  (SELECT id FROM auth.users LIMIT 1),
   'Express Parts',
-  'express-parts',
   'vendas@expressparts.com.br',
   '(81) 3777-8888',
   'Av. Norte, 890',
@@ -77,7 +84,7 @@ INSERT INTO stores (
   '54000-000',
   'Entrega rápida e peças de qualidade. Atendemos toda região metropolitana.',
   true
-);
+WHERE EXISTS (SELECT 1 FROM auth.users LIMIT 1);
 
 -- ========================================
 -- STEP 2: Products for Audi A1
@@ -110,7 +117,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.slug = 'auto-pecas-central'
+WHERE s.name = 'Auto Peças Central'
 LIMIT 1;
 
 -- Get the product_id we just inserted
@@ -175,7 +182,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.slug = 'mecanica-do-ze'
+WHERE s.name = 'Mecânica do Zé'
 LIMIT 1;
 
 WITH last_product AS (
@@ -237,7 +244,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.slug = 'express-parts'
+WHERE s.name = 'Express Parts'
 LIMIT 1;
 
 WITH last_product AS (
@@ -303,7 +310,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.slug = 'auto-pecas-central'
+WHERE s.name = 'Auto Peças Central'
 LIMIT 1;
 
 WITH last_product AS (
@@ -363,7 +370,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.slug = 'mecanica-do-ze'
+WHERE s.name = 'Mecânica do Zé'
 LIMIT 1;
 
 WITH last_product AS (
@@ -425,7 +432,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.slug = 'express-parts'
+WHERE s.name = 'Express Parts'
 LIMIT 1;
 
 WITH last_product AS (
