@@ -266,6 +266,8 @@ CREATE TABLE IF NOT EXISTS product_compatibility (
   engine_id UUID REFERENCES vehicle_engines(id) ON DELETE SET NULL,
   brand TEXT,
   model TEXT,
+  brand_code TEXT,
+  model_code TEXT,
   engines TEXT[],
   transmissions TEXT[],
   fuel_types TEXT[],

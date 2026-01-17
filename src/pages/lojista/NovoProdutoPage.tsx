@@ -149,6 +149,15 @@ export default function NovoProdutoPage() {
         value: value as string,
       }));
 
+      const { data: compatibilityData } = await supabase
+        .from('product_compatibility')
+        .select('brand, model, year_start, engines, transmissions, fuel_types, brand_code, model_code')
+        .eq('product_id', productId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const compatibility = compatibilityData?.[0];
+
       setFormData({
         name: data.name,
         description: data.description,
@@ -172,14 +181,14 @@ export default function NovoProdutoPage() {
             ? data.compatible_vehicles
             : [''],
         vehicle_compatibility: {
-          brand: '',
-          brandId: '',
-          model: '',
-          modelId: '',
-          year: new Date().getFullYear(),
-          engines: [],
-          transmissions: [],
-          fuel_types: [],
+          brand: compatibility?.brand || '',
+          brandId: compatibility?.brand_code || '',
+          model: compatibility?.model || '',
+          modelId: compatibility?.model_code || '',
+          year: compatibility?.year_start || new Date().getFullYear(),
+          engines: compatibility?.engines || [],
+          transmissions: compatibility?.transmissions || [],
+          fuel_types: compatibility?.fuel_types || [],
         },
         is_active: data.is_active,
       });
@@ -438,6 +447,8 @@ export default function NovoProdutoPage() {
               product_id: id,
               brand: comp.brand,
               model: comp.model,
+              brand_code: comp.brandId || null,
+              model_code: comp.modelId || null,
               year_start: comp.year,
               year_end: comp.year, // Use same year for both start and end
               engines: comp.engines.length > 0 ? comp.engines : null,
@@ -502,6 +513,8 @@ export default function NovoProdutoPage() {
               product_id: newProduct.id,
               brand: comp.brand,
               model: comp.model,
+              brand_code: comp.brandId || null,
+              model_code: comp.modelId || null,
               year_start: comp.year,
               year_end: comp.year, // Use same year for both start and end
               engines: comp.engines.length > 0 ? comp.engines : null,
