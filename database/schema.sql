@@ -607,6 +607,9 @@ END $$;
 
 CREATE TABLE IF NOT EXISTS brands (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  -- VARCHAR(200) allows for long international manufacturer names
+  -- e.g., "ZF Friedrichshafen / ZF Aftermarket" = 37 chars
+  -- Provides sufficient space while maintaining reasonable indexing performance
   name VARCHAR(200) NOT NULL UNIQUE,
   logo_url TEXT,
   is_active BOOLEAN DEFAULT true,

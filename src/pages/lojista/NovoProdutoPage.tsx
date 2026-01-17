@@ -214,8 +214,11 @@ export default function NovoProdutoPage() {
     brandInputRef.current?.blur();
   };
 
+  // Delay before processing brand blur to allow dropdown item clicks to register
+  const BRAND_BLUR_DELAY_MS = 200;
+
   const handleBrandBlur = async () => {
-    // Small delay to allow click on dropdown item
+    // Small delay to allow click on dropdown item to register before blur event
     setTimeout(async () => {
       setShowBrandDropdown(false);
       
@@ -245,7 +248,7 @@ export default function NovoProdutoPage() {
           }
         }
       }
-    }, 200);
+    }, BRAND_BLUR_DELAY_MS);
   };
 
   const handleSpecificationChange = (
