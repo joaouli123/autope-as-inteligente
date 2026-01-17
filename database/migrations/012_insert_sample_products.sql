@@ -1,8 +1,95 @@
--- Migration 012: Insert sample products for Audi A1 and VW Gol
+-- Migration 012: Insert sample stores and products for Audi A1 and VW Gol
 
--- Products for Audi A1 1.4 TFSI 2012 (Gasolina, Automático, 16v)
+-- ========================================
+-- STEP 1: Create sample stores
+-- ========================================
 
--- 1. Filtro de Ar para Audi A1
+-- Store 1: Auto Peças Central
+INSERT INTO stores (
+  name,
+  slug,
+  email,
+  phone,
+  whatsapp,
+  address,
+  city,
+  state,
+  postal_code,
+  description,
+  is_active
+) VALUES (
+  'Auto Peças Central',
+  'auto-pecas-central',
+  'contato@autopecascentral.com.br',
+  '(81) 3333-4444',
+  '5581987654321',
+  'Av. Principal, 1234',
+  'Recife',
+  'PE',
+  '50000-000',
+  'Especializada em peças automotivas de alta qualidade para todas as marcas.',
+  true
+);
+
+-- Store 2: Mecânica do Zé
+INSERT INTO stores (
+  name,
+  slug,
+  email,
+  phone,
+  whatsapp,
+  address,
+  city,
+  state,
+  postal_code,
+  description,
+  is_active
+) VALUES (
+  'Mecânica do Zé',
+  'mecanica-do-ze',
+  'mecanicadoze@gmail.com',
+  '(81) 3555-6666',
+  '5581976543210',
+  'Rua das Oficinas, 567',
+  'Olinda',
+  'PE',
+  '53000-000',
+  'Mecânica de confiança há mais de 20 anos. Peças originais e nacionais.',
+  true
+);
+
+-- Store 3: Express Parts
+INSERT INTO stores (
+  name,
+  slug,
+  email,
+  phone,
+  whatsapp,
+  address,
+  city,
+  state,
+  postal_code,
+  description,
+  is_active
+) VALUES (
+  'Express Parts',
+  'express-parts',
+  'vendas@expressparts.com.br',
+  '(81) 3777-8888',
+  '5581965432109',
+  'Av. Norte, 890',
+  'Jaboatão dos Guararapes',
+  'PE',
+  '54000-000',
+  'Entrega rápida e peças de qualidade. Atendemos toda região metropolitana.',
+  true
+);
+
+-- ========================================
+-- STEP 2: Products for Audi A1
+-- ========================================
+
+-- Product 1: Filtro de Ar (Store 1)
 INSERT INTO products (
   name, 
   description, 
@@ -29,7 +116,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.is_active = true
+WHERE s.slug = 'auto-pecas-central'
 LIMIT 1;
 
 -- Get the product_id we just inserted
@@ -63,7 +150,7 @@ SELECT
   16
 FROM last_product;
 
--- 2. Pastilha de Freio para Audi A1
+-- Product 2: Pastilha de Freio (Store 2)
 INSERT INTO products (
   name, 
   description, 
@@ -94,7 +181,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.is_active = true
+WHERE s.slug = 'mecanica-do-ze'
 LIMIT 1;
 
 WITH last_product AS (
@@ -127,67 +214,7 @@ SELECT
   NULL
 FROM last_product;
 
--- 3. Óleo de Motor para Audi A1
-INSERT INTO products (
-  name, 
-  description, 
-  price, 
-  category, 
-  part_code, 
-  brand, 
-  model,
-  mpn,
-  stock_quantity,
-  store_id,
-  is_active
-)
-SELECT 
-  'Óleo Sintético Mobil 1 5W-40',
-  'Óleo lubrificante sintético de alta performance. Embalagem com 1 litro.',
-  89.90,
-  'ÓLEOS',
-  'MOB-5W40-1L',
-  'Mobil 1',
-  '5W-40 Sintético',
-  'MB1-5W40',
-  50,
-  s.id,
-  true
-FROM stores s
-WHERE s.is_active = true
-LIMIT 1;
-
-WITH last_product AS (
-  SELECT id FROM products WHERE part_code = 'MOB-5W40-1L' LIMIT 1
-)
-INSERT INTO product_compatibility (
-  product_id,
-  brand,
-  model,
-  brand_code,
-  model_code,
-  year_start,
-  year_end,
-  engines,
-  transmissions,
-  fuel_types,
-  valves
-)
-SELECT 
-  id,
-  'Audi',
-  'A1 1.4 TFSI 122cv S-tronic 3p',
-  '59',
-  '5537',
-  2010,
-  2018,
-  ARRAY['1.4'],
-  NULL,
-  ARRAY['Gasolina'],
-  16
-FROM last_product;
-
--- 4. Vela de Ignição para Audi A1
+-- Product 3: Vela de Ignição (Store 3)
 INSERT INTO products (
   name, 
   description, 
@@ -216,7 +243,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.is_active = true
+WHERE s.slug = 'express-parts'
 LIMIT 1;
 
 WITH last_product AS (
@@ -249,71 +276,11 @@ SELECT
   16
 FROM last_product;
 
--- 5. Amortecedor Traseiro para Audi A1
-INSERT INTO products (
-  name, 
-  description, 
-  price, 
-  category, 
-  part_code, 
-  brand, 
-  model,
-  part_position,
-  mpn,
-  stock_quantity,
-  store_id,
-  is_active
-)
-SELECT 
-  'Amortecedor Traseiro Pressurizado (Par)',
-  'Par de amortecedores traseiros pressurizados a gás com válvula de controle progressivo.',
-  580.00,
-  'SUSPENSÃO',
-  'CONF-AUD-TRAS',
-  'Cofap',
-  'Turbogas',
-  'Traseiro',
-  'TG4567-PAR',
-  10,
-  s.id,
-  true
-FROM stores s
-WHERE s.is_active = true
-LIMIT 1;
+-- ========================================
+-- STEP 3: Products for VW Gol
+-- ========================================
 
-WITH last_product AS (
-  SELECT id FROM products WHERE part_code = 'CONF-AUD-TRAS' LIMIT 1
-)
-INSERT INTO product_compatibility (
-  product_id,
-  brand,
-  model,
-  brand_code,
-  model_code,
-  year_start,
-  year_end,
-  engines,
-  transmissions,
-  fuel_types,
-  valves
-)
-SELECT 
-  id,
-  'Audi',
-  'A1 1.4 TFSI 122cv S-tronic 3p',
-  '59',
-  '5537',
-  2010,
-  2018,
-  NULL,
-  NULL,
-  NULL,
-  NULL
-FROM last_product;
-
--- Products for VW Gol (1.0, 1.6)
-
--- 1. Kit Correia Dentada para VW Gol
+-- Product 1: Kit Correia Dentada (Store 1)
 INSERT INTO products (
   name, 
   description, 
@@ -342,7 +309,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.is_active = true
+WHERE s.slug = 'auto-pecas-central'
 LIMIT 1;
 
 WITH last_product AS (
@@ -375,7 +342,7 @@ SELECT
   NULL
 FROM last_product;
 
--- 2. Bateria para VW Gol
+-- Product 2: Bateria (Store 2)
 INSERT INTO products (
   name, 
   description, 
@@ -402,7 +369,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.is_active = true
+WHERE s.slug = 'mecanica-do-ze'
 LIMIT 1;
 
 WITH last_product AS (
@@ -435,7 +402,7 @@ SELECT
   NULL
 FROM last_product;
 
--- 3. Disco de Freio para VW Gol
+-- Product 3: Disco de Freio (Store 3)
 INSERT INTO products (
   name, 
   description, 
@@ -464,7 +431,7 @@ SELECT
   s.id,
   true
 FROM stores s
-WHERE s.is_active = true
+WHERE s.slug = 'express-parts'
 LIMIT 1;
 
 WITH last_product AS (
@@ -492,130 +459,6 @@ SELECT
   2008,
   2023,
   ARRAY['1.0', '1.6'],
-  NULL,
-  NULL,
-  NULL
-FROM last_product;
-
--- 4. Filtro de Combustível para VW Gol
-INSERT INTO products (
-  name, 
-  description, 
-  price, 
-  category, 
-  part_code, 
-  brand, 
-  model,
-  mpn,
-  oem_codes,
-  stock_quantity,
-  store_id,
-  is_active
-)
-SELECT 
-  'Filtro de Combustível Tecfil',
-  'Filtro de combustível com alta eficiência de filtragem. Compatível com etanol e gasolina.',
-  45.90,
-  'FILTROS',
-  'TECFIL-PSC939',
-  'Tecfil',
-  'Linha Leve',
-  'PSC939',
-  ARRAY['6Q0201051J', '6Q0201051C'],
-  35,
-  s.id,
-  true
-FROM stores s
-WHERE s.is_active = true
-LIMIT 1;
-
-WITH last_product AS (
-  SELECT id FROM products WHERE part_code = 'TECFIL-PSC939' LIMIT 1
-)
-INSERT INTO product_compatibility (
-  product_id,
-  brand,
-  model,
-  brand_code,
-  model_code,
-  year_start,
-  year_end,
-  engines,
-  transmissions,
-  fuel_types,
-  valves
-)
-SELECT 
-  id,
-  'VW - VolksWagen',
-  'Gol',
-  '59',
-  '517',
-  2008,
-  2023,
-  ARRAY['1.0', '1.6'],
-  NULL,
-  ARRAY['Flex', 'Gasolina'],
-  NULL
-FROM last_product;
-
--- 5. Terminal de Direção para VW Gol
-INSERT INTO products (
-  name, 
-  description, 
-  price, 
-  category, 
-  part_code, 
-  brand, 
-  model,
-  part_position,
-  mpn,
-  stock_quantity,
-  store_id,
-  is_active
-)
-SELECT 
-  'Terminal de Direção Axial Esquerdo',
-  'Terminal de direção lado esquerdo com ponteira de alta resistência e pino cônico temperado.',
-  78.50,
-  'SUSPENSÃO',
-  'NAKATA-N99145-ESQ',
-  'Nakata',
-  'Terminal Axial',
-  'Esquerdo',
-  'N99145',
-  16,
-  s.id,
-  true
-FROM stores s
-WHERE s.is_active = true
-LIMIT 1;
-
-WITH last_product AS (
-  SELECT id FROM products WHERE part_code = 'NAKATA-N99145-ESQ' LIMIT 1
-)
-INSERT INTO product_compatibility (
-  product_id,
-  brand,
-  model,
-  brand_code,
-  model_code,
-  year_start,
-  year_end,
-  engines,
-  transmissions,
-  fuel_types,
-  valves
-)
-SELECT 
-  id,
-  'VW - VolksWagen',
-  'Gol',
-  '59',
-  '517',
-  2008,
-  2016,
-  NULL,
   NULL,
   NULL,
   NULL
