@@ -33,6 +33,10 @@ interface ProductDetails {
   category: string;
   part_code?: string | null;
   part_position?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  mpn?: string | null;
+  oem_codes?: string[] | null;
   specifications?: Record<string, string>;
   store: {
     name: string;
@@ -66,7 +70,7 @@ export default function ProductScreen() {
         const { data, error: productError } = await supabase
           .from('products')
           .select(
-            'id, name, description, price, stock_quantity, images, image_url, category, part_code, part_position, specifications, stores(name, city, state)'
+            'id, name, description, price, stock_quantity, images, image_url, category, part_code, part_position, brand, model, mpn, oem_codes, specifications, stores(name, city, state)'
           )
           .eq('id', productId)
           .single();
@@ -91,6 +95,10 @@ export default function ProductScreen() {
           category: data.category,
           part_code: data.part_code,
           part_position: data.part_position,
+          brand: data.brand,
+          model: data.model,
+          mpn: data.mpn,
+          oem_codes: Array.isArray(data.oem_codes) ? data.oem_codes : null,
           specifications: data.specifications || undefined,
           store: data.stores
             ? {
@@ -253,6 +261,49 @@ export default function ProductScreen() {
                 {product.description || 'Sem descrição cadastrada.'}
               </Text>
             </View>
+
+            {/* Identification */}
+            {(product.brand || product.model || product.part_code || product.part_position || product.mpn || (product.oem_codes && product.oem_codes.length > 0)) && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Identificação</Text>
+                {product.brand && (
+                  <View style={styles.specRow}>
+                    <Text style={styles.specKey}>Marca</Text>
+                    <Text style={styles.specValue}>{product.brand}</Text>
+                  </View>
+                )}
+                {product.model && (
+                  <View style={styles.specRow}>
+                    <Text style={styles.specKey}>Modelo</Text>
+                    <Text style={styles.specValue}>{product.model}</Text>
+                  </View>
+                )}
+                {product.part_code && (
+                  <View style={styles.specRow}>
+                    <Text style={styles.specKey}>Código da Peça</Text>
+                    <Text style={styles.specValue}>{product.part_code}</Text>
+                  </View>
+                )}
+                {product.part_position && (
+                  <View style={styles.specRow}>
+                    <Text style={styles.specKey}>Posição</Text>
+                    <Text style={styles.specValue}>{product.part_position}</Text>
+                  </View>
+                )}
+                {product.mpn && (
+                  <View style={styles.specRow}>
+                    <Text style={styles.specKey}>MPN</Text>
+                    <Text style={styles.specValue}>{product.mpn}</Text>
+                  </View>
+                )}
+                {product.oem_codes && product.oem_codes.length > 0 && (
+                  <View style={styles.specRow}>
+                    <Text style={styles.specKey}>OEM</Text>
+                    <Text style={styles.specValue}>{product.oem_codes.join(', ')}</Text>
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* Specifications */}
             {product.specifications && Object.keys(product.specifications).length > 0 && (
