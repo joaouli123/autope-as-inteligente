@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import ImageUpload from '../../components/lojista/ImageUpload';
-import VehicleCompatibilityMatrix, {
-  type VehicleCompatibility,
-} from '../../components/lojista/VehicleCompatibilityMatrix';
+import VehicleSelector, {
+  type VehicleSelection,
+} from '../../components/lojista/VehicleSelector';
 import { supabase } from '../../services/supabaseClient';
 import type { Product } from '../../types/lojista';
 import { PART_POSITION_OPTIONS } from '../../constants/vehicles';
@@ -25,7 +25,7 @@ interface FormData {
   images: string[];
   specifications: { key: string; value: string }[];
   compatible_vehicles: string[];
-  vehicle_compatibilities: VehicleCompatibility[];
+  vehicle_compatibility: VehicleSelection;
   is_active: boolean;
 }
 
@@ -80,7 +80,7 @@ export default function NovoProdutoPage() {
     images: [],
     specifications: [{ key: '', value: '' }],
     compatible_vehicles: [''],
-    vehicle_compatibilities: [{
+    vehicle_compatibility: {
       brand: '',
       brandId: '',
       model: '',
@@ -89,7 +89,7 @@ export default function NovoProdutoPage() {
       engines: [],
       transmissions: [],
       fuel_types: [],
-    }],
+    },
     is_active: true,
   });
 
@@ -171,18 +171,16 @@ export default function NovoProdutoPage() {
           data.compatible_vehicles && data.compatible_vehicles.length > 0
             ? data.compatible_vehicles
             : [''],
-        vehicle_compatibilities: [
-          {
-            brand: '',
-            brandId: '',
-            model: '',
-            modelId: '',
-            year: new Date().getFullYear(),
-            engines: [],
-            transmissions: [],
-            fuel_types: [],
-          },
-        ],
+        vehicle_compatibility: {
+          brand: '',
+          brandId: '',
+          model: '',
+          modelId: '',
+          year: new Date().getFullYear(),
+          engines: [],
+          transmissions: [],
+          fuel_types: [],
+        },
         is_active: data.is_active,
       });
     } catch (error) {
@@ -196,7 +194,7 @@ export default function NovoProdutoPage() {
 
   const handleChange = (
     field: keyof FormData,
-    value: string | string[] | boolean | VehicleCompatibility[]
+    value: string | string[] | boolean | VehicleSelection
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     
@@ -426,7 +424,7 @@ export default function NovoProdutoPage() {
         }
 
         // Update vehicle compatibilities
-        if (formData.vehicle_compatibilities.length > 0) {
+        if (formData.vehicle_compatibility.brand && formData.vehicle_compatibility.model) {
           // Delete existing compatibilities
           await supabase
             .from('product_compatibility')
@@ -434,9 +432,9 @@ export default function NovoProdutoPage() {
             .eq('product_id', id);
 
           // Insert new compatibilities
-          const compatibilityData = formData.vehicle_compatibilities
-            .filter((comp) => comp.brand && comp.model)
-            .map((comp) => ({
+          const comp = formData.vehicle_compatibility;
+          const compatibilityData = [
+            {
               product_id: id,
               brand: comp.brand,
               model: comp.model,
@@ -446,7 +444,8 @@ export default function NovoProdutoPage() {
               transmissions: comp.transmissions.length > 0 ? comp.transmissions : null,
               fuel_types: comp.fuel_types.length > 0 ? comp.fuel_types : null,
               notes: null,
-            }));
+            },
+          ];
 
           if (compatibilityData.length > 0) {
             const { error: compError } = await supabase
@@ -492,10 +491,14 @@ export default function NovoProdutoPage() {
         }
 
         // Insert vehicle compatibilities
-        if (formData.vehicle_compatibilities.length > 0 && newProduct) {
-          const compatibilityData = formData.vehicle_compatibilities
-            .filter((comp) => comp.brand && comp.model)
-            .map((comp) => ({
+        if (
+          newProduct &&
+          formData.vehicle_compatibility.brand &&
+          formData.vehicle_compatibility.model
+        ) {
+          const comp = formData.vehicle_compatibility;
+          const compatibilityData = [
+            {
               product_id: newProduct.id,
               brand: comp.brand,
               model: comp.model,
@@ -505,7 +508,8 @@ export default function NovoProdutoPage() {
               transmissions: comp.transmissions.length > 0 ? comp.transmissions : null,
               fuel_types: comp.fuel_types.length > 0 ? comp.fuel_types : null,
               notes: null,
-            }));
+            },
+          ];
 
           if (compatibilityData.length > 0) {
             const { error: compError } = await supabase
@@ -951,11 +955,9 @@ export default function NovoProdutoPage() {
 
         {/* Compatible Vehicles - Advanced Matrix */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <VehicleCompatibilityMatrix
-            compatibilities={formData.vehicle_compatibilities}
-            onChange={(compatibilities) =>
-              handleChange('vehicle_compatibilities', compatibilities)
-            }
+          <VehicleSelector
+            value={formData.vehicle_compatibility}
+            onChange={(vehicle) => handleChange('vehicle_compatibility', vehicle)}
           />
         </div>
 
