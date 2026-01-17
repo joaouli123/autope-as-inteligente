@@ -361,43 +361,39 @@ export default function SearchScreen() {
                         {item.name}
                       </Text>
 
-                      <View style={styles.productCategoryPill}>
-                        <Text style={styles.productCategoryText}>
-                          {item.category?.toUpperCase()}
+                      <Text style={styles.productStore}>{item.store}</Text>
+
+                      <View style={styles.productRating}>
+                        {Array.from({ length: 5 }).map((_, index) => (
+                          <Star key={index} size={12} color="#fbbf24" fill="#fbbf24" />
+                        ))}
+                        <Text style={styles.productRatingText}>(4.9)</Text>
+                      </View>
+
+                      <View style={styles.productFooter}>
+                        <Text style={styles.productPrice}>
+                          {formatCurrency(item.price)}
                         </Text>
+                        
+                        <TouchableOpacity
+                          style={styles.addButton}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            addToCart({
+                              id: item.id,
+                              name: item.name,
+                              description: item.store,
+                              price: item.price,
+                              quantity: 1,
+                              brand: item.store,
+                              partNumber: item.part_code || '',
+                            });
+                          }}
+                        >
+                          <Plus color="#ffffff" size={20} />
+                        </TouchableOpacity>
                       </View>
-
-                      <View style={styles.productStoreRow}>
-                        <Text style={styles.productStore}>{item.store}</Text>
-                        <View style={styles.productRating}>
-                          {Array.from({ length: 5 }).map((_, index) => (
-                            <Star key={index} size={12} color="#fbbf24" fill="#fbbf24" />
-                          ))}
-                          <Text style={styles.productRatingText}>(4.9)</Text>
-                        </View>
-                      </View>
-
-                      <Text style={styles.productPrice}>
-                        {formatCurrency(item.price)}
-                      </Text>
                     </View>
-
-                    <TouchableOpacity
-                      style={styles.addButton}
-                      onPress={() =>
-                        addToCart({
-                          id: item.id,
-                          name: item.name,
-                          description: item.store,
-                          price: item.price,
-                          quantity: 1,
-                          brand: item.store,
-                          partNumber: item.part_code || '',
-                        })
-                      }
-                    >
-                      <Plus color="#ffffff" size={20} />
-                    </TouchableOpacity>
                   </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.listContent}
@@ -572,6 +568,7 @@ const styles = StyleSheet.create({
   productInfo: {
     flex: 1,
     justifyContent: 'space-between',
+    paddingVertical: 2,
   },
   productCategory: {
     fontSize: 12,
@@ -582,15 +579,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1f2937',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   productStore: {
-    fontSize: 12,
-    color: '#9ca3af',
+    fontSize: 13,
+    color: '#6b7280',
     marginBottom: 4,
   },
+  productRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginBottom: 8,
+  },
+  productRatingText: {
+    fontSize: 11,
+    color: '#6b7280',
+    marginLeft: 4,
+  },
+  productFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   productPrice: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1e3a8a',
   },
@@ -651,6 +664,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
+    marginBottom: 8,
   },
   productRatingText: {
     fontSize: 11,
@@ -664,7 +678,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563eb',
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
     ...Platform.select({
       ios: {
         shadowColor: '#2563eb',
