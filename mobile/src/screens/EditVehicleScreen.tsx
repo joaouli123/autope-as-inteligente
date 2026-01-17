@@ -78,6 +78,26 @@ export default function EditVehicleScreen() {
     }
   }, [selectedBrand, brands, models.length]);
 
+  // Backfill brand code from selected brand name when possible
+  React.useEffect(() => {
+    if (!selectedBrandCode && selectedBrand && brands.length > 0) {
+      const brandCode = brands.find(b => b.nome === selectedBrand)?.codigo;
+      if (brandCode) {
+        setSelectedBrandCode(brandCode);
+      }
+    }
+  }, [selectedBrand, selectedBrandCode, brands]);
+
+  // Backfill model code from selected model name when possible
+  React.useEffect(() => {
+    if (!selectedModelCode && selectedModel && models.length > 0) {
+      const modelCode = models.find(m => m.nome === selectedModel)?.codigo;
+      if (modelCode) {
+        setSelectedModelCode(modelCode);
+      }
+    }
+  }, [selectedModel, selectedModelCode, models]);
+
   const handleSave = async () => {
     if (!selectedBrand || !selectedModel) {
       Alert.alert('Erro', 'Marca e Modelo são obrigatórios');
@@ -94,13 +114,17 @@ export default function EditVehicleScreen() {
     }
 
     setSaving(true);
+    const resolvedBrandCode =
+      selectedBrandCode || brands.find(b => b.nome === selectedBrand)?.codigo || '';
+    const resolvedModelCode =
+      selectedModelCode || models.find(m => m.nome === selectedModel)?.codigo || '';
     const success = await updateUser({
       vehicle: {
         type: vehicleType,
         brand: selectedBrand,
-        brand_code: selectedBrandCode,
+        brand_code: resolvedBrandCode,
         model: selectedModel,
-        model_code: selectedModelCode,
+        model_code: resolvedModelCode,
         year,
         engine,
         valves,
@@ -155,7 +179,9 @@ export default function EditVehicleScreen() {
               onPress={() => {
                 setVehicleType('carros');
                 setSelectedBrand('');
+                setSelectedBrandCode('');
                 setSelectedModel('');
+                setSelectedModelCode('');
                 loadBrands('carros');
               }}
             >
@@ -169,7 +195,9 @@ export default function EditVehicleScreen() {
               onPress={() => {
                 setVehicleType('motos');
                 setSelectedBrand('');
+                setSelectedBrandCode('');
                 setSelectedModel('');
+                setSelectedModelCode('');
                 loadBrands('motos');
               }}
             >
@@ -183,7 +211,9 @@ export default function EditVehicleScreen() {
               onPress={() => {
                 setVehicleType('caminhoes');
                 setSelectedBrand('');
+                setSelectedBrandCode('');
                 setSelectedModel('');
+                setSelectedModelCode('');
                 loadBrands('caminhoes');
               }}
             >
