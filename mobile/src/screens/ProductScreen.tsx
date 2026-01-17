@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, ShoppingCart, Star, MapPin, Package } from 'lucide-react-native';
+import { ArrowLeft, ShoppingCart, Star, MapPin } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../../services/supabaseClient';
@@ -43,6 +43,16 @@ interface ProductDetails {
     city?: string | null;
     state?: string | null;
   } | null;
+  compatibility?: {
+    brand: string | null;
+    model: string | null;
+    year_start: number;
+    year_end: number | null;
+    engines: string[] | null;
+    transmissions: string[] | null;
+    fuel_types: string[] | null;
+    valves: number | null;
+  };
 }
 
 export default function ProductScreen() {
@@ -70,7 +80,7 @@ export default function ProductScreen() {
         const { data, error: productError } = await supabase
           .from('products')
           .select(
-            'id, name, description, price, stock_quantity, images, image_url, category, part_code, part_position, brand, model, mpn, oem_codes, specifications, stores(name, city, state)'
+            'id, name, description, price, stock_quantity, images, image_url, category, part_code, part_position, brand, model, mpn, oem_codes, specifications, stores(name, city, state), product_compatibility(brand, model, year_start, year_end, engines, transmissions, fuel_types, valves)'
           )
           .eq('id', productId)
           .single();
@@ -83,6 +93,10 @@ export default function ProductScreen() {
           : data.image_url
             ? [data.image_url]
             : [];
+
+        const compatibility = Array.isArray(data.product_compatibility) && data.product_compatibility.length > 0
+          ? data.product_compatibility[0]
+          : null;
 
         setProduct({
           id: data.id,
@@ -107,6 +121,7 @@ export default function ProductScreen() {
                 state: data.stores.state,
               }
             : null,
+          compatibility: compatibility || undefined,
         });
       } catch (err: any) {
         setError('Não foi possível carregar o produto.');
@@ -137,7 +152,7 @@ export default function ProductScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -227,14 +242,6 @@ export default function ProductScreen() {
               R$ {product.price.toFixed(2).replace('.', ',')}
             </Text>
 
-            {/* Stock */}
-            <View style={styles.stockBadge}>
-              <Package size={16} color="#10b981" />
-              <Text style={styles.stockText}>
-                {product.stock_quantity} em estoque
-              </Text>
-            </View>
-
             {/* Store Info */}
             {product.store && (
               <View style={styles.storeCard}>
@@ -244,11 +251,22 @@ export default function ProductScreen() {
                   </View>
                   <View style={styles.storeInfo}>
                     <Text style={styles.storeName}>{product.store.name}</Text>
-                    <Text style={styles.storeAddress}>
-                      {[product.store.city, product.store.state]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </Text>
+                    {(product.store.city || product.store.state) && (
+                      <Text style={styles.storeAddress}>
+                        {[product.store.city, product.store.state]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </Text>
+                    )}
+                    <View style={styles.storeRating}>
+                      <View style={{ flexDirection: 'row', gap: 2 }}>
+                        {Array.from({ length: 5 }).map((_, index) => (
+                          <Star key={index} size={14} color="#fbbf24" fill="#fbbf24" />
+                        ))}
+                      </View>
+                      <Text style={styles.ratingText}>4.9</Text>
+                      <Text style={styles.reviewsText}>(120 avaliações)</Text>
+                    </View>
                   </View>
                 </View>
               </View>
@@ -263,9 +281,63 @@ export default function ProductScreen() {
             </View>
 
             {/* Identification */}
-            {(product.brand || product.model || product.part_code || product.part_position || product.mpn || (product.oem_codes && product.oem_codes.length > 0)) && (
+            {(product.compatibility || product.brand || product.model || product.part_code || product.part_position || product.mpn || (product.oem_codes && product.oem_codes.length > 0)) && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Identificação</Text>
+                
+                {/* Informações do Veículo Compatível */}
+                {product.compatibility && (
+                  <>
+                    {product.compatibility.brand && (
+                      <View style={styles.specRow}>
+                        <Text style={styles.specKey}>Marca do Veículo</Text>
+                        <Text style={styles.specValue}>{product.compatibility.brand}</Text>
+                      </View>
+                    )}
+                    {product.compatibility.model && (
+                      <View style={styles.specRow}>
+                        <Text style={styles.specKey}>Modelo do Veículo</Text>
+                        <Text style={styles.specValue}>{product.compatibility.model}</Text>
+                      </View>
+                    )}
+                    {product.compatibility.year_start && (
+                      <View style={styles.specRow}>
+                        <Text style={styles.specKey}>Ano</Text>
+                        <Text style={styles.specValue}>
+                          {product.compatibility.year_end
+                            ? `${product.compatibility.year_start} - ${product.compatibility.year_end}`
+                            : `${product.compatibility.year_start}+`}
+                        </Text>
+                      </View>
+                    )}
+                    {product.compatibility.engines && product.compatibility.engines.length > 0 && (
+                      <View style={styles.specRow}>
+                        <Text style={styles.specKey}>Motor</Text>
+                        <Text style={styles.specValue}>{product.compatibility.engines.join(', ')}</Text>
+                      </View>
+                    )}
+                    {product.compatibility.fuel_types && product.compatibility.fuel_types.length > 0 && (
+                      <View style={styles.specRow}>
+                        <Text style={styles.specKey}>Combustível</Text>
+                        <Text style={styles.specValue}>{product.compatibility.fuel_types.join(', ')}</Text>
+                      </View>
+                    )}
+                    {product.compatibility.transmissions && product.compatibility.transmissions.length > 0 && (
+                      <View style={styles.specRow}>
+                        <Text style={styles.specKey}>Transmissão</Text>
+                        <Text style={styles.specValue}>{product.compatibility.transmissions.join(', ')}</Text>
+                      </View>
+                    )}
+                    {product.compatibility.valves && (
+                      <View style={styles.specRow}>
+                        <Text style={styles.specKey}>Válvulas</Text>
+                        <Text style={styles.specValue}>{product.compatibility.valves}v</Text>
+                      </View>
+                    )}
+                  </>
+                )}
+                
+                {/* Informações da Peça */}
                 {product.brand && (
                   <View style={styles.specRow}>
                     <Text style={styles.specKey}>Marca</Text>
@@ -284,12 +356,6 @@ export default function ProductScreen() {
                     <Text style={styles.specValue}>{product.part_code}</Text>
                   </View>
                 )}
-                {product.part_position && (
-                  <View style={styles.specRow}>
-                    <Text style={styles.specKey}>Posição</Text>
-                    <Text style={styles.specValue}>{product.part_position}</Text>
-                  </View>
-                )}
                 {product.mpn && (
                   <View style={styles.specRow}>
                     <Text style={styles.specKey}>MPN</Text>
@@ -300,6 +366,14 @@ export default function ProductScreen() {
                   <View style={styles.specRow}>
                     <Text style={styles.specKey}>OEM</Text>
                     <Text style={styles.specValue}>{product.oem_codes.join(', ')}</Text>
+                  </View>
+                )}
+                
+                {/* Posição da Peça (quando preenchida) */}
+                {product.part_position && (
+                  <View style={styles.specRow}>
+                    <Text style={styles.specKey}>Posição da Peça</Text>
+                    <Text style={styles.specValue}>{product.part_position}</Text>
                   </View>
                 )}
               </View>
@@ -499,14 +573,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginTop: 4,
   },
   ratingText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '600',
     color: '#1f2937',
+    marginLeft: 2,
   },
   reviewsText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6b7280',
   },
   section: {
