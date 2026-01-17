@@ -176,36 +176,39 @@ function VehicleCompatibilityRow({
 
   const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const brandId = e.target.value;
-    const selectedBrand = brands.find((b) => String(b.codigo) === brandId);
+    const brandName = e.target.selectedOptions?.[0]?.textContent?.trim() || '';
 
-    if (brandId && selectedBrand) {
-      onUpdate(index, 'brandId', brandId);
-      onUpdate(index, 'brand', selectedBrand.nome);
-      // Reset model when brand changes
-      onUpdate(index, 'model', '');
-      onUpdate(index, 'modelId', '');
-      setModels([]);
-    } else if (brandId === '') {
+    if (!brandId) {
       onUpdate(index, 'brandId', '');
       onUpdate(index, 'brand', '');
       onUpdate(index, 'model', '');
       onUpdate(index, 'modelId', '');
       setModels([]);
+      return;
     }
+
+    // Always set the selected value (even if FIPE payload changes type)
+    onUpdate(index, 'brandId', brandId);
+    onUpdate(index, 'brand', brandName);
+    // Reset model when brand changes
+    onUpdate(index, 'model', '');
+    onUpdate(index, 'modelId', '');
+    setModels([]);
   };
 
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const modelId = e.target.value;
-    const selectedModel = models.find((m) => String(m.codigo) === modelId);
+    const modelName = e.target.selectedOptions?.[0]?.textContent?.trim() || '';
 
-    if (modelId && selectedModel) {
-      onUpdate(index, 'modelId', modelId);
-      onUpdate(index, 'model', selectedModel.nome);
-      fetchYearsForModel(String(compatibility.brandId), modelId);
-    } else if (modelId === '') {
+    if (!modelId) {
       onUpdate(index, 'modelId', '');
       onUpdate(index, 'model', '');
+      return;
     }
+
+    onUpdate(index, 'modelId', modelId);
+    onUpdate(index, 'model', modelName);
+    fetchYearsForModel(String(compatibility.brandId), modelId);
   };
 
   // Generate years from 1950 to current year
@@ -257,7 +260,7 @@ function VehicleCompatibilityRow({
             value={String(compatibility.modelId || '')}
             onChange={handleModelChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={!compatibility.brandId || loadingModels || models.length === 0}
+            disabled={!compatibility.brandId || loadingModels}
           >
             <option value="">Selecione o modelo</option>
             {models.map((model) => (
@@ -271,6 +274,11 @@ function VehicleCompatibilityRow({
               <Loader size={16} className="animate-spin" />
               Carregando modelos...
             </div>
+          )}
+          {!loadingModels && compatibility.brandId && models.length === 0 && (
+            <p className="text-xs text-gray-500 mt-2">
+              Nenhum modelo carregado para esta marca.
+            </p>
           )}
         </div>
 
