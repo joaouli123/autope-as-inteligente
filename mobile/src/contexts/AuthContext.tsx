@@ -35,7 +35,9 @@ export interface UserProfile {
 // Database vehicle data structure
 interface DbVehicleData {
   brand: string;
+  brand_code: string | null;
   model: string;
+  model_code: string | null;
   year: number;
   engine: string | null;
   valves: number | null;
@@ -100,7 +102,9 @@ const mapVehicleData = (vehicleData: DbVehicleData): Vehicle => {
   return {
     type: 'carros', // Default to carros for now, can be extended later
     brand: vehicleData.brand,
+    brand_code: vehicleData.brand_code || undefined,
     model: vehicleData.model,
+    model_code: vehicleData.model_code || undefined,
     year: vehicleData.year.toString(),
     engine: vehicleData.engine || '',
     valves: vehicleData.valves ? `${vehicleData.valves}v` : '',
@@ -138,7 +142,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data: vehicleData, error: vehicleError } = await supabase
         .from('user_vehicles')
-        .select('brand, model, year, engine, valves, fuel_type, transmission')
+        .select('brand, brand_code, model, model_code, year, engine, valves, fuel_type, transmission')
         .eq('user_id', userId)
         .eq('is_primary', true)
         .single();

@@ -36,7 +36,9 @@ export default function EditVehicleScreen() {
   const [brands, setBrands] = useState<FipeBrand[]>([]);
   const [models, setModels] = useState<FipeModel[]>([]);
   const [selectedBrand, setSelectedBrand] = useState(user?.vehicle.brand || '');
+  const [selectedBrandCode, setSelectedBrandCode] = useState(user?.vehicle.brand_code || '');
   const [selectedModel, setSelectedModel] = useState(user?.vehicle.model || '');
+  const [selectedModelCode, setSelectedModelCode] = useState(user?.vehicle.model_code || '');
   const [year, setYear] = useState(user?.vehicle.year || '');
   const [engine, setEngine] = useState(user?.vehicle.engine || '');
   const [valves, setValves] = useState(user?.vehicle.valves || '');
@@ -96,7 +98,9 @@ export default function EditVehicleScreen() {
       vehicle: {
         type: vehicleType,
         brand: selectedBrand,
+        brand_code: selectedBrandCode,
         model: selectedModel,
+        model_code: selectedModelCode,
         year,
         engine,
         valves,
@@ -211,8 +215,10 @@ export default function EditVehicleScreen() {
                         style={styles.pickerOption}
                         onPress={() => {
                           setSelectedBrand(brand.nome);
+                          setSelectedBrandCode(brand.codigo);
                           setShowBrandPicker(false);
                           setSelectedModel('');
+                          setSelectedModelCode('');
                           loadModels(brand.codigo);
                         }}
                       >
@@ -243,6 +249,7 @@ export default function EditVehicleScreen() {
                           style={styles.pickerOption}
                           onPress={() => {
                             setSelectedModel(model.nome);
+                            setSelectedModelCode(model.codigo);
                             setShowModelPicker(false);
                           }}
                         >
