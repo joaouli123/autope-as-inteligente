@@ -7,6 +7,8 @@ ALTER TABLE product_compatibility
 CREATE INDEX IF NOT EXISTS idx_product_compatibility_brand_code ON product_compatibility(brand_code);
 CREATE INDEX IF NOT EXISTS idx_product_compatibility_model_code ON product_compatibility(model_code);
 
+DROP FUNCTION IF EXISTS get_products_for_user_vehicle(UUID, VARCHAR, DECIMAL);
+
 CREATE OR REPLACE FUNCTION get_products_for_user_vehicle(
   p_user_id UUID,
   p_category VARCHAR DEFAULT NULL,
