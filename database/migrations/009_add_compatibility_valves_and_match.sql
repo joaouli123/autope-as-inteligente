@@ -80,7 +80,7 @@ BEGIN
 
   -- Return products with compatibility check (text-based)
   RETURN QUERY
-  SELECT DISTINCT
+  SELECT
     p.id,
     p.name,
     p.part_code,
