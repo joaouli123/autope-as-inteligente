@@ -40,10 +40,11 @@ export default function VehicleCompatibilityMatrix({
       if (data && data.length > 0) {
         setBrands(data);
       } else {
+        console.error('FIPE API: No brands returned for vehicle type "carros"');
         setErrorLoadingBrands(true);
       }
     } catch (error) {
-      console.error('Error fetching brands:', error);
+      console.error('FIPE API: Error fetching brands for vehicle type "carros":', error);
       setErrorLoadingBrands(true);
     } finally {
       setLoadingBrands(false);
@@ -183,11 +184,12 @@ function VehicleCompatibilityRow({
       if (data && data.length > 0) {
         setModels(data);
       } else {
+        console.error(`FIPE API: No models returned for brand ID "${brandId}"`);
         setErrorLoadingModels(true);
         setManualEntry(true);
       }
     } catch (error) {
-      console.error('Error fetching models:', error);
+      console.error(`FIPE API: Error fetching models for brand ID "${brandId}":`, error);
       setErrorLoadingModels(true);
       setManualEntry(true);
     } finally {
@@ -201,7 +203,7 @@ function VehicleCompatibilityRow({
       const data = await getYears('carros', brandId, modelId);
       setYears(data);
     } catch (error) {
-      console.error('Error fetching years:', error);
+      console.error(`FIPE API: Error fetching years for brand ID "${brandId}", model ID "${modelId}":`, error);
     } finally {
       setLoadingYears(false);
     }

@@ -224,8 +224,8 @@ CREATE INDEX idx_products_category ON products(category);
 DROP INDEX IF EXISTS idx_products_sku;
 CREATE INDEX idx_products_sku ON products(sku);
 
-DROP INDEX IF EXISTS idx_products_sku_unique;
-CREATE UNIQUE INDEX idx_products_sku_unique ON products(sku) WHERE sku IS NOT NULL;
+DROP INDEX IF EXISTS idx_products_sku_partial_unique;
+CREATE UNIQUE INDEX idx_products_sku_partial_unique ON products(sku) WHERE sku IS NOT NULL;
 
 DROP INDEX IF EXISTS idx_products_mpn;
 CREATE INDEX idx_products_mpn ON products(mpn);

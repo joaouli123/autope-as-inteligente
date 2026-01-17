@@ -8,8 +8,9 @@
 
 ALTER TABLE products ADD COLUMN IF NOT EXISTS sku VARCHAR(100);
 
--- Make SKU unique to prevent duplicate products
-CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku_unique ON products(sku) WHERE sku IS NOT NULL;
+-- Make SKU unique to prevent duplicate products (only when SKU is provided)
+-- Using a partial unique index allows NULL values while enforcing uniqueness for non-NULL values
+CREATE UNIQUE INDEX IF NOT EXISTS idx_products_sku_partial_unique ON products(sku) WHERE sku IS NOT NULL;
 
 -- Create index for fast SKU lookups
 CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
