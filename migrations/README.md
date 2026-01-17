@@ -58,9 +58,28 @@ Execute these SQL scripts in order via **Supabase Dashboard** → **SQL Editor**
 
 ---
 
+### 5. 005_create_brands_and_orders_tables.sql
+**Purpose:** Creates `brands` table for product manufacturers and `orders` table for order management.
+
+**Problem Solved:** 
+- Fixes 400 error when loading resources from stores endpoint
+- Fixes 422 error during signup
+- Fixes missing table errors for `orders` (referenced by store_reviews)
+- Enables dynamic brand selection with autocomplete in product registration
+
+**What it does:**
+- Creates `brands` table with 100+ predefined automotive part brands
+- Creates `orders` table for managing customer orders
+- Creates `store_reviews` table (if not exists) with proper foreign key to orders
+- Adds RLS (Row Level Security) policies for all tables
+- Seeds brands table with comprehensive list of automotive part manufacturers
+- Adds indexes for performance optimization
+
+---
+
 ## Migration Order
 
-**IMPORTANT:** Execute migrations in numerical order (001, 002, 003, 004, etc.) to ensure proper database structure.
+**IMPORTANT:** Execute migrations in numerical order (001, 002, 003, 004, 005, etc.) to ensure proper database structure.
 
 ## Verification
 
@@ -83,6 +102,19 @@ WHERE table_name = 'stores'
 SELECT table_name 
 FROM information_schema.tables 
 WHERE table_name = 'store_reviews';
+
+-- Check if brands and orders tables exist
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_name IN ('brands', 'orders');
+
+-- Count brands in the database
+SELECT COUNT(*) as brand_count FROM brands;
+
+-- Check orders table structure
+SELECT column_name, data_type 
+FROM information_schema.columns 
+WHERE table_name = 'orders';
 ```
 
 ## Rollback (if needed)
