@@ -70,9 +70,12 @@ export default function VehicleCompatibilityMatrix({
     onChange(compatibilities.filter((_, i) => i !== index));
   };
 
-  const updateCompatibility = (index: number, field: keyof VehicleCompatibility, value: string | number | string[] | undefined) => {
+  const updateCompatibility = (
+    index: number,
+    patch: Partial<VehicleCompatibility>
+  ) => {
     const updated = [...compatibilities];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], ...patch };
     onChange(updated);
   };
 
@@ -122,7 +125,7 @@ interface VehicleCompatibilityRowProps {
   index: number;
   brands: FipeItem[];
   loadingBrands: boolean;
-  onUpdate: (index: number, field: keyof VehicleCompatibility, value: any) => void;
+  onUpdate: (index: number, patch: Partial<VehicleCompatibility>) => void;
   onRemove: () => void;
 }
 
@@ -188,20 +191,24 @@ function VehicleCompatibilityRow({
     const brandName = (selectedOption?.textContent || '').trim();
 
     if (!brandId) {
-      onUpdate(index, 'brandId', '');
-      onUpdate(index, 'brand', '');
-      onUpdate(index, 'model', '');
-      onUpdate(index, 'modelId', '');
+      onUpdate(index, {
+        brandId: '',
+        brand: '',
+        model: '',
+        modelId: '',
+      });
       setModels([]);
       return;
     }
 
     // Always set the selected value (even if FIPE payload changes type)
-    onUpdate(index, 'brandId', brandId);
-    onUpdate(index, 'brand', brandName);
     // Reset model when brand changes
-    onUpdate(index, 'model', '');
-    onUpdate(index, 'modelId', '');
+    onUpdate(index, {
+      brandId,
+      brand: brandName,
+      model: '',
+      modelId: '',
+    });
     setModels([]);
   };
 
@@ -211,13 +218,11 @@ function VehicleCompatibilityRow({
     const modelName = (selectedOption?.textContent || '').trim();
 
     if (!modelId) {
-      onUpdate(index, 'modelId', '');
-      onUpdate(index, 'model', '');
+      onUpdate(index, { modelId: '', model: '' });
       return;
     }
 
-    onUpdate(index, 'modelId', modelId);
-    onUpdate(index, 'model', modelName);
+    onUpdate(index, { modelId, model: modelName });
     fetchYearsForModel(String(compatibility.brandId), modelId);
   };
 
@@ -303,7 +308,7 @@ function VehicleCompatibilityRow({
           </label>
           <select
             value={compatibility.year}
-            onChange={(e) => onUpdate(index, 'year', parseInt(e.target.value))}
+            onChange={(e) => onUpdate(index, { year: parseInt(e.target.value) })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Selecione o ano</option>
@@ -322,7 +327,9 @@ function VehicleCompatibilityRow({
           </label>
           <select
             value={compatibility.engines[0] || ''}
-            onChange={(e) => onUpdate(index, 'engines', e.target.value ? [e.target.value] : [])}
+            onChange={(e) =>
+              onUpdate(index, { engines: e.target.value ? [e.target.value] : [] })
+            }
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Selecione o motor</option>
@@ -348,7 +355,11 @@ function VehicleCompatibilityRow({
           </label>
           <select
             value={compatibility.transmissions[0] || ''}
-            onChange={(e) => onUpdate(index, 'transmissions', e.target.value ? [e.target.value] : [])}
+            onChange={(e) =>
+              onUpdate(index, {
+                transmissions: e.target.value ? [e.target.value] : [],
+              })
+            }
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Selecione a transmissão</option>
@@ -366,7 +377,11 @@ function VehicleCompatibilityRow({
           </label>
           <select
             value={compatibility.fuel_types[0] || ''}
-            onChange={(e) => onUpdate(index, 'fuel_types', e.target.value ? [e.target.value] : [])}
+            onChange={(e) =>
+              onUpdate(index, {
+                fuel_types: e.target.value ? [e.target.value] : [],
+              })
+            }
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Selecione o combustível</option>
