@@ -77,21 +77,11 @@ export default function VehicleCompatibilityMatrix({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">🚗 Compatibilidade com Veículos</h3>
-          <p className="text-sm text-gray-600">
-            Adicione os veículos compatíveis com este produto usando dados da FIPE
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={addCompatibility}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={20} />
-          Adicionar Veículo
-        </button>
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">🚗 Compatibilidade com Veículos</h3>
+        <p className="text-sm text-gray-600">
+          Adicione os veículos compatíveis com este produto usando dados da FIPE
+        </p>
       </div>
 
       {errorLoadingBrands && (
@@ -114,28 +104,30 @@ export default function VehicleCompatibilityMatrix({
         </div>
       )}
 
-      {compatibilities.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-          <p className="text-gray-500">
-            Nenhum veículo compatível adicionado. Clique em "Adicionar Veículo" para começar.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {compatibilities.map((comp, index) => (
-            <VehicleCompatibilityRow
-              key={index}
-              compatibility={comp}
-              index={index}
-              brands={brands}
-              loadingBrands={loadingBrands}
-              errorLoadingBrands={errorLoadingBrands}
-              onUpdate={updateCompatibility}
-              onRemove={() => removeCompatibility(index)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="space-y-4">
+        {compatibilities.map((comp, index) => (
+          <VehicleCompatibilityRow
+            key={index}
+            compatibility={comp}
+            index={index}
+            brands={brands}
+            loadingBrands={loadingBrands}
+            errorLoadingBrands={errorLoadingBrands}
+            onUpdate={updateCompatibility}
+            onRemove={() => removeCompatibility(index)}
+          />
+        ))}
+        
+        {/* Always show add button for flexibility */}
+        <button
+          type="button"
+          onClick={addCompatibility}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus size={20} />
+          Adicionar Outro Veículo
+        </button>
+      </div>
     </div>
   );
 }

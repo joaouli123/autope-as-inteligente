@@ -80,7 +80,16 @@ export default function NovoProdutoPage() {
     images: [],
     specifications: [{ key: '', value: '' }],
     compatible_vehicles: [''],
-    vehicle_compatibilities: [],
+    vehicle_compatibilities: [{
+      brand: '',
+      brandId: '',
+      model: '',
+      modelId: '',
+      year: new Date().getFullYear(),
+      engines: [],
+      transmissions: [],
+      fuel_types: [],
+    }],
     is_active: true,
   });
 
