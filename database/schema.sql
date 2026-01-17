@@ -146,6 +146,11 @@ CREATE TABLE IF NOT EXISTS products (
   store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   description TEXT,
+  sku VARCHAR(100),
+  oem_codes JSONB,
+  mpn VARCHAR(100),
+  brand TEXT,
+  model TEXT,
   part_code VARCHAR(50),
   category VARCHAR(100) NOT NULL,
   part_position VARCHAR(50),
@@ -215,6 +220,24 @@ CREATE INDEX idx_products_store ON products(store_id);
 
 DROP INDEX IF EXISTS idx_products_category;
 CREATE INDEX idx_products_category ON products(category);
+
+DROP INDEX IF EXISTS idx_products_sku;
+CREATE INDEX idx_products_sku ON products(sku);
+
+DROP INDEX IF EXISTS idx_products_sku_unique;
+CREATE UNIQUE INDEX idx_products_sku_unique ON products(sku) WHERE sku IS NOT NULL;
+
+DROP INDEX IF EXISTS idx_products_mpn;
+CREATE INDEX idx_products_mpn ON products(mpn);
+
+DROP INDEX IF EXISTS idx_products_oem_codes;
+CREATE INDEX idx_products_oem_codes ON products USING gin(oem_codes);
+
+DROP INDEX IF EXISTS idx_products_brand;
+CREATE INDEX idx_products_brand ON products(brand);
+
+DROP INDEX IF EXISTS idx_products_model;
+CREATE INDEX idx_products_model ON products(model);
 
 DROP INDEX IF EXISTS idx_products_part_code;
 CREATE INDEX idx_products_part_code ON products(part_code);
