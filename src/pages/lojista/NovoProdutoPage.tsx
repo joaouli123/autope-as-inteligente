@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import ImageUpload from '../../components/lojista/ImageUpload';
@@ -85,6 +85,15 @@ export default function NovoProdutoPage() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [brands, setBrands] = useState<string[]>([]);
+  const [filteredBrands, setFilteredBrands] = useState<string[]>([]);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const brandInputRef = useRef<HTMLInputElement>(null);
+
+  // Load brands from database
+  useEffect(() => {
+    fetchBrands();
+  }, []);
 
   // Load product data if editing
   useEffect(() => {
@@ -92,6 +101,26 @@ export default function NovoProdutoPage() {
       fetchProduct(id);
     }
   }, [id, isEditing]);
+
+  const fetchBrands = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('brands')
+        .select('name')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+
+      if (data) {
+        const brandNames = data.map((b) => b.name);
+        setBrands(brandNames);
+        setFilteredBrands(brandNames);
+      }
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+    }
+  };
 
   const fetchProduct = async (productId: string) => {
     try {
@@ -162,6 +191,61 @@ export default function NovoProdutoPage() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const handleBrandChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, brand: value }));
+    
+    // Filter brands based on input
+    const filtered = brands.filter((b) =>
+      b.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredBrands(filtered);
+    setShowBrandDropdown(value.length > 0 && filtered.length > 0);
+    
+    if (errors.brand) {
+      setErrors((prev) => ({ ...prev, brand: '' }));
+    }
+  };
+
+  const selectBrand = (brandName: string) => {
+    setFormData((prev) => ({ ...prev, brand: brandName }));
+    setShowBrandDropdown(false);
+    brandInputRef.current?.blur();
+  };
+
+  const handleBrandBlur = async () => {
+    // Small delay to allow click on dropdown item
+    setTimeout(async () => {
+      setShowBrandDropdown(false);
+      
+      // If brand is entered and doesn't exist in the list, add it to the database
+      if (formData.brand && formData.brand.trim()) {
+        const brandExists = brands.some(
+          (b) => b.toLowerCase() === formData.brand.trim().toLowerCase()
+        );
+        
+        if (!brandExists) {
+          try {
+            const { error } = await supabase
+              .from('brands')
+              .insert({ name: formData.brand.trim(), is_active: true });
+
+            if (error) {
+              // If duplicate key error (race condition), just ignore it
+              if (error.code !== '23505') {
+                console.error('Error adding new brand:', error);
+              }
+            } else {
+              // Refresh brands list
+              await fetchBrands();
+            }
+          } catch (error) {
+            console.error('Error adding brand:', error);
+          }
+        }
+      }
+    }, 200);
   };
 
   const handleSpecificationChange = (
@@ -579,13 +663,47 @@ export default function NovoProdutoPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Marca
               </label>
-              <input
-                type="text"
-                value={formData.brand}
-                onChange={(e) => handleChange('brand', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ex: Bosch"
-              />
+              <div className="relative">
+                <input
+                  ref={brandInputRef}
+                  type="text"
+                  value={formData.brand}
+                  onChange={(e) => handleBrandChange(e.target.value)}
+                  onFocus={() => {
+                    if (formData.brand) {
+                      const filtered = brands.filter((b) =>
+                        b.toLowerCase().includes(formData.brand.toLowerCase())
+                      );
+                      setFilteredBrands(filtered);
+                      setShowBrandDropdown(filtered.length > 0);
+                    }
+                  }}
+                  onBlur={handleBrandBlur}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Ex: Bosch"
+                  autoComplete="off"
+                />
+                {showBrandDropdown && filteredBrands.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredBrands.slice(0, 10).map((brand, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          selectBrand(brand);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                      >
+                        {brand}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Selecione uma marca existente ou digite uma nova
+              </p>
             </div>
 
             <div>
