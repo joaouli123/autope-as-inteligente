@@ -13,7 +13,7 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Search, Filter, X, ShoppingBag, Star, Plus } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
@@ -127,6 +127,41 @@ export default function SearchScreen() {
   useEffect(() => {
     loadAllProducts();
   }, []);
+
+  // Realtime subscription for new products
+  useEffect(() => {
+    console.log('[SearchScreen] Setting up realtime subscription...');
+    
+    const channel = supabase
+      .channel('products-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'products',
+        },
+        (payload) => {
+          console.log('[SearchScreen] Products table changed:', payload.eventType);
+          // Reload products when any change happens
+          loadAllProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('[SearchScreen] Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Reload when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('[SearchScreen] Screen focused, reloading products');
+      loadAllProducts();
+    }, [])
+  );
 
   // Reload products when user vehicle changes
   useEffect(() => {
