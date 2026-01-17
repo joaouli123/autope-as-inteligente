@@ -559,7 +559,7 @@ export default function NovoProdutoPage() {
         {/* Basic Information */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <h2 className="text-xl font-bold text-gray-900 mb-2">
-            📝 Informações Básicas
+            Informações Básicas
           </h2>
           <p className="text-sm text-gray-600 mb-4">
             Informações gerais sobre o produto
@@ -629,7 +629,7 @@ export default function NovoProdutoPage() {
         {/* Product Codes */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <h2 className="text-xl font-bold text-gray-900 mb-2">
-            🔢 Códigos de Identificação
+            Códigos de Identificação
           </h2>
           <p className="text-sm text-gray-600 mb-4">
             SKU, códigos OEM e identificadores do produto
@@ -795,7 +795,7 @@ export default function NovoProdutoPage() {
         {/* Pricing and Stock */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <h2 className="text-xl font-bold text-gray-900 mb-2">
-            💰 Preço e Estoque
+            Preço e Estoque
           </h2>
           <p className="text-sm text-gray-600 mb-4">
             Valores e disponibilidade do produto
@@ -855,7 +855,7 @@ export default function NovoProdutoPage() {
         {/* Images */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <h2 className="text-xl font-bold text-gray-900 mb-2">
-            📸 Imagens do Produto *
+            Imagens do Produto *
           </h2>
           <p className="text-sm text-gray-600 mb-4">
             Adicione fotos do produto (máximo 5 imagens)
@@ -878,7 +878,7 @@ export default function NovoProdutoPage() {
         {/* Specifications */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <h2 className="text-xl font-bold text-gray-900 mb-2">
-            ⚙️ Especificações Técnicas
+            Especificações Técnicas
           </h2>
           <p className="text-sm text-gray-600 mb-4">
             Características e detalhes técnicos do produto
