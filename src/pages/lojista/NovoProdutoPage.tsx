@@ -160,7 +160,10 @@ export default function NovoProdutoPage() {
         model: data.model || '',
         part_code: data.part_code || '',
         part_position: data.part_position || '',
-        price: data.price.toString(),
+        price:
+          data.price !== null && data.price !== undefined
+            ? Math.round(Number(data.price) * 100).toString()
+            : '',
         stock_quantity: data.stock_quantity.toString(),
         images: data.images || [],
         specifications: specsArray.length > 0 ? specsArray : [{ key: '', value: '' }],
@@ -168,7 +171,18 @@ export default function NovoProdutoPage() {
           data.compatible_vehicles && data.compatible_vehicles.length > 0
             ? data.compatible_vehicles
             : [''],
-        vehicle_compatibilities: [],
+        vehicle_compatibilities: [
+          {
+            brand: '',
+            brandId: '',
+            model: '',
+            modelId: '',
+            year: new Date().getFullYear(),
+            engines: [],
+            transmissions: [],
+            fuel_types: [],
+          },
+        ],
         is_active: data.is_active,
       });
     } catch (error) {
@@ -325,8 +339,8 @@ export default function NovoProdutoPage() {
       newErrors.sku = 'SKU é obrigatório';
     }
 
-    const price = parseFloat(formData.price);
-    if (!formData.price || isNaN(price) || price <= 0) {
+    const priceCents = parseInt(formData.price, 10);
+    if (!formData.price || isNaN(priceCents) || priceCents <= 0) {
       newErrors.price = 'Preço deve ser um número positivo';
     }
 
@@ -383,7 +397,7 @@ export default function NovoProdutoPage() {
         model: formData.model.trim() || null,
         part_code: formData.part_code.trim() || null,
         part_position: formData.part_position || null,
-        price: parseFloat(formData.price),
+        price: parseInt(formData.price || '0', 10) / 100,
         stock_quantity: parseInt(formData.stock_quantity) || 0,
         images: formData.images,
         specifications,
@@ -807,13 +821,18 @@ export default function NovoProdutoPage() {
               </label>
               <input
                 type="text"
-                value={formData.price ? Number(formData.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
+                value={
+                  formData.price
+                    ? (parseInt(formData.price, 10) / 100).toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : ''
+                }
                 onChange={(e) => {
-                  // Remove tudo exceto números
-                  const rawValue = e.target.value.replace(/\D/g, '');
-                  // Converte para centavos e depois para reais
-                  const numValue = parseFloat(rawValue) / 100;
-                  handleChange('price', numValue > 0 ? numValue.toString() : '');
+                  // Guarda como centavos (somente dígitos)
+                  const cents = e.target.value.replace(/\D/g, '');
+                  handleChange('price', cents);
                 }}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.price ? 'border-red-500' : 'border-gray-300'
