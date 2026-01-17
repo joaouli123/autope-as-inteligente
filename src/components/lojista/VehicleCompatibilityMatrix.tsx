@@ -227,9 +227,9 @@ function VehicleCompatibilityRow({
     onUpdate(index, 'modelId', '');
   };
 
-  // Generate years from 1950 to 2026
+  // Generate years from 1950 to current year
   const generateYears = () => {
-    const currentYear = 2026;
+    const currentYear = new Date().getFullYear();
     const years = [];
     for (let year = currentYear; year >= 1950; year--) {
       years.push(year);
