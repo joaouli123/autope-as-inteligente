@@ -147,21 +147,15 @@ export default function SearchScreen() {
           loadAllProducts();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[SearchScreen] Subscription status:', status);
+      });
 
     return () => {
       console.log('[SearchScreen] Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, []);
-
-  // Reload when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log('[SearchScreen] Screen focused, reloading products');
-      loadAllProducts();
-    }, [])
-  );
 
   // Reload products when user vehicle changes
   useEffect(() => {
