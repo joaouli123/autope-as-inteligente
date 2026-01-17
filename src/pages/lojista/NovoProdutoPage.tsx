@@ -549,7 +549,7 @@ export default function NovoProdutoPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
             📝 Informações Básicas
           </h2>
           <p className="text-sm text-gray-600 mb-4">
@@ -614,10 +614,12 @@ export default function NovoProdutoPage() {
                 <p className="text-red-600 text-sm mt-1">{errors.category}</p>
               )}
             </div>
+          </div>
+        </div>
 
-        {/* Product Codes & Identification */}
+        {/* Product Codes */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
             🔢 Códigos de Identificação
           </h2>
           <p className="text-sm text-gray-600 mb-4">
@@ -640,25 +642,6 @@ export default function NovoProdutoPage() {
               {errors.sku && (
                 <p className="text-red-600 text-sm mt-1">{errors.sku}</p>
               )}
-              <p className="text-xs text-gray-500 mt-1">
-                Código único de estoque (obrigatório)
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Código da Peça
-              </label>
-              <input
-                type="text"
-                value={formData.part_code}
-                onChange={(e) => handleChange('part_code', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ex: KL1045008"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Código único da peça para busca exata
-              </p>
             </div>
 
             <div>
@@ -695,6 +678,22 @@ export default function NovoProdutoPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Código da Peça
+              </label>
+              <input
+                type="text"
+                value={formData.part_code}
+                onChange={(e) => handleChange('part_code', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ex: KL1045008"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Código único da peça para busca exata
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Posição da Peça
               </label>
               <select
@@ -713,9 +712,9 @@ export default function NovoProdutoPage() {
           </div>
         </div>
 
-        {/* Manufacturer Details */}
+        {/* Manufacturer */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
             🏭 Fabricante
           </h2>
           <p className="text-sm text-gray-600 mb-4">
@@ -784,9 +783,9 @@ export default function NovoProdutoPage() {
           </div>
         </div>
 
-        {/* Pricing & Inventory */}
+        {/* Pricing and Stock */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
             💰 Preço e Estoque
           </h2>
           <p className="text-sm text-gray-600 mb-4">
@@ -843,7 +842,7 @@ export default function NovoProdutoPage() {
 
         {/* Images */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
             📸 Imagens do Produto *
           </h2>
           <p className="text-sm text-gray-600 mb-4">
@@ -866,7 +865,7 @@ export default function NovoProdutoPage() {
 
         {/* Specifications */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
             ⚙️ Especificações Técnicas
           </h2>
           <p className="text-sm text-gray-600 mb-4">
@@ -916,15 +915,6 @@ export default function NovoProdutoPage() {
 
         {/* Compatible Vehicles - Advanced Matrix */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              🚗 Compatibilidade com Veículos
-            </h2>
-            <p className="text-sm text-gray-600">
-              Adicione os veículos compatíveis usando dados da tabela FIPE. 
-              Os dados são obtidos da API FIPE em tempo real para garantir precisão.
-            </p>
-          </div>
           <VehicleCompatibilityMatrix
             compatibilities={formData.vehicle_compatibilities}
             onChange={(compatibilities) =>
@@ -935,7 +925,7 @@ export default function NovoProdutoPage() {
 
         {/* Legacy Compatible Vehicles (Simple Text List) */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
             📋 Compatibilidade Simplificada (Legado)
           </h2>
           <p className="text-sm text-gray-600 mb-4">
