@@ -4,6 +4,7 @@ import {
   Package,
   ShoppingCart,
   Users,
+  Store,
   LogOut,
 } from 'lucide-react';
 import { useLojistaAuth } from '../../contexts/LojistaAuthContext';
