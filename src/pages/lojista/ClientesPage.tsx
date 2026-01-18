@@ -451,30 +451,30 @@ export default function ClientesPage() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#1f4461] to-[#34abd5] text-white px-6 py-3 rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all duration-200 shadow-lg"
         >
-          <Plus size={18} />
+          <Plus size={20} strokeWidth={2.5} />
           Novo Cliente
         </button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+        <div className="bg-[#34abd5]/10 rounded-2xl p-6 border border-[#34abd5]/30 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-700">Total de Clientes</p>
-              <p className="text-3xl font-bold text-blue-900">
+              <p className="text-sm text-[#34abd5] font-semibold">Total de Clientes</p>
+              <p className="text-3xl font-bold text-[#1f4461]">
                 {customers.length}
               </p>
             </div>
-            <Eye size={32} className="text-blue-600" />
+            <Eye size={32} className="text-[#34abd5]" strokeWidth={2} />
           </div>
         </div>
-        <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+        <div className="bg-green-50 rounded-2xl p-6 border border-green-200 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-700">Clientes Ativos</p>
+              <p className="text-sm text-green-700 font-semibold">Clientes Ativos</p>
               <p className="text-3xl font-bold text-green-900">
                 {customers.filter((c) => !c.is_blocked).length}
               </p>
@@ -545,7 +545,7 @@ export default function ClientesPage() {
             <button
               onClick={handleCreateCustomer}
               disabled={creating}
-              className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="px-5 py-3 text-white bg-gradient-to-r from-[#1f4461] to-[#34abd5] rounded-xl font-bold hover:shadow-xl transition-all duration-200 disabled:opacity-50"
             >
               {creating ? 'Salvando...' : 'Salvar Cliente'}
             </button>

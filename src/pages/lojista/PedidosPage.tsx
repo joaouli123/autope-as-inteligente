@@ -301,43 +301,43 @@ export default function PedidosPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+        <div className="bg-amber-50 rounded-xl p-5 border border-amber-200 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-yellow-700">Pendentes</p>
-              <p className="text-2xl font-bold text-yellow-900">
+              <p className="text-sm text-amber-700 font-semibold">Pendentes</p>
+              <p className="text-2xl font-bold text-amber-900">
                 {orders.filter((o) => o.status === 'pending').length}
               </p>
             </div>
-            <Calendar size={32} className="text-yellow-600" />
+            <Calendar size={32} className="text-amber-600" />
           </div>
         </div>
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+        <div className="bg-[#34abd5]/10 rounded-xl p-5 border border-[#34abd5]/30 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-700">Confirmados</p>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-sm text-[#34abd5] font-semibold">Confirmados</p>
+              <p className="text-2xl font-bold text-[#1f4461]">
                 {orders.filter((o) => o.status === 'confirmed').length}
               </p>
             </div>
-            <User size={32} className="text-blue-600" />
+            <User size={32} className="text-[#34abd5]" />
           </div>
         </div>
-        <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+        <div className="bg-[#e99950]/10 rounded-xl p-5 border border-[#e99950]/30 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-700">Em Entrega</p>
-              <p className="text-2xl font-bold text-purple-900">
+              <p className="text-sm text-[#e99950] font-semibold">Em Entrega</p>
+              <p className="text-2xl font-bold text-[#1f4461]">
                 {orders.filter((o) => o.status === 'delivering').length}
               </p>
             </div>
-            <CreditCard size={32} className="text-purple-600" />
+            <CreditCard size={32} className="text-[#e99950]" />
           </div>
         </div>
-        <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+        <div className="bg-green-50 rounded-xl p-5 border border-green-200 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-700">Entregues</p>
+              <p className="text-sm text-green-700 font-semibold">Entregues</p>
               <p className="text-2xl font-bold text-green-900">
                 {orders.filter((o) => o.status === 'delivered').length}
               </p>

@@ -280,28 +280,28 @@ export default function PerfilPage() {
         {!editMode ? (
           <button
             onClick={() => setEditMode(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-gradient-to-r from-[#1f4461] to-[#34abd5] text-white px-6 py-3 rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all duration-200 shadow-lg"
           >
-            <Settings size={20} />
+            <Settings size={20} strokeWidth={2.5} />
             Editar Informações
           </button>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={() => {
                 setEditMode(false);
                 fetchStoreData();
               }}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
             >
               Cancelar
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 bg-gradient-to-r from-[#1f4461] to-[#34abd5] text-white px-6 py-3 rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all duration-200 shadow-lg disabled:opacity-50"
             >
-              <Save size={20} />
+              <Save size={20} strokeWidth={2.5} />
               {saving ? 'Salvando...' : 'Salvar Alterações'}
             </button>
           </div>
@@ -321,8 +321,8 @@ export default function PerfilPage() {
           title="Pedidos do Mês"
           value={monthlyStats.orders.toString()}
           icon={ShoppingBag}
-          iconBgColor="bg-blue-100"
-          iconColor="text-blue-600"
+          iconBgColor="bg-[#34abd5]/10"
+          iconColor="text-[#34abd5]"
         />
         <StatsCard
           title="Novos Clientes"
