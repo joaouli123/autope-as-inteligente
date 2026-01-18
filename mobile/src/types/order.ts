@@ -18,6 +18,8 @@ export interface Order {
   items: CartItem[];
   total: number;
   paymentMethod: string;
+  storeName?: string;
+  storePhone?: string;
   deliveryAddress: {
     street: string;
     number: string;

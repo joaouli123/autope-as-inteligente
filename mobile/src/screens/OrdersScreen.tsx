@@ -34,7 +34,7 @@ export default function OrdersScreen() {
       setLoading(true);
       const { data, error } = await supabase
         .from('orders')
-        .select('id, order_number, created_at, status, total, payment_method, items, delivery_address')
+        .select('id, order_number, created_at, status, total, payment_method, items, delivery_address, stores(name, phone)')
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -71,6 +71,8 @@ export default function OrdersScreen() {
             : order.payment_method === 'cash'
             ? 'Dinheiro'
             : String(order.payment_method || ''),
+        storeName: order.stores?.name || undefined,
+        storePhone: order.stores?.phone || undefined,
         deliveryAddress: {
           street: order.delivery_address?.street || '',
           number: order.delivery_address?.number || '',
@@ -179,6 +181,17 @@ export default function OrdersScreen() {
                     </Text>
                   )}
                 </View>
+
+                {(order.storeName || order.storePhone) && (
+                  <View style={styles.storeInfo}>
+                    {order.storeName && (
+                      <Text style={styles.storeName}>{order.storeName}</Text>
+                    )}
+                    {order.storePhone && (
+                      <Text style={styles.storePhone}>{order.storePhone}</Text>
+                    )}
+                  </View>
+                )}
 
                 <View style={styles.orderFooter}>
                   <Text style={styles.orderTotal}>
@@ -302,6 +315,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
     gap: 6,
+  },
+  storeInfo: {
+    marginTop: 12,
+    padding: 10,
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+  },
+  storeName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  storePhone: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginTop: 2,
   },
   orderItemText: {
     fontSize: 14,
