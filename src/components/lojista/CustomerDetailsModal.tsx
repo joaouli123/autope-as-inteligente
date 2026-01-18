@@ -9,12 +9,14 @@ interface CustomerDetailsModalProps {
   customer: Customer | null;
   isOpen: boolean;
   onClose: () => void;
+  storeId?: string | null;
 }
 
 export default function CustomerDetailsModal({
   customer,
   isOpen,
   onClose,
+  storeId,
 }: CustomerDetailsModalProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,11 +32,16 @@ export default function CustomerDetailsModal({
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('orders')
         .select('*')
-        .eq('customer_id', customer.id)
-        .order('created_at', { ascending: false });
+        .eq('customer_id', customer.id);
+
+      if (storeId) {
+        query = query.eq('store_id', storeId);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
 

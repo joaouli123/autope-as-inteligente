@@ -148,6 +148,8 @@ export interface Customer {
   orders_count: number;
   total_spent: number;
   last_purchase_at?: string;
+  last_order_total?: number;
+  last_order_number?: string;
   created_at: string;
 }
 
