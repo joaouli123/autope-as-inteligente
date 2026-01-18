@@ -7,15 +7,18 @@ import {
   StyleSheet,
   Alert,
   Modal,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Car, Eye, EyeOff } from 'lucide-react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { validateEmail } from '../utils/validators';
 import { sendPasswordResetEmail } from '../services/emailService';
+
+const logoChegapecas = require('../../assets/images/logo-chegapecas.svg');
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -76,12 +79,17 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
+    <View style={{ flex: 1, backgroundColor: '#1f4461' }}>
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Car color="#ffffff" size={64} strokeWidth={2} />
-            <Text style={styles.title}>AutoPeças AI</Text>
+            <View style={styles.logoContainer}>
+              <Image 
+                source={logoChegapecas} 
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.subtitle}>Entre na sua conta</Text>
           </View>
 
@@ -202,11 +210,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 48,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginTop: 16,
+  logoContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+    width: 140,
+    height: 140,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
   },
   subtitle: {
     fontSize: 16,
@@ -253,7 +269,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   buttonText: {
-    color: '#1e3a8a',
+    color: '#1f4461',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -301,7 +317,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalButton: {
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#1f4461',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
