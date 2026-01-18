@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Search, Filter, X, ShoppingBag, Star, Plus } from 'lucide-react-native';
+import { Search, Filter, X, ShoppingBag, Star, Plus, Check } from 'lucide-react-native';
 import type { RootStackParamList } from '../types/navigation';
 import AdvancedFilterModal from '../components/AdvancedFilterModal';
 import { supabase } from '../../services/supabaseClient';
@@ -27,6 +27,7 @@ interface Product {
   name: string;
   price: number;
   store: string;
+  storeId: string;
   image: string;
   category: string;
   part_code?: string;
@@ -86,7 +87,7 @@ interface FilterState {
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -207,6 +208,7 @@ export default function SearchScreen() {
         name: item.product_name,
         price: item.price,
         store: item.store_name,
+        storeId: item.store_id,
         image: item.image_url || 'https://via.placeholder.com/80',
         category: item.category,
         part_code: item.part_code || undefined,
@@ -409,7 +411,10 @@ export default function SearchScreen() {
                         </Text>
                         
                         <TouchableOpacity
-                          style={styles.addButton}
+                          style={[
+                            styles.addButton,
+                            cartItems.some((cartItem) => cartItem.id === item.id) && styles.addButtonAdded,
+                          ]}
                           onPress={(e) => {
                             e.stopPropagation();
                             addToCart({
@@ -418,12 +423,18 @@ export default function SearchScreen() {
                               description: item.store,
                               price: item.price,
                               quantity: 1,
+                              image: item.image,
+                              store_id: item.storeId,
                               brand: item.store,
                               partNumber: item.part_code || '',
                             });
                           }}
                         >
-                          <Plus color="#ffffff" size={20} />
+                          {cartItems.some((cartItem) => cartItem.id === item.id) ? (
+                            <Check color="#ffffff" size={20} />
+                          ) : (
+                            <Plus color="#ffffff" size={20} />
+                          )}
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -569,6 +580,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 16,
+    marginTop: -35,
   },
   listContent: {
     paddingBottom: 100,
@@ -722,5 +734,9 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
     }),
+  },
+  addButtonAdded: {
+    backgroundColor: '#10b981',
+    shadowColor: '#10b981',
   },
 });

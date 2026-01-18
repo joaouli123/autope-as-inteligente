@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -59,7 +60,11 @@ export default function CartScreen() {
           {cartItems.map((item) => (
             <View key={item.id} style={styles.cartItem}>
               <View style={styles.itemImage}>
-                <ShoppingCart color="#1e3a8a" size={32} />
+                {item.image ? (
+                  <Image source={{ uri: item.image }} style={styles.itemImageAsset} />
+                ) : (
+                  <ShoppingCart color="#1e3a8a" size={32} />
+                )}
               </View>
               <View style={styles.itemInfo}>
                 <Text style={styles.itemBrand}>{item.brand}</Text>
@@ -86,7 +91,11 @@ export default function CartScreen() {
                   <Text style={styles.quantityText}>{item.quantity}</Text>
                   <TouchableOpacity
                     style={styles.quantityButton}
-                    onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                    onPress={() => {
+                      if (!item.stock_quantity || item.quantity < item.stock_quantity) {
+                        updateQuantity(item.id, item.quantity + 1);
+                      }
+                    }}
                   >
                     <Plus color="#1e3a8a" size={16} />
                   </TouchableOpacity>
@@ -179,6 +188,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  itemImageAsset: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   itemInfo: {
     flex: 1,
@@ -241,6 +256,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
+    marginBottom: -35,
   },
   totalContainer: {
     flexDirection: 'row',

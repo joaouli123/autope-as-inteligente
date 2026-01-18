@@ -8,8 +8,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ClipboardList, Package, ChevronRight } from 'lucide-react-native';
-import { useCart } from '../contexts/CartContext';
-import { ORDER_STATUS_MAP } from '../types/order';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../../services/supabaseClient';
+import { ORDER_STATUS_MAP, type Order } from '../types/order';
 
 // Helper function to convert hex color to rgba with opacity
 const hexToRgba = (hex: string, opacity: number): string => {
@@ -20,7 +21,88 @@ const hexToRgba = (hex: string, opacity: number): string => {
 };
 
 export default function OrdersScreen() {
-  const { orders } = useCart();
+  const { user } = useAuth();
+  const [orders, setOrders] = React.useState<Order[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  React.useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('orders')
+        .select('id, order_number, created_at, status, total, payment_method, items, delivery_address')
+        .eq('customer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('[OrdersScreen] Failed to load orders:', error.message);
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+
+      const mapped = (data || []).map((order) => ({
+        id: order.order_number,
+        date: order.created_at,
+        status: order.status,
+        items: Array.isArray(order.items)
+          ? order.items.map((item: any) => ({
+              id: item.product_id || '',
+              name: item.name || 'Produto',
+              description: '',
+              price: Number(item.price || 0),
+              quantity: Number(item.quantity || 1),
+              image: item.image || undefined,
+              store_id: '',
+              brand: '',
+              partNumber: item.part_number || '',
+            }))
+          : [],
+        total: Number(order.total || 0),
+        paymentMethod:
+          order.payment_method === 'credit_card'
+            ? 'Cartão (Maquininha)'
+            : order.payment_method === 'pix'
+            ? 'PIX'
+            : order.payment_method === 'cash'
+            ? 'Dinheiro'
+            : String(order.payment_method || ''),
+        deliveryAddress: {
+          street: order.delivery_address?.street || '',
+          number: order.delivery_address?.number || '',
+          complement: order.delivery_address?.complement || '',
+          city: order.delivery_address?.city || '',
+          state: order.delivery_address?.state || '',
+          cep: order.delivery_address?.cep || '',
+        },
+      }));
+
+      setOrders(mapped);
+      setLoading(false);
+    };
+
+    fetchOrders();
+  }, [user?.id]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
+        <SafeAreaView style={styles.container} edges={['bottom']}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Meus Pedidos</Text>
+          </View>
+          <View style={styles.emptyContainer}>
+            <ClipboardList color="#9ca3af" size={80} />
+            <Text style={styles.emptyTitle}>Carregando pedidos...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

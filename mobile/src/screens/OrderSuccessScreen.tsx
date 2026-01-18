@@ -42,19 +42,13 @@ export default function OrderSuccessScreen() {
             <View style={styles.infoItem}>
               <View style={styles.infoBullet} />
               <Text style={styles.infoText}>
-                Você receberá um e-mail com os detalhes do pedido
-              </Text>
-            </View>
-            <View style={styles.infoItem}>
-              <View style={styles.infoBullet} />
-              <Text style={styles.infoText}>
                 Acompanhe o status na aba "Pedidos"
               </Text>
             </View>
             <View style={styles.infoItem}>
               <View style={styles.infoBullet} />
               <Text style={styles.infoText}>
-                Estimativa de entrega: 3-5 dias úteis
+                Estimativa de entrega: 2-5 horas
               </Text>
             </View>
           </View>

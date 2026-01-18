@@ -5,23 +5,25 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { CreditCard, DollarSign, MapPin, Edit2 } from 'lucide-react-native';
+import { CreditCard, DollarSign, MapPin, Edit2, QrCode } from 'lucide-react-native';
 import { useCart } from '../contexts/CartContext';
-import { sendOrderEmails } from '../services/emailService';
 import type { RootStackParamList } from '../types/navigation';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../../services/supabaseClient';
 
 type CheckoutScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type PaymentMethod = 'card' | 'pix' | 'cash';
 
+
 export default function CheckoutScreen() {
   const navigation = useNavigation<CheckoutScreenNavigationProp>();
-  const { cartItems, getCartTotal, createOrder } = useCart();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
+  const { cartItems, getCartTotal, clearCart } = useCart();
+  const { user } = useAuth();
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
 
   const handleConfirmOrder = async () => {
     // Validate cart is not empty
@@ -35,42 +37,104 @@ export default function CheckoutScreen() {
       pix: 'PIX',
       cash: 'Dinheiro',
     };
-    const order = createOrder(paymentMethods[paymentMethod]);
-    
-    // Send order confirmation emails
-    // TODO: Replace hardcoded customer info with actual user data from AuthContext
-    // TODO: Add user feedback (toast notification) for email send status
-    try {
-      await sendOrderEmails({
-        orderCode: order.id,
-        customerName: 'Cliente', // TODO: Get from user profile (useAuth hook)
-        customerEmail: 'cliente@example.com', // TODO: Get from user profile (useAuth hook)
-        storeEmail: 'loja@autopecascentral.com',
-        storeName: 'Auto Peças Central',
-        items: cartItems.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        total: getCartTotal() + 15.90,
-        address: {
-          street: 'Av. Paulista',
-          number: '1000',
-          city: 'São Paulo',
-          state: 'SP',
-        },
-      });
-    } catch (error) {
-      console.error('Failed to send order emails:', error);
-      // Continue anyway - don't block order completion
+    const orderNumberBase = `ORD-${Date.now()}`;
+
+    const itemsByStore = cartItems.reduce<Record<string, typeof cartItems>>((acc, item) => {
+      if (!item.store_id) return acc;
+      if (!acc[item.store_id]) acc[item.store_id] = [];
+      acc[item.store_id].push(item);
+      return acc;
+    }, {});
+
+    const storeIds = Object.keys(itemsByStore);
+    if (storeIds.length === 0) {
+      return;
     }
+
+    for (let i = 0; i < storeIds.length; i += 1) {
+      const storeId = storeIds[i];
+      const storeItems = itemsByStore[storeId];
+      const orderNumber = `${orderNumberBase}-${i + 1}`;
+      const subtotal = storeItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+      const { error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          customer_id: user?.id || null,
+          customer_name: user?.name || 'Cliente',
+          customer_email: user?.email || 'cliente@example.com',
+          customer_phone: user?.phone || null,
+          store_id: storeId,
+          items: storeItems.map((item) => ({
+            product_id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            image: item.image || null,
+            part_number: item.partNumber || null,
+          })),
+          subtotal,
+          shipping_cost: 0,
+          discount: 0,
+          total: subtotal,
+          status: 'pending',
+          payment_method: paymentMethod === 'card' ? 'credit_card' : paymentMethod,
+          delivery_address: {
+            cep: user?.address.cep || null,
+            street: user?.address.street || null,
+            number: user?.address.number || null,
+            complement: user?.address.complement || null,
+            city: user?.address.city || null,
+            state: user?.address.state || null,
+          },
+          status_history: [
+            {
+              status: 'pending',
+              timestamp: new Date().toISOString(),
+              user: 'Cliente',
+            },
+          ],
+        });
+
+      if (orderError) {
+        console.error('Failed to create order:', orderError);
+        return;
+      }
+
+      for (const item of storeItems) {
+        const { data: productData, error: productError } = await supabase
+          .from('products')
+          .select('stock_quantity')
+          .eq('id', item.id)
+          .single();
+
+        if (productError) {
+          console.error('Failed to fetch stock:', productError);
+          continue;
+        }
+
+        const currentStock = Number(productData?.stock_quantity ?? 0);
+        const newStock = Math.max(0, currentStock - item.quantity);
+
+        const { error: stockError } = await supabase
+          .from('products')
+          .update({ stock_quantity: newStock })
+          .eq('id', item.id);
+
+        if (stockError) {
+          console.error('Failed to update stock:', stockError);
+        }
+      }
+    }
+    
+    clearCart();
     
     navigation.navigate('OrderSuccess');
   };
 
-  const shippingFee = 15.90;
   const subtotal = getCartTotal();
-  const total = subtotal + shippingFee;
+  const total = subtotal;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#1e3a8a' }}>
@@ -103,10 +167,16 @@ export default function CheckoutScreen() {
               </TouchableOpacity>
             </View>
             <View style={styles.addressCard}>
-              <Text style={styles.addressText}>Av. Paulista, 1000</Text>
-              <Text style={styles.addressText}>Apto 101</Text>
-              <Text style={styles.addressText}>São Paulo - SP</Text>
-              <Text style={styles.addressText}>CEP: 01310-100</Text>
+              <Text style={styles.addressText}>
+                {user?.address.street || 'Rua não informada'}, {user?.address.number || 'S/N'}
+              </Text>
+              {!!user?.address.complement && (
+                <Text style={styles.addressText}>{user.address.complement}</Text>
+              )}
+              <Text style={styles.addressText}>
+                {(user?.address.city || 'Cidade não informada')} - {user?.address.state || 'UF'}
+              </Text>
+              <Text style={styles.addressText}>CEP: {user?.address.cep || 'Não informado'}</Text>
             </View>
           </View>
 
@@ -114,11 +184,10 @@ export default function CheckoutScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleRow}>
-                <CreditCard color="#1e3a8a" size={20} />
                 <Text style={styles.sectionTitle}>Forma de Pagamento</Text>
               </View>
             </View>
-            
+
             {/* Opção: Cartão */}
             <TouchableOpacity
               style={[styles.paymentOption, paymentMethod === 'card' && styles.paymentOptionSelected]}
@@ -133,7 +202,7 @@ export default function CheckoutScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* Opção: Pix com logo oficial */}
+            {/* Opção: Pix com ícone */}
             <TouchableOpacity
               style={[styles.paymentOption, paymentMethod === 'pix' && styles.paymentOptionSelected]}
               onPress={() => setPaymentMethod('pix')}
@@ -142,10 +211,7 @@ export default function CheckoutScreen() {
                 <View style={styles.radio}>
                   {paymentMethod === 'pix' && <View style={styles.radioDot} />}
                 </View>
-                <Image
-                  source={{ uri: 'https://logodownload.org/wp-content/uploads/2020/02/pix-bc-logo-0.png' }}
-                  style={styles.pixLogo}
-                />
+                <QrCode color="#32bcad" size={24} />
                 <Text style={styles.paymentLabel}>Pix</Text>
               </View>
             </TouchableOpacity>
@@ -163,6 +229,7 @@ export default function CheckoutScreen() {
                 <Text style={styles.paymentLabel}>Dinheiro</Text>
               </View>
             </TouchableOpacity>
+
           </View>
 
           <View style={{ height: 180 }} />
@@ -173,12 +240,6 @@ export default function CheckoutScreen() {
             <Text style={styles.priceLabel}>Subtotal</Text>
             <Text style={styles.priceValue}>
               R$ {subtotal.toFixed(2).replace('.', ',')}
-            </Text>
-          </View>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Frete</Text>
-            <Text style={styles.priceValue}>
-              R$ {shippingFee.toFixed(2).replace('.', ',')}
             </Text>
           </View>
           <View style={styles.divider} />
@@ -303,11 +364,6 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: '#1e3a8a',
-  },
-  pixLogo: {
-    width: 24,
-    height: 24,
-    resizeMode: 'contain',
   },
   footer: {
     backgroundColor: '#ffffff',

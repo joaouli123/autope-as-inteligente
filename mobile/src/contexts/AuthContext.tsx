@@ -407,8 +407,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return true;
       }
       
-      // For non-vehicle updates, just update local state
-      const updatedUser = { ...user, ...userData };
+      // For non-vehicle updates, update Auth metadata/email and local state
+      const updatedUser: UserProfile = {
+        ...user,
+        ...userData,
+        address: {
+          ...user.address,
+          ...(userData.address || {}),
+        },
+      };
+
+      const updatePayload: { email?: string; data: Record<string, any> } = {
+        data: {
+          name: updatedUser.name,
+          cpfCnpj: updatedUser.cpfCnpj,
+          phone: updatedUser.phone,
+          address: {
+            cep: updatedUser.address.cep,
+            street: updatedUser.address.street,
+            number: updatedUser.address.number,
+            complement: updatedUser.address.complement,
+            city: updatedUser.address.city,
+            state: updatedUser.address.state,
+          },
+        },
+      };
+
+      if (userData.email && userData.email !== user.email) {
+        updatePayload.email = userData.email;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser(updatePayload);
+      if (updateError) {
+        console.error('[AuthContext] Error updating profile:', updateError.message);
+        return false;
+      }
+
       setUser(updatedUser);
       return true;
     } catch (error) {

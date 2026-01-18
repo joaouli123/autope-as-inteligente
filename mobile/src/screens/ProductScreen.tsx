@@ -40,9 +40,11 @@ interface ProductDetails {
   oem_codes?: string[] | null;
   specifications?: Record<string, string>;
   store: {
+    id: string;
     name: string;
     city?: string | null;
     state?: string | null;
+    logo_url?: string | null;
   } | null;
   compatibility?: {
     brand: string | null;
@@ -85,7 +87,7 @@ export default function ProductScreen() {
         const { data, error: productError } = await supabase
           .from('products')
           .select(
-            'id, name, description, price, stock_quantity, images, image_url, category, part_code, part_position, brand, model, mpn, oem_codes, specifications, stores(name, city, state), product_compatibility(brand, model, year_start, year_end, engines, transmissions, fuel_types, valves)'
+            'id, name, description, price, stock_quantity, images, image_url, category, part_code, part_position, brand, model, mpn, oem_codes, specifications, stores(id, name, city, state, logo_url), product_compatibility(brand, model, year_start, year_end, engines, transmissions, fuel_types, valves)'
           )
           .eq('id', productId)
           .single();
@@ -121,9 +123,11 @@ export default function ProductScreen() {
           specifications: data.specifications || undefined,
           store: data.stores
             ? {
+                id: data.stores.id,
                 name: data.stores.name,
                 city: data.stores.city,
                 state: data.stores.state,
+                logo_url: data.stores.logo_url,
               }
             : null,
           compatibility: compatibility || undefined,
@@ -143,12 +147,16 @@ export default function ProductScreen() {
 
   const handleAddToCart = () => {
     if (!product) return;
+    if (product.stock_quantity <= 0) return;
     addToCart({
       id: product.id,
       name: product.name,
       description: product.store?.name || '',
       price: product.price,
       quantity: 1,
+      image: product.images[0] || product.image_url || undefined,
+      stock_quantity: product.stock_quantity,
+      store_id: product.store?.id || '',
       brand: product.store?.name || '',
       partNumber: product.part_code || '',
     });
@@ -252,7 +260,14 @@ export default function ProductScreen() {
               <View style={styles.storeCard}>
                 <View style={styles.storeHeader}>
                   <View style={styles.storeIcon}>
-                    <MapPin size={20} color="#1e3a8a" />
+                    {product.store.logo_url ? (
+                      <Image
+                        source={{ uri: product.store.logo_url }}
+                        style={styles.storeLogo}
+                      />
+                    ) : (
+                      <MapPin size={20} color="#1e3a8a" />
+                    )}
                   </View>
                   <View style={styles.storeInfo}>
                     <Text style={styles.storeName}>{product.store.name}</Text>
@@ -567,6 +582,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1f2937',
     marginBottom: 2,
+    overflow: 'hidden',
+  },
+  storeLogo: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   storeAddress: {
     fontSize: 14,

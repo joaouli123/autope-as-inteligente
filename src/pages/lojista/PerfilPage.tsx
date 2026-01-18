@@ -14,6 +14,7 @@ import {
   Globe,
   Clock,
 } from 'lucide-react';
+import ImageUpload from '../../components/lojista/ImageUpload';
 import type { Store as StoreType, StoreReview } from '../../types/lojista';
 import StatsCard from '../../components/lojista/StatsCard';
 import ReviewCard from '../../components/lojista/ReviewCard';
@@ -352,22 +353,22 @@ export default function PerfilPage() {
               Logo da Loja
             </label>
             {editMode ? (
-              <div className="flex items-center gap-4">
-                {formData.logo_url && (
-                  <img
-                    src={formData.logo_url}
-                    alt="Logo"
-                    className="w-20 h-20 object-cover rounded-lg border border-gray-300"
-                  />
-                )}
+              <div className="space-y-3">
+                <ImageUpload
+                  images={formData.logo_url ? [formData.logo_url] : []}
+                  onChange={(images) =>
+                    setFormData({ ...formData, logo_url: images[0] || '' })
+                  }
+                  maxImages={1}
+                />
                 <input
                   type="text"
                   value={formData.logo_url}
                   onChange={(e) =>
                     setFormData({ ...formData, logo_url: e.target.value })
                   }
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="URL da logo"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="URL da logo (opcional)"
                 />
               </div>
             ) : (
