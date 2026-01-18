@@ -109,8 +109,8 @@ export default function DashboardPage() {
     <div className="space-y-8 animate-fade-in">
       {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Visão Geral</h1>
-        <p className="text-base text-gray-600">Acompanhe o desempenho da sua loja em tempo real</p>
+        <h1 className="text-3xl font-bold text-[#1f4461] mb-2 tracking-tight">Visão Geral</h1>
+        <p className="text-base text-gray-600 font-medium">Acompanhe o desempenho da sua loja em tempo real</p>
       </div>
 
       {/* Metrics Grid */}
@@ -120,54 +120,54 @@ export default function DashboardPage() {
           value={`R$ ${metrics.revenue_today.toFixed(2).replace('.', ',')}`}
           icon={DollarSign}
           trend={{ value: `${metrics.revenue_growth}%`, isPositive: true }}
-          iconBgColor="bg-emerald-100"
-          iconColor="text-emerald-600"
+          iconBgColor="bg-[#34abd5]/10"
+          iconColor="text-[#34abd5]"
         />
         <MetricCard
           title="Pedidos Pendentes"
           value={`${metrics.pending_orders}`}
           icon={ShoppingCart}
           trend={{ value: `${metrics.processing_orders} processando`, isPositive: false }}
-          iconBgColor="bg-blue-100"
-          iconColor="text-blue-600"
+          iconBgColor="bg-[#1f4461]/10"
+          iconColor="text-[#1f4461]"
         />
         <MetricCard
           title="Produtos Ativos"
           value={`${metrics.active_products}`}
           icon={Package}
           trend={{ value: `${metrics.low_stock_products} em baixa`, isPositive: false }}
-          iconBgColor="bg-purple-100"
-          iconColor="text-purple-600"
+          iconBgColor="bg-[#e99950]/10"
+          iconColor="text-[#e99950]"
         />
         <MetricCard
           title="Total de Clientes"
           value={`${metrics.total_customers}`}
           icon={TrendingUp}
-          iconBgColor="bg-amber-100"
-          iconColor="text-amber-600"
+          iconBgColor="bg-emerald-500/10"
+          iconColor="text-emerald-600"
         />
       </div>
 
       {/* Recent Orders */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-          <h2 className="text-xl font-bold text-gray-900">Pedidos Recentes</h2>
-          <p className="text-sm text-gray-600 mt-1">Últimos pedidos realizados na sua loja</p>
+        <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-[#1f4461]/5 to-[#34abd5]/5">
+          <h2 className="text-xl font-bold text-[#1f4461] tracking-tight">Pedidos Recentes</h2>
+          <p className="text-sm text-gray-600 mt-1 font-medium">Últimos pedidos realizados na sua loja</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-[#1f4461] uppercase tracking-wider">
                   Código
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-[#1f4461] uppercase tracking-wider">
                   Cliente
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-[#1f4461] uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-[#1f4461] uppercase tracking-wider">
                   Total
                 </th>
               </tr>
@@ -176,20 +176,20 @@ export default function DashboardPage() {
               {recentOrders.map((order) => (
                 <tr 
                   key={order.id} 
-                  className="odd:bg-white even:bg-gray-50/50 hover:bg-blue-50/50 transition-colors duration-150"
+                  className="odd:bg-white even:bg-gray-50/50 hover:bg-[#34abd5]/5 transition-colors duration-150 cursor-pointer"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-bold text-gray-900">{order.code}</span>
+                    <span className="text-sm font-bold text-[#1f4461]">{order.code}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-semibold text-gray-900">{order.customer_name}</div>
-                      <div className="text-xs text-gray-500">{order.customer_email}</div>
+                      <div className="text-xs text-gray-500 font-medium">{order.customer_email}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
                         statusConfig[order.status].color
                       }`}
                     >
@@ -197,7 +197,7 @@ export default function DashboardPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-bold text-gray-900">
+                    <span className="text-sm font-bold text-[#1f4461]">
                       R$ {order.total.toFixed(2).replace('.', ',')}
                     </span>
                   </td>

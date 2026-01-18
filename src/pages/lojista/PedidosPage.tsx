@@ -170,9 +170,9 @@ export default function PedidosPage() {
 
   const getPaymentMethodBadge = (method: string) => {
     const colors: Record<string, string> = {
-      credit_card: 'bg-blue-100 text-blue-800',
-      pix: 'bg-green-100 text-green-800',
-      cash: 'bg-gray-100 text-gray-800',
+      credit_card: 'bg-[#1f4461]/10 text-[#1f4461] border border-[#1f4461]/20',
+      pix: 'bg-[#34abd5]/10 text-[#34abd5] border border-[#34abd5]/20',
+      cash: 'bg-[#e99950]/10 text-[#e99950] border border-[#e99950]/20',
     };
 
     const labels: Record<string, string> = {

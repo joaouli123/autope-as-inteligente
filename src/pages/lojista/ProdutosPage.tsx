@@ -121,33 +121,33 @@ export default function ProdutosPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Produtos</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-[#1f4461] tracking-tight">Produtos</h1>
+          <p className="text-gray-600 mt-1 font-medium">
             Gerencie seu catálogo de produtos ({filteredProducts.length} itens)
           </p>
         </div>
         <Link
           to="/lojista/produtos/novo"
-          className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#1f4461] to-[#34abd5] text-white px-6 py-3 rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all duration-200 shadow-lg"
         >
-          <Plus size={20} />
+          <Plus size={20} strokeWidth={2.5} />
           Adicionar Produto
         </Link>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200 mb-6">
+      <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Busca */}
           <div className="md:col-span-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
                 placeholder="Buscar por nome, SKU, categoria ou marca..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none font-medium"
               />
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function ProdutosPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none font-medium"
             >
               <option value="all">Todas Categorias</option>
               {categories.map((cat) => (
@@ -171,7 +171,7 @@ export default function ProdutosPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none font-medium"
             >
               <option value="all">Todos Status</option>
               <option value="active">Ativos</option>
@@ -184,18 +184,18 @@ export default function ProdutosPage() {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#34abd5]"></div>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && filteredProducts.length === 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <Package size={64} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+          <Package size={64} className="mx-auto text-gray-300 mb-4" strokeWidth={1.5} />
+          <h3 className="text-xl font-bold text-[#1f4461] mb-2">
             Nenhum produto encontrado
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 mb-6 font-medium">
             {search || categoryFilter !== 'all' || statusFilter !== 'all'
               ? 'Tente ajustar os filtros de busca'
               : 'Comece adicionando seu primeiro produto ao catálogo'}
@@ -203,9 +203,9 @@ export default function ProdutosPage() {
           {!search && categoryFilter === 'all' && statusFilter === 'all' && (
             <Link
               to="/lojista/produtos/novo"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#1f4461] to-[#34abd5] text-white px-6 py-3 rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all duration-200 shadow-lg"
             >
-              <Plus size={20} />
+              <Plus size={20} strokeWidth={2.5} />
               Adicionar Primeiro Produto
             </Link>
           )}
@@ -280,7 +280,7 @@ export default function ProdutosPage() {
 
                     {/* Coluna Categoria */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-[#34abd5]/10 text-[#34abd5] border border-[#34abd5]/20">
                         {product.category}
                       </span>
                     </td>
@@ -292,7 +292,7 @@ export default function ProdutosPage() {
 
                     {/* Coluna Preço */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-sm font-bold text-[#1f4461]">
                         R$ {product.price?.toFixed(2).replace('.', ',')}
                       </span>
                     </td>
@@ -332,21 +332,21 @@ export default function ProdutosPage() {
                             setSelectedProduct(product);
                             setShowDetailsModal(true);
                           }}
-                          className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="text-[#34abd5] hover:text-[#1f4461] p-2 hover:bg-[#34abd5]/10 rounded-lg transition-all duration-200"
                           title="Ver detalhes"
                         >
                           <Eye size={18} />
                         </button>
                         <button
                           onClick={() => navigate(`/lojista/produtos/${product.id}`)}
-                          className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="text-gray-600 hover:text-[#1f4461] p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
                           title="Editar"
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(product)}
-                          className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                          className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-all duration-200"
                           title="Deletar"
                         >
                           <Trash2 size={18} />

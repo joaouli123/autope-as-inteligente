@@ -1,18 +1,48 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* Theme configuration defined inline in CSS */
 @theme {
-  /* Colors */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* Brand Colors - Identidade Visual */
+  --color-brand-primary: #1f4461;
+  --color-brand-secondary: #34abd5;
+  --color-brand-tertiary: #e99950;
+  
+  /* Primary Shades (based on #1f4461) */
+  --color-primary-50: #f0f5f8;
+  --color-primary-100: #d9e5ec;
+  --color-primary-200: #b3cbd9;
+  --color-primary-300: #8db1c6;
+  --color-primary-400: #6797b3;
+  --color-primary-500: #1f4461;
+  --color-primary-600: #1a3a52;
+  --color-primary-700: #152f44;
+  --color-primary-800: #102535;
+  --color-primary-900: #0b1a27;
+
+  /* Secondary Shades (based on #34abd5) */
+  --color-secondary-50: #e8f6fb;
+  --color-secondary-100: #d1eef7;
+  --color-secondary-200: #a3ddef;
+  --color-secondary-300: #75cce7;
+  --color-secondary-400: #47bbdf;
+  --color-secondary-500: #34abd5;
+  --color-secondary-600: #2a8aaa;
+  --color-secondary-700: #206880;
+  --color-secondary-800: #154655;
+  --color-secondary-900: #0b242b;
+
+  /* Tertiary/Accent Shades (based on #e99950) */
+  --color-accent-50: #fdf5ec;
+  --color-accent-100: #fbebd9;
+  --color-accent-200: #f7d7b3;
+  --color-accent-300: #f3c38d;
+  --color-accent-400: #efaf67;
+  --color-accent-500: #e99950;
+  --color-accent-600: #ba7b40;
+  --color-accent-700: #8c5c30;
+  --color-accent-800: #5d3e20;
+  --color-accent-900: #2f1f10;
 
   /* Box Shadows */
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06);
@@ -21,6 +51,9 @@
 
   /* Animations */
   --animate-blob: blob 7s infinite;
+  
+  /* Font Family */
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* Base styles */
@@ -28,6 +61,10 @@
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    font-family: var(--font-family-base);
   }
 }
 

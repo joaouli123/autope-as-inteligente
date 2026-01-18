@@ -282,22 +282,22 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#1f4461] via-[#1a3a52] to-[#152f44] flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white/98 backdrop-blur-sm rounded-3xl shadow-2xl p-8 sm:p-10 border border-white/20">
           {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center">
-              <Store size={40} className="text-white" />
+          <div className="flex justify-center mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#1f4461] to-[#34abd5] rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
+              <Store size={40} className="text-white" strokeWidth={2} />
             </div>
           </div>
 
           {/* Title */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">
               Cadastrar Nova Loja
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 font-medium">
               Passo {step} de 3 - {step === 1 ? 'Dados da Loja' : step === 2 ? 'Endereço' : 'Senha'}
             </p>
           </div>
@@ -308,8 +308,8 @@ export default function SignupPage() {
               {[1, 2, 3].map((s) => (
                 <div
                   key={s}
-                  className={`flex-1 h-2 mx-1 rounded-full ${
-                    s <= step ? 'bg-blue-600' : 'bg-gray-200'
+                  className={`flex-1 h-2.5 mx-1 rounded-full transition-all duration-300 ${
+                    s <= step ? 'bg-gradient-to-r from-[#1f4461] to-[#34abd5]' : 'bg-gray-200'
                   }`}
                 />
               ))}
@@ -329,49 +329,49 @@ export default function SignupPage() {
             {step === 1 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Nome da Loja *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">Nome da Loja *</label>
                   <div className="relative">
                     <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="text"
                       value={formData.storeName}
                       onChange={(e) => handleChange('storeName', e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                       placeholder="Minha Loja"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Nome do Proprietário *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">Nome do Proprietário *</label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="text"
                       value={formData.ownerName}
                       onChange={(e) => handleChange('ownerName', e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                       placeholder="João Silva"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">Email *</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleChange('email', e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                       placeholder="contato@minhaloja.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">CNPJ *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">CNPJ *</label>
                   <div className="relative">
                     <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
@@ -379,21 +379,21 @@ export default function SignupPage() {
                       value={formData.cnpj}
                       onChange={(e) => handleChange('cnpj', e.target.value.replace(/\D/g, ''))}
                       maxLength={14}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                       placeholder="00000000000000"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Telefone *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">Telefone *</label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleChange('phone', e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                       placeholder="(11) 98765-4321"
                     />
                   </div>
@@ -402,7 +402,7 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  className="w-full bg-gradient-to-r from-[#1f4461] to-[#34abd5] text-white py-4 rounded-xl font-bold text-base hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg mt-6"
                 >
                   Próximo
                 </button>
@@ -411,9 +411,9 @@ export default function SignupPage() {
 
             {/* PASSO 2: Endereço */}
             {step === 2 && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">CEP *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">CEP *</label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
@@ -422,7 +422,7 @@ export default function SignupPage() {
                       onChange={(e) => handleChange('cep', e.target.value.replace(/\D/g, ''))}
                       onBlur={handleCepBlur}
                       maxLength={8}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                       placeholder="00000000"
                     />
                   </div>
@@ -430,83 +430,83 @@ export default function SignupPage() {
 
                 <div className="grid grid-cols-3 gap-4">
                   <div className="col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Rua *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2.5">Rua *</label>
                     <input
                       type="text"
                       value={formData.street}
                       onChange={(e) => handleChange('street', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Número *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2.5">Número *</label>
                     <input
                       type="text"
                       value={formData.number}
                       onChange={(e) => handleChange('number', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Complemento</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">Complemento</label>
                   <input
                     type="text"
                     value={formData.complement}
                     onChange={(e) => handleChange('complement', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                     placeholder="Sala, Andar, etc."
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Bairro *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2.5">Bairro *</label>
                     <input
                       type="text"
                       value={formData.neighborhood}
                       onChange={(e) => handleChange('neighborhood', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Cidade *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2.5">Cidade *</label>
                     <input
                       type="text"
                       value={formData.city}
                       onChange={(e) => handleChange('city', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Estado *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">Estado *</label>
                   <input
                     type="text"
                     value={formData.state}
                     onChange={(e) => handleChange('state', e.target.value.toUpperCase())}
                     maxLength={2}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                     placeholder="SP"
                   />
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 mt-6">
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                    className="flex-1 border-2 border-gray-300 text-gray-700 py-3.5 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                   >
                     Voltar
                   </button>
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    className="flex-1 bg-gradient-to-r from-[#1f4461] to-[#34abd5] text-white py-3.5 rounded-xl font-bold hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg"
                   >
                     Próximo
                   </button>
@@ -516,48 +516,48 @@ export default function SignupPage() {
 
             {/* PASSO 3: Senha */}
             {step === 3 && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Senha *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">Senha *</label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="password"
                       value={formData.password}
                       onChange={(e) => handleChange('password', e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                       placeholder="••••••••"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Mínimo de 6 caracteres</p>
+                  <p className="text-xs text-gray-500 mt-2 font-medium">Mínimo de 6 caracteres</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Confirmar Senha *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2.5">Confirmar Senha *</label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
                       type="password"
                       value={formData.confirmPassword}
                       onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#34abd5]/20 focus:border-[#34abd5] transition-all duration-200 outline-none hover:border-gray-300 font-medium"
                       placeholder="••••••••"
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 mt-6">
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                    className="flex-1 border-2 border-gray-300 text-gray-700 py-3.5 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                   >
                     Voltar
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="flex-1 bg-gradient-to-r from-[#1f4461] to-[#34abd5] text-white py-3.5 rounded-xl font-bold hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     {loading ? 'Criando conta...' : 'Criar Conta'}
                   </button>
@@ -567,14 +567,14 @@ export default function SignupPage() {
           </form>
 
           {/* Footer */}
-          <div className="mt-8 text-center space-y-2">
-            <p className="text-sm text-gray-600">
+          <div className="mt-8 text-center space-y-3">
+            <p className="text-sm text-gray-600 font-medium">
               Já tem uma conta?{' '}
-              <Link to="/lojista/login" className="text-blue-600 hover:underline font-semibold">
+              <Link to="/lojista/login" className="text-[#34abd5] hover:text-[#1f4461] hover:underline font-bold transition-colors">
                 Fazer login
               </Link>
             </p>
-            <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+            <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-all duration-200 font-medium">
               <ArrowLeft size={16} />
               Voltar para App do Cliente
             </Link>
