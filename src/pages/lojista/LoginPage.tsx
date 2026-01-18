@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Store, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, ArrowLeft } from 'lucide-react';
 import { useLojistaAuth } from '../../contexts/LojistaAuthContext';
+import logoChegapecas from '../../assets/logo-chegapecas.svg';
 
 export default function LojistaLoginPage() {
   const [email, setEmail] = useState('');
@@ -52,10 +53,10 @@ export default function LojistaLoginPage() {
       
       <div className="w-full max-w-md relative z-10">
         <div className="bg-white/98 backdrop-blur-sm rounded-3xl shadow-2xl p-8 sm:p-10 border border-white/30">
-          {/* Icon */}
+          {/* Logo */}
           <div className="flex justify-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#1f4461] to-[#34abd5] rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
-              <Store size={40} className="text-white" strokeWidth={2} />
+            <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300 p-4">
+              <img src={logoChegapecas} alt="Chegapeças" className="w-full h-full object-contain" />
             </div>
           </div>
 

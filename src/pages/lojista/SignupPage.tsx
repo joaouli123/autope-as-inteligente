@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Store, Mail, Lock, Phone, FileText, MapPin, Building2, ArrowLeft, User } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
+import logoChegapecas from '../../assets/logo-chegapecas.svg';
 
 export default function SignupPage() {
   const [step, setStep] = useState(1); // 1: Dados básicos, 2: Endereço, 3: Senha
@@ -285,10 +286,10 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#1f4461] via-[#1a3a52] to-[#152f44] flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl">
         <div className="bg-white/98 backdrop-blur-sm rounded-3xl shadow-2xl p-8 sm:p-10 border border-white/20">
-          {/* Icon */}
+          {/* Logo */}
           <div className="flex justify-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#1f4461] to-[#34abd5] rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
-              <Store size={40} className="text-white" strokeWidth={2} />
+            <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300 p-4">
+              <img src={logoChegapecas} alt="Chegapeças" className="w-full h-full object-contain" />
             </div>
           </div>
 

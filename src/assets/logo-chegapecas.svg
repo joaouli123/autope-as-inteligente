@@ -1,0 +1,8 @@
+<!-- Logo Chegapeças - Placeholder SVG -->
+<!-- A logo real deve ser salva aqui manualmente ou via upload -->
+<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="80" fill="transparent"/>
+  <text x="100" y="40" font-family="Arial" font-size="24" font-weight="bold" fill="#1f4461" text-anchor="middle">
+    Chegapeças
+  </text>
+</svg>

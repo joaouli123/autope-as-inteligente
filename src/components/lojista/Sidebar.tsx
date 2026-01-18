@@ -4,10 +4,10 @@ import {
   Package,
   ShoppingCart,
   Users,
-  Store,
   LogOut,
 } from 'lucide-react';
 import { useLojistaAuth } from '../../contexts/LojistaAuthContext';
+import logoChegapecas from '../../assets/logo-chegapecas.svg';
 
 const navigation = [
   { name: 'Visão Geral', href: '/lojista/dashboard', icon: LayoutDashboard },
@@ -26,11 +26,11 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-gradient-to-br from-[#34abd5] to-[#e99950] rounded-xl flex items-center justify-center shadow-lg">
-            <Store size={24} className="text-white" strokeWidth={2.5} />
+          <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-lg p-1.5">
+            <img src={logoChegapecas} alt="Chegapeças" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white tracking-tight">AutoPeças Pro</h1>
+            <h1 className="text-xl font-bold text-white tracking-tight">Chegapeças</h1>
             <p className="text-xs text-[#34abd5]/80 truncate max-w-[150px] font-medium">{store?.name}</p>
           </div>
         </div>
